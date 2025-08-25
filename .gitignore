@@ -1,0 +1,17 @@
+# Dependencies
+/node_modules/
+/backend/node_modules/
+/frontend/node_modules/
+
+# Environment variables
+.env
+.env.local
+/backend/.env
+/frontend/.env
+/frontend/.env.local
+
+# Build outputs
+/frontend/.next/
+
+# IDE and OS files
+.DS_Store
