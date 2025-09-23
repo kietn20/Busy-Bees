@@ -28,14 +28,43 @@ export default function RegisterPage() {
         }
 
         try {
-            const response = await api.post('/auth/register', {
-                firstName,
-                lastName,
-                email,
-                password,
-            });
 
-            const { token, user } = response.data;
+            // const response = await api.post('/auth/register', {
+                //     firstName,
+                //     lastName,
+                //     email,
+                //     password,
+                // });
+
+
+
+
+
+
+                
+            // !!! THIS IS A MOCK TEST SINCE CONNECTION TO MONGODB IS NOT IMPLEMENTED YET !!!
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            const fakeResponse = {
+                data: {
+                    token: 'fake-jwt-token-for-testing',
+                    user: {
+                        id: '12345-abcde',
+                        firstName: firstName,
+                        email: email,
+                    }
+                }
+            };
+            const { token, user } = fakeResponse.data;
+
+
+
+
+
+
+
+
+            
+            // const { token, user } = response.data;
 
             // log the user in immediately after successful registration
             login(token, user);
