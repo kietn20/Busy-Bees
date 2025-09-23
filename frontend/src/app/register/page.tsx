@@ -43,8 +43,12 @@ export default function RegisterPage() {
             // redirect to the dashboard after
             router.push('/dashboard');
 
-        } catch {
-            setError('Registration failed. Please try again.');
+        } catch (error) {
+            if (error && typeof error === 'object' && 'response' in error) {
+                // @ts-expect-error: error type is unknown but may have response
+                const errorMessage = error.response?.data?.message || 'Registration failed. Please try again.';
+                setError(errorMessage);
+            }
         } finally {
             setIsLoading(false);
         }
