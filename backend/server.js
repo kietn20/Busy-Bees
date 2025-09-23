@@ -1,6 +1,7 @@
 const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
+const authRoutes = require('./routes/auth.routes');
 
 dotenv.config();
 
@@ -21,6 +22,9 @@ app.get('/api/health', (req, res) => {
     message: 'API is healthy'
   });
 });
+
+
+app.use('/api/auth', authRoutes);
 
 
 app.listen(PORT, () => {
