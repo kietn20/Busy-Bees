@@ -5,15 +5,11 @@ import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 
 export default function Header() {
-    const { user, logout } = useAuth();
+    const { user } = useAuth();
     const router = useRouter();
 
 
 
-    const handleLogout = () => {
-        logout();
-        router.push('/login');
-    };
     
 
     return (
@@ -30,12 +26,11 @@ export default function Header() {
                             <Link href="/dashboard" className="text-gray-600 hover:text-gray-800">
                                 Dashboard
                             </Link>
-                            <button
-                                onClick={handleLogout}
-                                className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded"
-                            >
-                                Logout
-                            </button>
+
+
+
+                            
+
                         </>
                     ) : (
                         // --- User is Logged Out ---

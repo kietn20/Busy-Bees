@@ -14,7 +14,6 @@ interface AuthContextType {
     user: User | null;
     token: string | null;
     login: (token: string, userData: User) => void;
-    logout: () => void;
     isLoading: boolean;
 }
 
@@ -46,13 +45,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         localStorage.setItem('authToken', newToken);
     };
 
-    const logout = () => {
-        setUser(null);
-        setToken(null);
-        localStorage.removeItem('authToken');
-    };
 
-    const value = { user, token, login, logout, isLoading };
+    const value = { user, token, login, isLoading };
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
