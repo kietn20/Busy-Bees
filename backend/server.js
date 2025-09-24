@@ -21,7 +21,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // Routes
-app.use("/auth", authRoutes);
+app.use("/api/auth", authRoutes);
 
 app.get("/", (req, res) => res.send("Busybee Backend Running"));
 
