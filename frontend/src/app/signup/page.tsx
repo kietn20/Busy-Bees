@@ -1,15 +1,16 @@
-import LogInForm from "@/components/login";
+"use client";
+
+import SignUpForm from "@/components/sign-up";
 import SignInGoogle from "@/components/sign-in-google";
 
-export default function LoginPage() {
+export default function SignUpPage() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center ">
       <div className="w-full max-w-xl p-12 space-y-6 border border-gray-300 rounded-lg shadow-lg">
         <div className="mb-8 space-y-1">
-          <h1 className="text-2xl font-bold">Welcome back!</h1>
+          <h1 className="text-2xl font-bold">Get Started Now</h1>
           <h3 className="text-md text-muted-foreground">
-            Glad to see you again! Please enter your details below to log in to
-            your account.
+            Enter your details below to create your account and get started!
           </h3>
         </div>
         <div>
@@ -20,7 +21,7 @@ export default function LoginPage() {
           <span className="px-3 text-xs text-muted-foreground">or</span>
           <div className="flex-1 border-t border-gray-300" />
         </div>
-        <LogInForm />
+        <SignUpForm />
       </div>
     </div>
   );
