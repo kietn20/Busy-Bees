@@ -1,3 +1,57 @@
+const User = require('../models/User.model');
+const { comparePassword, hashPassword } = require('../utils/password.util'); 
+const { generateToken } = require('../utils/jwt.util');
+
+
+const loginUser = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    // 1. validate input
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email and password are required.' });
+    }
+
+    // 2. find the user by email
+    const user = await User.findOne({ email }).select('+password');
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid credentials.' });
+    }
+
+    // 3. compare the provided password with the stored hash
+    const isMatch = await comparePassword(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Invalid credentials.' });
+    }
+
+    // 4. generate a JWT
+    const token = generateToken(user._id);
+
+    // 5. send the token and user info in the response
+    user.password = undefined; // set password to undefined so it's not sent back to the client
+
+    res.status(200).json({
+      token,
+      user: {
+        id: user._id,
+        firstName: user.firstName,
+        email: user.email,
+      }
+    });
+
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({ message: 'Internal server error.' });
+  }
+};
+
+
+module.exports = {
+  registerUser,
+  loginUser,
+};
+
+// OAuth callback handler
 exports.googleCallback = (req, res) => {
   
   res.redirect('/dashboard'); // change this based on the frontend route
