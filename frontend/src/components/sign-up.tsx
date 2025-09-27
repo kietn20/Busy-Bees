@@ -3,11 +3,12 @@
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "./ui/button";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -32,6 +33,10 @@ const signupSchema = z.object({
 });
 
 const SignUpForm = () => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const router = useRouter();
+
   const form = useForm<z.infer<typeof signupSchema>>({
     resolver: zodResolver(signupSchema),
     defaultValues: {
@@ -43,18 +48,30 @@ const SignUpForm = () => {
   });
 
   const onSubmit = async (data: z.infer<typeof signupSchema>) => {
+    setIsLoading(true);
+    setError("");
+
     try {
       const response = await signup(data);
-      console.log("Sign-up successful:", response);
-      // Handle successful sign-up (e.g., redirect, show message)
+
+      const { token, user } = response;
+
+      // Redirect to the dashboard after
+      router.push("/dashboard");
     } catch (error) {
-      console.error("Sign-up failed:", error);
-      // Handle sign-up error (e.g., show error message)
+      setError("Signup failed. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <div>
+      {error && (
+        <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+          {error}
+        </div>
+      )}
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -115,8 +132,12 @@ const SignUpForm = () => {
               </FormItem>
             )}
           />
-          <Button type="submit" className="w-full cursor-pointer my-2">
-            Create Account
+          <Button
+            type="submit"
+            className="w-full cursor-pointer my-2"
+            disabled={isLoading}
+          >
+            {isLoading ? "Creating Account..." : "Create Account"}
           </Button>
         </form>
       </Form>

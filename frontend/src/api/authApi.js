@@ -1,36 +1,37 @@
-import axios from "axios";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+import api from "./config";
 
 export const login = async ({ email, password }) => {
   try {
-    const response = await axios.post(
-      `${API_URL}/auth/login/`,
-      { email, password },
-      { withCredentials: true }
-    );
-    return response.data;
+    const response = await api.post("/auth/login", { email, password });
+
+    const { token, user } = response.data;
+
+    return { token, user };
   } catch (error) {
-    if (error?.response?.data) throw error.response.data;
+    throw new Error("Login failed. Please try again.");
   }
 };
 export const logout = async () => {
   try {
-    await axios.post(`${API_URL}/auth/logout/`, {}, { withCredentials: true });
+    await api.post("/auth/logout/", {});
   } catch (error) {
-    if (error?.response?.data) throw error.response.data;
+    throw new Error("Logout failed. Please try again.");
   }
 };
 
 export const signup = async ({ firstname, lastname, email, password }) => {
   try {
-    const response = await axios.post(
-      `${API_URL}/auth/register/`,
-      { firstname, lastname, email, password },
-      { withCredentials: true }
-    );
-    return response.data;
+    const response = await api.post("/auth/register", {
+      firstname,
+      lastname,
+      email,
+      password,
+    });
+
+    const { token, user } = response.data;
+
+    return { token, user };
   } catch (error) {
-    if (error?.response?.data) throw error.response.data;
+    throw new Error("Signup failed. Please try again.");
   }
 };
