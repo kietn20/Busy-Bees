@@ -7,8 +7,8 @@ require("./config/passport"); // Passport config
 require("./config/db"); // MongoDB connection
 
 // Route files
-const authRoutes = require("./routes/auth");
-const accountRoutes = require("./routes/account");
+const authRoutes = require("./routes/auth.routes");
+const accountRoutes = require("./routes/account.routes");
 
 const app = express();
 
