@@ -19,11 +19,11 @@ export const logout = async () => {
   }
 };
 
-export const signup = async ({ firstname, lastname, email, password }) => {
+export const signup = async ({ firstName, lastName, email, password }) => {
   try {
     const response = await api.post("/auth/register", {
-      firstname,
-      lastname,
+      firstName,
+      lastName,
       email,
       password,
     });

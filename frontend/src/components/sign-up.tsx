@@ -18,10 +18,10 @@ import { Input } from "@/components/ui/input";
 import { signup } from "@/api/authApi";
 
 const signupSchema = z.object({
-  firstname: z.string().min(2, {
+  firstName: z.string().min(2, {
     message: "First name must be at least 2 characters.",
   }),
-  lastname: z.string().min(2, {
+  lastName: z.string().min(2, {
     message: "Last name must be at least 2 characters.",
   }),
   email: z.email({
@@ -40,8 +40,8 @@ const SignUpForm = () => {
   const form = useForm<z.infer<typeof signupSchema>>({
     resolver: zodResolver(signupSchema),
     defaultValues: {
-      firstname: "",
-      lastname: "",
+      firstName: "",
+      lastName: "",
       email: "",
       password: "",
     },
@@ -77,7 +77,7 @@ const SignUpForm = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
               control={form.control}
-              name="firstname"
+              name="firstName"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>First Name</FormLabel>
@@ -90,7 +90,7 @@ const SignUpForm = () => {
             />
             <FormField
               control={form.control}
-              name="lastname"
+              name="lastName"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Last Name</FormLabel>
