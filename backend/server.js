@@ -6,7 +6,9 @@ const passport = require("passport");
 require("./config/passport"); // Passport config
 require("./config/db"); // MongoDB connection
 
+// Route files
 const authRoutes = require("./routes/auth");
+const accountRoutes = require("./routes/account");
 
 const app = express();
 
@@ -22,6 +24,7 @@ app.use(passport.session());
 
 // Routes
 app.use("/api/auth", authRoutes);
+app.use("/api/account", accountRoutes);
 
 app.get("/", (req, res) => res.send("Busybee Backend Running"));
 
