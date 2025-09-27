@@ -15,7 +15,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { signup } from "@/api/authApi";
+import { signup } from "@/services/authApi";
+import { useAuth } from "@/context/AuthContext";
 
 const signupSchema = z.object({
   firstName: z.string().min(2, {
@@ -36,6 +37,7 @@ const SignUpForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
+  const { login: authLogin } = useAuth();
 
   const form = useForm<z.infer<typeof signupSchema>>({
     resolver: zodResolver(signupSchema),
@@ -55,6 +57,9 @@ const SignUpForm = () => {
       const response = await signup(data);
 
       const { token, user } = response;
+
+      // Use AuthContext to set authentication state
+      authLogin(token, user);
 
       // Redirect to the dashboard after
       router.push("/dashboard");

@@ -1,15 +1,6 @@
-const User = require('../models/User.model');
-const { comparePassword, hashPassword } = require('../utils/password.util'); 
-const { generateToken } = require('../utils/jwt.util');
-
-
-
-
-
-
-
-
-
+const User = require("../models/User.model");
+const { comparePassword, hashPassword } = require("../utils/password.util");
+const { generateToken } = require("../utils/jwt.util");
 
 const loginUser = async (req, res) => {
   try {
@@ -17,19 +8,21 @@ const loginUser = async (req, res) => {
 
     // 1. validate input
     if (!email || !password) {
-      return res.status(400).json({ message: 'Email and password are required.' });
+      return res
+        .status(400)
+        .json({ message: "Email and password are required." });
     }
 
     // 2. find the user by email
-    const user = await User.findOne({ email }).select('+password');
+    const user = await User.findOne({ email }).select("+password");
     if (!user) {
-      return res.status(401).json({ message: 'Invalid credentials.' });
+      return res.status(401).json({ message: "Invalid credentials." });
     }
 
     // 3. compare the provided password with the stored hash
     const isMatch = await comparePassword(password, user.password);
     if (!isMatch) {
-      return res.status(401).json({ message: 'Invalid credentials.' });
+      return res.status(401).json({ message: "Invalid credentials." });
     }
 
     // 4. generate a JWT
@@ -44,15 +37,13 @@ const loginUser = async (req, res) => {
         id: user._id,
         firstName: user.firstName,
         email: user.email,
-      }
+      },
     });
-
   } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ message: 'Internal server error.' });
+    console.error("Login error:", error);
+    res.status(500).json({ message: "Internal server error." });
   }
 };
-
 
 module.exports = {
   registerUser,

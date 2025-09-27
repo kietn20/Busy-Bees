@@ -15,7 +15,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { login } from "@/api/authApi";
+import { login } from "@/services/authApi";
+import { useAuth } from "@/context/AuthContext";
 
 const loginSchema = z.object({
   email: z.email(),
@@ -26,6 +27,7 @@ const LogInForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
+  const { login: authLogin } = useAuth();
 
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
@@ -44,6 +46,9 @@ const LogInForm = () => {
 
       const { token, user } = response;
 
+      // Use AuthContext to set authentication state
+      authLogin(token, user);
+
       // Redirect to the dashboard after
       router.push("/dashboard");
     } catch (error) {
@@ -61,7 +66,7 @@ const LogInForm = () => {
         </div>
       )}
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <FormField
             control={form.control}
             name="email"
