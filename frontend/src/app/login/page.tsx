@@ -1,4 +1,4 @@
-import LogInForm from "@/components/login-in";
+import LogInForm from "@/components/login";
 import SignInGoogle from "@/components/sign-in-google";
 
 export default function LoginPage() {

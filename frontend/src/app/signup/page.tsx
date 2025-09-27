@@ -1,10 +1,9 @@
 "use client";
 
 import SignUpForm from "@/components/sign-up";
-import { Button } from "@/components/ui/button";
 import SignInGoogle from "@/components/sign-in-google";
 
-const SignUp = () => {
+export default function SignUpPage() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center ">
       <div className="w-full max-w-xl p-12 space-y-6 border border-gray-300 rounded-lg shadow-lg">
@@ -26,6 +25,4 @@ const SignUp = () => {
       </div>
     </div>
   );
-};
-
-export default SignUp;
+}
