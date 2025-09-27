@@ -1,15 +1,3 @@
-<<<<<<< HEAD
-// Purpose: Middleware to protect routes by verifying OAuth/session authentication only
-
-const ensureAuthenticated = (req, res, next) => {
-  if (req.isAuthenticated && req.isAuthenticated()) {
-    return next();
-  }
-  return res.status(401).json({ message: 'Not authorized, OAuth/session required' });
-};
-
-module.exports = { ensureAuthenticated };
-=======
 // Purpose: Middleware to protect routes by verifying JWT.
 
 const { verifyToken } = require('../utils/jwt.util');
@@ -51,4 +39,14 @@ const protect = async (req, res, next) => {
 };
 
 module.exports = { protect };
->>>>>>> 2e1c122867feeafab0ae27507c64d31a4b69ea64
+
+// Purpose: Middleware to protect routes by verifying OAuth/session authentication
+
+const ensureAuthenticated = (req, res, next) => {
+  if (req.isAuthenticated && req.isAuthenticated()) {
+    return next();
+  }
+  return res.status(401).json({ message: 'Not authorized, OAuth/session required' });
+};
+
+module.exports = { ensureAuthenticated };
