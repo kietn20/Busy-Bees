@@ -4,6 +4,8 @@ const cors = require('cors');
 const session = require("express-session");
 const passport = require("passport");
 
+dotenv.config();
+
 require("./config/passport"); // Passport config
 require("./config/db"); // MongoDB connection
 
@@ -11,7 +13,7 @@ require("./config/db"); // MongoDB connection
 const authRoutes = require("./routes/auth.routes");
 const accountRoutes = require("./routes/account.routes");
 
-dotenv.config();
+
 
 const app = express();
 const PORT = process.env.PORT || 8080;

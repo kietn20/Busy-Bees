@@ -1,11 +1,11 @@
 const User = require('../models/User.model');
 const express = require('express');
-const { ensureAuthenticated } = require('../middleware/auth.middleware');
+const { allowJwtOrGoogle } = require('../middleware/auth.middleware');
 
 const router = express.Router();
 
 // DELETE /api/account - Delete only users authenticated by OAuth/session
-router.delete('/', ensureAuthenticated, async (req, res) => {
+router.delete('/', allowJwtOrGoogle, async (req, res) => {
   try {
     const userId = req.user._id; // get userId from authenticated user
     const deletedUser = await User.findByIdAndDelete(userId); // delete user in MongoDB

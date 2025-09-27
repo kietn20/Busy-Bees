@@ -46,14 +46,16 @@ const loginUser = async (req, res) => {
   }
 };
 
-module.exports = {
-  registerUser,
-  loginUser,
-};
-
 // OAuth callback handler
-exports.googleCallback = (req, res) => {
-  
+const googleCallback = (req, res) => {
   res.redirect('/dashboard'); // change this based on the frontend route
-
 };
+
+module.exports = {
+  //registerUser,
+  loginUser,
+  googleCallback,
+};
+
+
+
