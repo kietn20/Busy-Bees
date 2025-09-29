@@ -48,7 +48,7 @@ const loginUser = async (req, res) => {
 
 // OAuth callback handler
 const googleCallback = (req, res) => {
-  res.redirect('/dashboard'); // change this based on the frontend route
+  res.redirect('http://localhost:3000/dashboard'); // change this based on the frontend route
 };
 
 module.exports = {

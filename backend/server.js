@@ -13,14 +13,29 @@ require("./config/db"); // MongoDB connection
 const authRoutes = require("./routes/auth.routes");
 const accountRoutes = require("./routes/account.routes");
 
-
-
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-app.use(cors());
+app.use(cors({
+  origin: "http://localhost:3000", // your frontend URL
+  credentials: true
+}));
 
 app.use(express.json());
+
+// Express session
+app.use(session({
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  cookie: { 
+    sameSite: "lax",
+    secure: false }
+}));
+
+// initialize passport middleware
+app.use(passport.initialize());
+app.use(passport.session());
 
 // --- Routes ---
 app.use("/api/account", accountRoutes);
@@ -33,18 +48,6 @@ app.get('/api/health', (req, res) => {
     message: 'API is healthy'
   });
 });
-
-
-// Express session
-app.use(session({
-  secret: process.env.SESSION_SECRET,
-  resave: false,
-  saveUninitialized: true
-}));
-
-app.use(passport.initialize());
-app.use(passport.session());
-
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

@@ -2,16 +2,17 @@ const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const User = require("../models/User.model");
 
-// Serialize user instance to session (best practice: only store minimal info)
-passport.serializeUser((user, done) => done(null, user));
-// Deserialize user instance from session
-passport.deserializeUser((obj, done) => done(null, obj));
+passport.serializeUser((user, done) => done(null, user.id)); // or user._id
+passport.deserializeUser(async (id, done) => {
+  const user = await User.findById(id);
+  done(null, user);
+});
 
 // Configure Passport to use Google OAuth 2.0 strategy
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID, // Store secrets in environment variables
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: "/auth/google/callback" // Use a secure callback URL
+    callbackURL: "/api/auth/google/callback" // Use a secure callback URL
   },
   // OAuth callback: runs after Google authenticates the user
   async (accessToken, refreshToken, profile, done) => {

@@ -4,6 +4,14 @@ const { allowJwtOrGoogle } = require('../middleware/auth.middleware');
 
 const router = express.Router();
 
+// GET /api/account - Get current authenticated user's info
+router.get('/', allowJwtOrGoogle, (req, res) => {
+  if (!req.user) {
+    return res.status(401).json({ message: 'Not authenticated' });
+  }
+  res.json({ user: req.user });
+});
+
 // DELETE /api/account - Delete only users authenticated by OAuth/session
 router.delete('/', allowJwtOrGoogle, async (req, res) => {
   try {

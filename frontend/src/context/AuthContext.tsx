@@ -45,6 +45,22 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     setIsLoading(false);
   }, []);
 
+  // if no JWT token and no user, fetch user info using session cookie from Google OAuth
+  useEffect(() => {
+    if (!token && !user) {
+      setIsLoading(true);
+      fetch("http://localhost:8080/api/account", { credentials: "include" })
+        .then((res) => res.ok ? res.json() : null)
+        .then((data) => {
+          if (data && data.user) {
+            setUser(data.user);
+          }
+          setIsLoading(false);
+        })
+        .catch(() => setIsLoading(false));
+    }
+  }, [token, user]);
+
   const login = (newToken: string, userData: User) => {
     setUser(userData);
     setToken(newToken);
