@@ -1,9 +1,10 @@
 import { Button } from "@/components/ui/button"
 import { deleteAccount } from "@/services/accountApi"
 
-
+// currently in dashboard, move it when possible
 const DeleteAccountButton = () => {
   const handleDelete = async () => {
+    // change the confirmation method later
     const confirmed = window.confirm(
       "Are you sure you want to delete your account? This action cannot be undone."
     );
