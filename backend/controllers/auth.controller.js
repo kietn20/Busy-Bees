@@ -1,6 +1,7 @@
-const User = require("../models/User.model");
-const { comparePassword, hashPassword } = require("../utils/password.util");
-const { generateToken } = require("../utils/jwt.util");
+const User = require('../models/User.model');
+const { comparePassword, hashPassword } = require('../utils/password.util'); 
+const { generateToken } = require('../utils/jwt.util');
+
 
 const loginUser = async (req, res) => {
   try {
@@ -45,7 +46,16 @@ const loginUser = async (req, res) => {
   }
 };
 
-module.exports = {
-  registerUser,
-  loginUser,
+// OAuth callback handler
+const googleCallback = (req, res) => {
+  res.redirect('http://localhost:3000/dashboard'); // change this based on the frontend route
 };
+
+module.exports = {
+  //registerUser,
+  loginUser,
+  googleCallback,
+};
+
+
+

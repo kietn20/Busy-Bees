@@ -17,7 +17,10 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
             return;
         }
 
-        if (!user || !token) {
+        //if (!user || !token) {
+        //    router.push('/login');
+        //}
+        if (!user) {
             router.push('/login');
         }
     }, [user, token, isLoading, router]);
