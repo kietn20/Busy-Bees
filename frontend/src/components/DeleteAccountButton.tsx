@@ -1,8 +1,11 @@
 import { Button } from "@/components/ui/button"
 import { deleteAccount } from "@/services/accountApi"
+import { useAuth } from "@/context/AuthContext"; // adjust import path as needed
 
 // currently in dashboard, move it when possible
 const DeleteAccountButton = () => {
+  const { token } = useAuth(); // token for JWT auth
+
   const handleDelete = async () => {
     // change the confirmation method later
     const confirmed = window.confirm(
@@ -10,7 +13,7 @@ const DeleteAccountButton = () => {
     );
     if (!confirmed) return;
     try {
-        await deleteAccount();
+        await deleteAccount(token);
         // Redirect to whatever page makes sense after account deletion
     } catch (error: any) {
         alert("Error deleting account: " + error.message);
