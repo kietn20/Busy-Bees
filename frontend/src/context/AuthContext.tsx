@@ -1,12 +1,7 @@
 "use client";
 
-import React, {
-  createContext,
-  useState,
-  useContext,
-  useEffect,
-  ReactNode,
-} from "react";
+import React, { createContext, useState, useContext, useEffect, ReactNode } from "react";
+import Loading from "@/components/Loading";
 
 // define the shape of the user object
 interface User {
@@ -55,9 +50,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           if (data && data.user) {
             setUser(data.user);
           }
-          setIsLoading(false);
         })
-        .catch(() => setIsLoading(false));
+        .catch(console.error)
+        .finally(() => setIsLoading(false));
     }
   }, [token, user]);
 
@@ -68,6 +63,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   };
 
   const value = { user, token, login, isLoading };
+
+  if (isLoading) {
+    return <Loading />;
+  }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
