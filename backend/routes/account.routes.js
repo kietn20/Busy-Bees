@@ -18,7 +18,7 @@ router.get('/', allowJwtOrGoogle, (req, res) => {
   res.json({ user: normalized });
 });
 
-// DELETE /api/account - Delete only users authenticated by OAuth/session
+// DELETE /api/account - Delete current authenticated user's account
 router.delete('/', allowJwtOrGoogle, async (req, res) => {
   try {
     const userId = req.user._id; // get userId from authenticated user
