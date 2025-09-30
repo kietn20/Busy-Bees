@@ -9,7 +9,13 @@ router.get('/', allowJwtOrGoogle, (req, res) => {
   if (!req.user) {
     return res.status(401).json({ message: 'Not authenticated' });
   }
-  res.json({ user: req.user });
+  // Normalize user shape for both JWT and OAuth flows
+  const normalized = {
+    id: req.user._id,
+    firstName: req.user.firstName || '',
+    email: req.user.email,
+  };
+  res.json({ user: normalized });
 });
 
 // DELETE /api/account - Delete only users authenticated by OAuth/session

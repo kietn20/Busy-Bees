@@ -3,6 +3,8 @@ const dotenv = require('dotenv');
 const cors = require('cors');
 const session = require("express-session");
 const passport = require("passport");
+const mongoose = require("mongoose");
+const User = require("./models/User.model");
 
 dotenv.config();
 
@@ -51,10 +53,20 @@ app.get('/api/health', (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
+  // Ensure indexes are in sync and drop legacy userId index if present
+  (async () => {
+    try {
+      await User.syncIndexes();
+      const indexes = await mongoose.connection.db
+        .collection("users")
+        .indexInformation({ full: true });
+      const legacyUserIdIndex = indexes.find && indexes.find(i => i.name === "userId_1");
+      if (legacyUserIdIndex) {
+        await mongoose.connection.db.collection("users").dropIndex("userId_1");
+        console.log("Dropped legacy index userId_1");
+      }
+    } catch (err) {
+      console.error("Index sync error:", err);
+    }
+  })();
 });
-
-
-
-
-
-
