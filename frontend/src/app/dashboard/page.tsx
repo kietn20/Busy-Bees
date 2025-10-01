@@ -1,5 +1,6 @@
 "use client";
 
+import DeleteAccountButton from "@/components/DeleteAccountButton";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { useAuth } from "@/context/AuthContext";
 
@@ -24,7 +25,12 @@ export default function Dashboard() {
             <p className="text-yellow-700">Email: {user?.email}</p>
             <p className="text-yellow-700">ID: {user?.id}</p>
           </div>
+          
+          {/* Change where this goes */}
+          <DeleteAccountButton />
+          
         </div>
+        
       </div>
     </ProtectedRoute>
   );

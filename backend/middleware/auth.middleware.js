@@ -38,4 +38,25 @@ const protect = async (req, res, next) => {
   }
 };
 
-module.exports = { protect };
+// Checks if user is authenticated via either JWT or Google OAuth/session
+const allowJwtOrGoogle = async (req, res, next) => {
+  // Try OAuth first
+  if (req.isAuthenticated && req.isAuthenticated()) {
+    return next();
+  }
+  // Try JWT
+  try {
+    await protect(req, res, (err) => {
+        if (err) throw err;
+        next();
+    });
+  } catch (error) {
+    console.error('JWT authentication error:', error);
+    return res.status(401).json({ message: 'Not authorized, token invalid' });
+  }
+};
+
+module.exports = { 
+    protect,
+    allowJwtOrGoogle
+};

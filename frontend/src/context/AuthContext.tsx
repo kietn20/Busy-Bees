@@ -1,12 +1,7 @@
 "use client";
 
-import React, {
-  createContext,
-  useState,
-  useContext,
-  useEffect,
-  ReactNode,
-} from "react";
+import React, { createContext, useState, useContext, useEffect, ReactNode } from "react";
+import Loading from "@/components/Loading";
 
 // define the shape of the user object
 interface User {
@@ -20,6 +15,7 @@ interface AuthContextType {
   user: User | null;
   token: string | null;
   login: (token: string, userData: User) => void;
+  logout: () => void;
   isLoading: boolean;
 }
 
@@ -45,13 +41,39 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     setIsLoading(false);
   }, []);
 
+  // if no JWT token and no user, fetch user info using session cookie from Google OAuth
+  useEffect(() => {
+    if (!token && !user) {
+      setIsLoading(true);
+      fetch("http://localhost:8080/api/account", { credentials: "include" })
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (data && data.user) {
+            setUser(data.user);
+          }
+        })
+        .catch(console.error)
+        .finally(() => setIsLoading(false));
+    }
+  }, [token, user]);
+
   const login = (newToken: string, userData: User) => {
     setUser(userData);
     setToken(newToken);
     localStorage.setItem("authToken", newToken);
   };
 
-  const value = { user, token, login, isLoading };
+  const logout = () => {
+    setUser(null);
+    setToken(null);
+    localStorage.removeItem("authToken");
+  };
+
+  const value = { user, token, login, logout, isLoading };
+
+  if (isLoading) {
+    return <Loading />;
+  }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
