@@ -1,3 +1,77 @@
+const bcrypt = require("bcrypt");
+const User = require("../models/User.model");
+
+exports.registerUser = async (req, res) => {
+      // Handle validation errors
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
+  
+      try {
+        const { userId, firstName, lastName, email, password } = req.body;
+  
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+          return res.status(400).json({ error: "User already exists" });
+        }
+  
+        const hashedPassword = await bcrypt.hash(password, 10);
+  
+        const newUser = new User({
+          userId,
+          firstName,
+          lastName,
+          email,
+          password: hashedPassword,
+          registeredCourses: [],
+        });
+  
+        await newUser.save();
+        res.status(201).json({ message: "User registered successfully" });
+      } catch (err) {
+        console.error("Error registering user", err);
+        res.status(500).json({ error: "Server error" });
+      }
+};
+
+exports.updateUser = async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    try {
+      const { firstName, lastName, email, password } = req.body;
+      const updates = {};
+
+      if (firstName) updates.firstName = firstName;
+      if (lastName) updates.lastName = lastName;
+      if (email) updates.email = email;
+      if (password) {
+        updates.password = await bcrypt.hash(password, 10);
+      }
+
+      const updatedUser = await User.findByIdAndUpdate(
+        req.params.id,
+        updates,
+        { new: true, runValidators: true }
+      ).select("-password");
+
+      if (!updatedUser) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      res.json({ message: "User updated successfully", user: updatedUser });
+    } catch (err) {
+      console.error("Error in /api/users/:id:", err);
+      res.status(500).json({ error: "Server error" });
+    }
+};
+
+exports.logoutUser = (req, res) => {
+  res.status(200).json({ message: "Logged out successfully. Please delete your token on client side." });
+};
 
 exports.getAccount = (req, res) => {
   if (!req.user) {
