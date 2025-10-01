@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import Loading from '@/components/Loading';
 
 interface ProtectedRouteProps {
     children: React.ReactNode;
@@ -26,9 +27,8 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
     }, [user, token, isLoading, router]);
 
     if (isLoading || !user) {
-        return <div>Loading...</div>; // add a spinning loading icon later???
+        return <Loading />;
     }
 
-    
     return <>{children}</>;
 }

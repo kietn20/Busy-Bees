@@ -1,12 +1,7 @@
 "use client";
 
-import React, {
-  createContext,
-  useState,
-  useContext,
-  useEffect,
-  ReactNode,
-} from "react";
+import React, { createContext, useState, useContext, useEffect, ReactNode } from "react";
+import Loading from "@/components/Loading";
 
 // define the shape of the user object
 interface User {
@@ -20,6 +15,7 @@ interface AuthContextType {
   user: User | null;
   token: string | null;
   login: (token: string, userData: User) => void;
+  logout: () => void;
   isLoading: boolean;
 }
 
@@ -50,14 +46,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     if (!token && !user) {
       setIsLoading(true);
       fetch("http://localhost:8080/api/account", { credentials: "include" })
-        .then((res) => res.ok ? res.json() : null)
+        .then((res) => (res.ok ? res.json() : null))
         .then((data) => {
           if (data && data.user) {
             setUser(data.user);
           }
-          setIsLoading(false);
         })
-        .catch(() => setIsLoading(false));
+        .catch(console.error)
+        .finally(() => setIsLoading(false));
     }
   }, [token, user]);
 
@@ -67,7 +63,17 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     localStorage.setItem("authToken", newToken);
   };
 
-  const value = { user, token, login, isLoading };
+  const logout = () => {
+    setUser(null);
+    setToken(null);
+    localStorage.removeItem("authToken");
+  };
+
+  const value = { user, token, login, logout, isLoading };
+
+  if (isLoading) {
+    return <Loading />;
+  }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
