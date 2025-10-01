@@ -1,5 +1,6 @@
 import api from "./config";
 
+
 // for delete account button
 export const deleteAccount = async (token) => {
   try {

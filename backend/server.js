@@ -12,7 +12,6 @@ require("./config/db"); // MongoDB connection
 // Route files
 const authRoutes = require("./routes/auth.routes");
 const accountRoutes = require("./routes/account.routes");
-const userRoutes = require("./routes/user");
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -39,7 +38,6 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // --- Routes ---
-app.use("/api", userRoutes);
 app.use("/api/account", accountRoutes);
 app.use('/api/auth', authRoutes);
 

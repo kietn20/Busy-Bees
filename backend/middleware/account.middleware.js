@@ -1,7 +1,7 @@
 const { body } = require("express-validator");
 
 exports.registerValidation = [
-  body("userId").notEmpty().withMessage("User ID is required"),
+  //body("userId").notEmpty().withMessage("User ID is required"),
   body("firstName")
     .notEmpty()
     .withMessage("First name is required")

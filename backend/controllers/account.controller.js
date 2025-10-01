@@ -1,5 +1,6 @@
 const bcrypt = require("bcrypt");
 const User = require("../models/User.model");
+const { validationResult } = require("express-validator");
 
 exports.registerUser = async (req, res) => {
       // Handle validation errors

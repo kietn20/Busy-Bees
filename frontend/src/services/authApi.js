@@ -2,7 +2,7 @@ import api from "./config";
 
 export const login = async ({ email, password }) => {
   try {
-    const response = await api.post("/auth/login", { email, password });
+    const response = await api.post("/account/login", { email, password });
 
     const { token, user } = response.data;
 
@@ -13,7 +13,7 @@ export const login = async ({ email, password }) => {
 };
 export const logout = async () => {
   try {
-    const res = await api.post("/auth/logout/", {}, { withCredentials: true });
+    const res = await api.post("/account/logout/", {}, { withCredentials: true });
     return res.data;
   } catch (error) {
     throw new Error("Logout failed. Please try again.");
@@ -22,7 +22,7 @@ export const logout = async () => {
 
 export const signup = async ({ firstName, lastName, email, password }) => {
   try {
-    const response = await api.post("/auth/register", {
+    const response = await api.post("/account/register", {
       firstName,
       lastName,
       email,
