@@ -1,149 +1,187 @@
 "use client";
-
-import { useState, ChangeEvent, FormEvent } from "react";
+import { useState, ChangeEvent, FormEvent, FocusEvent } from "react";
 import axios from "axios";
 
-interface EditAccountFormProps {
-  userId: string;
+interface FormErrors {
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  password?: string;
+  confirmPassword?: string;
 }
 
-export default function EditAccountForm({ userId }: EditAccountFormProps) {
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-  });
+export default function EditAccountForm() {
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [success, setSuccess] = useState("");
 
-  const [errors, setErrors] = useState<string[]>([]);
-  const [successMessage, setSuccessMessage] = useState<string>("");
+  // 🔹 Field-specific validation
+  const validateField = (name: string, value: string) => {
+    let error = "";
 
-  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    switch (name) {
+      case "firstName":
+        if (!value.trim()) error = "First name is required.";
+        break;
+      case "lastName":
+        if (!value.trim()) error = "Last name is required.";
+        break;
+      case "email":
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(value)) error = "Please enter a valid email address.";
+        break;
+      case "password":
+        if (value && value.length < 8)
+          error = "Password must be at least 8 characters.";
+        break;
+      case "confirmPassword":
+        if (value !== password) error = "Passwords do not match.";
+        break;
+    }
+
+    setErrors((prev) => ({ ...prev, [name]: error }));
   };
 
-  const validateForm = () => {
-    const newErrors: string[] = [];
+  // 🔹 Validate all fields before submit
+  const validateAll = (): boolean => {
+    validateField("firstName", firstName);
+    validateField("lastName", lastName);
+    validateField("email", email);
+    validateField("password", password);
+    validateField("confirmPassword", confirmPassword);
 
-    if (!formData.firstName) newErrors.push("First name is required.");
-    if (!formData.lastName) newErrors.push("Last name is required.");
-    if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.push("Email is invalid.");
+    return Object.values(errors).every((err) => !err);
+  };
 
-    const passwordRegex =
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>]).{8,}$/;
-
-    if (formData.password && !passwordRegex.test(formData.password)) {
-      newErrors.push(
-        "Password must be at least 8 characters, include uppercase, lowercase, number, and special character."
-      );
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      newErrors.push("Passwords do not match.");
-    }
-
-    return newErrors;
+  const handleBlur = (e: FocusEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    validateField(name, value);
   };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setErrors([]);
-    setSuccessMessage("");
 
-    const newErrors = validateForm();
-    if (newErrors.length > 0) {
-      setErrors(newErrors);
-      return;
-    }
+    if (!validateAll()) return;
 
     try {
-      await axios.put(`http://localhost:5000/api/users/${userId}`, {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
-        password: formData.password,
+      await axios.put("http://localhost:5000/api/users/update", {
+        firstName,
+        lastName,
+        email,
+        password,
       });
 
-      setSuccessMessage("Account updated successfully.");
-      setFormData({ firstName: "", lastName: "", email: "", password: "", confirmPassword: "" });
+      setSuccess("Account updated successfully!");
+      setErrors({});
     } catch (error: any) {
-      setErrors([error.response?.data?.message || "Update failed."]);
+      setSuccess("");
+      setErrors({ email: "Failed to update account. Please try again." });
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-md mx-auto p-4 border rounded">
-      <h2 className="text-xl mb-4 font-bold">Edit Account</h2>
+    <form
+      onSubmit={handleSubmit}
+      className="max-w-lg mx-auto p-6 bg-white rounded-lg shadow space-y-4"
+    >
+      <h2 className="text-2xl font-bold text-center">Edit Account</h2>
 
-      {errors.length > 0 && (
-        <div className="mb-4 text-red-600">
-          {errors.map((err, i) => (
-            <p key={i}>{err}</p>
-          ))}
-        </div>
-      )}
-
-      {successMessage && <p className="mb-4 text-green-600">{successMessage}</p>}
-
-      {/* First + Last name side by side */}
-      <div className="flex gap-4 mb-2">
-        <label className="flex-1">
-          First Name:
+      {/* First & Last Name */}
+      <div className="flex space-x-4">
+        <div className="flex-1">
+          <label className="block text-sm font-medium">First Name</label>
           <input
             type="text"
             name="firstName"
-            value={formData.firstName}
-            onChange={handleChange}
-            className="border p-2 w-full"
+            value={firstName}
+            onChange={(e: ChangeEvent<HTMLInputElement>) =>
+              setFirstName(e.target.value)
+            }
+            onBlur={handleBlur}
+            className="w-full border p-2 rounded"
           />
-        </label>
-
-        <label className="flex-1">
-          Last Name:
+          {errors.firstName && (
+            <p className="text-red-500 text-sm">{errors.firstName}</p>
+          )}
+        </div>
+        <div className="flex-1">
+          <label className="block text-sm font-medium">Last Name</label>
           <input
             type="text"
             name="lastName"
-            value={formData.lastName}
-            onChange={handleChange}
-            className="border p-2 w-full"
+            value={lastName}
+            onChange={(e: ChangeEvent<HTMLInputElement>) =>
+              setLastName(e.target.value)
+            }
+            onBlur={handleBlur}
+            className="w-full border p-2 rounded"
           />
-        </label>
+          {errors.lastName && (
+            <p className="text-red-500 text-sm">{errors.lastName}</p>
+          )}
+        </div>
       </div>
 
-      <label className="block mb-2">
-        Email:
+      {/* Email */}
+      <div>
+        <label className="block text-sm font-medium">Email</label>
         <input
           type="email"
           name="email"
-          value={formData.email}
-          onChange={handleChange}
-          className="border p-2 w-full"
+          value={email}
+          onChange={(e: ChangeEvent<HTMLInputElement>) =>
+            setEmail(e.target.value)
+          }
+          onBlur={handleBlur}
+          className="w-full border p-2 rounded"
         />
-      </label>
+        {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
+      </div>
 
-      <label className="block mb-2">
-        New Password:
+      {/* Password */}
+      <div>
+        <label className="block text-sm font-medium">New Password</label>
         <input
           type="password"
           name="password"
-          value={formData.password}
-          onChange={handleChange}
-          className="border p-2 w-full"
+          value={password}
+          onChange={(e: ChangeEvent<HTMLInputElement>) =>
+            setPassword(e.target.value)
+          }
+          onBlur={handleBlur}
+          className="w-full border p-2 rounded"
         />
-      </label>
+        {errors.password && (
+          <p className="text-red-500 text-sm">{errors.password}</p>
+        )}
+      </div>
 
-      <label className="block mb-4">
-        Confirm New Password:
+      {/* Confirm Password */}
+      <div>
+        <label className="block text-sm font-medium">Confirm New Password</label>
         <input
           type="password"
           name="confirmPassword"
-          value={formData.confirmPassword}
-          onChange={handleChange}
-          className="border p-2 w-full"
+          value={confirmPassword}
+          onChange={(e: ChangeEvent<HTMLInputElement>) =>
+            setConfirmPassword(e.target.value)
+          }
+          onBlur={handleBlur}
+          className="w-full border p-2 rounded"
         />
-      </label>
+        {errors.confirmPassword && (
+          <p className="text-red-500 text-sm">{errors.confirmPassword}</p>
+        )}
+      </div>
 
+      {/* Success message */}
+      {success && <p className="text-green-600 text-center">{success}</p>}
+
+      {/* Update button */}
       <div className="flex justify-center">
         <button
           type="submit"
@@ -155,4 +193,3 @@ export default function EditAccountForm({ userId }: EditAccountFormProps) {
     </form>
   );
 }
-
