@@ -1,10 +1,12 @@
 import { Button } from "@/components/ui/button"
 import { deleteAccount } from "@/services/accountApi"
 import { useAuth } from "@/context/AuthContext"; // adjust import path as needed
+import { useRouter } from "next/navigation";
 
 // currently in dashboard, move it when possible
 const DeleteAccountButton = () => {
-  const { token } = useAuth(); // token for JWT auth
+  const { token, logout } = useAuth(); // token for JWT auth and logout handler
+  const router = useRouter();
 
   const handleDelete = async () => {
     // change the confirmation method later
@@ -13,10 +15,11 @@ const DeleteAccountButton = () => {
     );
     if (!confirmed) return;
     try {
-        await deleteAccount(token);
-        // Redirect to whatever page makes sense after account deletion
+      await deleteAccount(token);
+      await logout();
+      router.push("/");
     } catch (error: any) {
-        alert("Error deleting account: " + error.message);
+      alert("Error deleting account: " + error.message);
     }
   };
 

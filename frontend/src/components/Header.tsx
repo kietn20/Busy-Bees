@@ -6,8 +6,14 @@ import { useRouter } from "next/navigation";
 import LogoutButton from "./logout-button";
 
 export default function Header() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const router = useRouter();
+
+
+  const handleLogout = () => {
+    logout();
+    router.push('/login');
+  };
 
   return (
     <header className="bg-white shadow-md">
