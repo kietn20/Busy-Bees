@@ -1,6 +1,8 @@
 const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
+const authRoutes = require('./routes/auth.routes');
+const userRoutes = require("./routes/user");
 const session = require("express-session");
 const passport = require("passport");
 
@@ -38,6 +40,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // --- Routes ---
+app.use("/api", userRoutes);
 app.use("/api/account", accountRoutes);
 app.use('/api/auth', authRoutes);
 
@@ -52,9 +55,3 @@ app.get('/api/health', (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
-
-
-
-
-
-
