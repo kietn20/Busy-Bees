@@ -13,7 +13,8 @@ export const login = async ({ email, password }) => {
 };
 export const logout = async () => {
   try {
-    await api.post("/auth/logout/", {});
+    const res = await api.post("/auth/logout/", {}, { withCredentials: true });
+    return res.data;
   } catch (error) {
     throw new Error("Logout failed. Please try again.");
   }
