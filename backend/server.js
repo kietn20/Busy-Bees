@@ -1,8 +1,6 @@
 const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
-const authRoutes = require('./routes/auth.routes');
-const userRoutes = require("./routes/user");
 const session = require("express-session");
 const passport = require("passport");
 
@@ -14,6 +12,7 @@ require("./config/db"); // MongoDB connection
 // Route files
 const authRoutes = require("./routes/auth.routes");
 const accountRoutes = require("./routes/account.routes");
+const userRoutes = require("./routes/user");
 
 const app = express();
 const PORT = process.env.PORT || 8080;
