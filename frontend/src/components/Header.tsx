@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
+import LogoutButton from "./logout-button";
 
 export default function Header() {
   const { user } = useAuth();
@@ -25,6 +26,7 @@ export default function Header() {
               >
                 Dashboard
               </Link>
+              <LogoutButton />
             </>
           ) : (
             // --- User is Logged Out ---

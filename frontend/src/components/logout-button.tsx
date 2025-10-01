@@ -16,12 +16,11 @@ const LogoutButton = () => {
 
     try {
       await logout();
+      authLogout();
+      router.push("/login");
     } catch (error) {
       console.error("Logout failed:", error);
     } finally {
-      // Always clear local state for security
-      authLogout();
-      router.push("/login");
       setIsLoading(false);
     }
   };
