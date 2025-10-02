@@ -26,6 +26,9 @@ passport.use(new GoogleStrategy({
       });
 
       if (!user) {
+        if (!profile.id || !profile.emails || !profile.emails[0].value) {
+          return done(new Error("Missing Google profile id or email"), null);
+        }
         // If user doesn't exist, create a new user record
         // For OAuth users, do NOT require or store a password
         user = new User({
