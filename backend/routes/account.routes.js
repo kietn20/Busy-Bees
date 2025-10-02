@@ -5,6 +5,7 @@ const accountMiddleware = require('../middleware/account.middleware');
 
 const router = express.Router();
 
+
 // GET /api/account - Get current authenticated user's info
 router.get(
   '/', 
