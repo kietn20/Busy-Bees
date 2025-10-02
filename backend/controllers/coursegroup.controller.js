@@ -1,3 +1,5 @@
+const CourseGroup = require("../models/CourseGroup.model");
+
 // creates a new course group
 exports.createCourseGroup = (req, res) => {
   res.status(201).json({ message: "Stub: createCourseGroup" });
