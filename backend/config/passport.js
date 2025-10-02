@@ -20,7 +20,7 @@ passport.use(new GoogleStrategy({
       // Check for existing user by Google ID or email
       let user = await User.findOne({
         $or: [
-          { userId: profile.id }, // Google unique user ID
+          { googleId: profile.id }, // Google unique user ID
           { email: profile.emails[0].value } // Primary email from Google profile
         ]
       });
@@ -32,7 +32,7 @@ passport.use(new GoogleStrategy({
         // If user doesn't exist, create a new user record
         // For OAuth users, do NOT require or store a password
         user = new User({
-          userId: profile.id,
+          googleId: profile.id,
           firstName: profile.name.givenName || "", // Use Google profile name
           lastName: profile.name.familyName || "",
           email: profile.emails[0].value, // Always use verified email

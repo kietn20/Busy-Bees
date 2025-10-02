@@ -3,37 +3,51 @@ const User = require("../models/User.model");
 const { validationResult } = require("express-validator");
 
 exports.registerUser = async (req, res) => {
-      // Handle validation errors
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-      }
-  
       try {
-        const { userId, firstName, lastName, email, password } = req.body;
-  
-        const existingUser = await User.findOne({ email });
-        if (existingUser) {
-          return res.status(400).json({ error: "User already exists" });
+          const { firstName, lastName, email, password } = req.body;
+      
+          // 1. validate input
+          if (!firstName || !lastName || !email || !password) {
+            return res.status(400).json({ message: 'All fields are required.' });
+          }
+      
+          // 2. check if user already exist
+          const existingUser = await User.findOne({ email });
+          if (existingUser) {
+            return res.status(400).json({ message: 'An account with this email already exists.' });
+          }
+      
+          // 3. hash the password
+          const hashedPassword = await hashPassword(password);
+      
+          // 4. Create the new user
+          const newUser = new User({
+            firstName,
+            lastName,
+            email,
+            password: hashedPassword,
+          });
+          
+          await newUser.save();
+          
+          // 5. generate a JWT and send response
+          const token = generateToken(newUser._id);
+          
+          newUser.password = undefined;
+      
+          res.status(201).json({
+            token,
+            user: {
+              id: newUser._id,
+              firstName: newUser.firstName,
+              email: newUser.email,
+            }
+          });
+      
+        } catch (error) {
+          console.error('Registration error:', error);
+          res.status(500).json({ message: 'Internal server error.' });
         }
-  
-        const hashedPassword = await bcrypt.hash(password, 10);
-  
-        const newUser = new User({
-          userId,
-          firstName,
-          lastName,
-          email,
-          password: hashedPassword,
-          registeredCourses: [],
-        });
-  
-        await newUser.save();
-        res.status(201).json({ message: "User registered successfully" });
-      } catch (err) {
-        console.error("Error registering user", err);
-        res.status(500).json({ error: "Server error" });
-      }
 };
 
 exports.updateUser = async (req, res) => {
@@ -71,14 +85,32 @@ exports.updateUser = async (req, res) => {
 };
 
 exports.logoutUser = (req, res) => {
-  res.status(200).json({ message: "Logged out successfully. Please delete your token on client side." });
+    if (req.logout) {
+    req.logout(function () {
+      req.session?.destroy(() => {
+        res.clearCookie('connect.sid');
+        return res.status(200).json({ message: 'Logged out' });
+      });
+    });
+  } else {
+    req.session?.destroy(() => {
+      res.clearCookie('connect.sid');
+      return res.status(200).json({ message: 'Logged out' });
+    });
+  }
 };
 
 exports.getAccount = (req, res) => {
   if (!req.user) {
     return res.status(401).json({ message: 'Not authenticated' });
   }
-  res.json({ user: req.user });
+  // Normalize user shape for both JWT and OAuth flows
+  const normalized = {
+    id: req.user._id,
+    firstName: req.user.firstName || '',
+    email: req.user.email,
+  };
+  res.json({ user: normalized });
 };
 
 exports.deleteAccount = async (req, res) => {

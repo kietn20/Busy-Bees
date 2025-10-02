@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema(
   {
-    userId: {
+    googleId: {
       type: String,
       unique: true,
       required: false,
@@ -53,4 +53,4 @@ const userSchema = new mongoose.Schema(
   }
 );
 
-module.exports = mongoose.models.User || mongoose.model("User", userSchema);
+module.exports = mongoose.model("User", userSchema);

@@ -46,16 +46,17 @@ const loginUser = async (req, res) => {
   }
 };
 
+const getCurrentUser = async (req, res) => {
+  res.status(200).json(req.user); // we cna just send it back since the user obj is already attached to the req due to our protect middleware
+};
+
 // OAuth callback handler
 const googleCallback = (req, res) => {
   res.redirect('http://localhost:3000/dashboard'); // change this based on the frontend route
 };
 
 module.exports = {
-  //registerUser,
+  getCurrentUser,
   loginUser,
   googleCallback,
 };
-
-
-
