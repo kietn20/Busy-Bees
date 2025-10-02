@@ -1,7 +1,6 @@
 const User = require('../models/User.model');
-const { comparePassword, hashPassword } = require('../utils/password.util'); 
+const { comparePassword } = require('../utils/password.util'); 
 const { generateToken } = require('../utils/jwt.util');
-
 
 const loginUser = async (req, res) => {
   try {

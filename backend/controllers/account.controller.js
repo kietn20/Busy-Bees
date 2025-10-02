@@ -1,6 +1,8 @@
 const bcrypt = require("bcrypt");
 const User = require("../models/User.model");
 const { validationResult } = require("express-validator");
+const { hashPassword } = require('../utils/password.util');
+const { generateToken } = require('../utils/jwt.util');
 
 exports.registerUser = async (req, res) => {
       try {

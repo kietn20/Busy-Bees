@@ -12,13 +12,6 @@ router.get(
   accountController.getAccount
 );
 
-// POST /api/account/register - Register a new user
-router.post(
-  "/register",
-  accountMiddleware.registerValidation,
-  accountController.registerUser
-);
-
 // PUT /api/users/:id - Update user details
 router.put(
   "/users/:id",
