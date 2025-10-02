@@ -6,7 +6,6 @@ const accountController = require('../controllers/account.controller');
 
 const router = express.Router();
 
-
 // @route   GET /api/auth/me
 // @desc    Get the current logged-in user's data
 // @access  Private
