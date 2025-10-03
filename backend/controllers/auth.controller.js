@@ -99,50 +99,6 @@ const getCurrentUser = async (req, res) => {
   res.status(200).json(req.user); // we cna just send it back since the user obj is already attached to the req due to our protect middleware
 };
 
-// Update user profile
-const updateUser = async (req, res) => {
-  try {
-    // Handle express-validator validation errors
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-
-    const { firstName, lastName, email, password } = req.body;
-    const updates = {};
-
-    if (firstName) updates.firstName = firstName;
-    if (lastName) updates.lastName = lastName;
-    if (email) updates.email = email;
-    if (password) {
-      updates.password = await hashPassword(password);
-    }
-
-    const updatedUser = await User.findByIdAndUpdate(
-      req.user._id,
-      updates,
-      { new: true, runValidators: true }
-    ).select("-password");
-
-    if (!updatedUser) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-
-    res.json({ 
-      message: 'User updated successfully', 
-      user: {
-        id: updatedUser._id,
-        firstName: updatedUser.firstName,
-        lastName: updatedUser.lastName,
-        email: updatedUser.email
-      }
-    });
-  } catch (error) {
-    console.error('Update user error:', error);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-};
-
 // OAuth callback handler
 const googleCallback = (req, res) => {
   res.redirect('http://localhost:3000/dashboard'); // change this based on the frontend route
@@ -152,6 +108,5 @@ module.exports = {
   registerUser,
   getCurrentUser,
   loginUser,
-  updateUser,
   googleCallback,
 };
