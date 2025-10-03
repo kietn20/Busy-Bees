@@ -1,5 +1,5 @@
 const User = require('../models/User.model');
-const { comparePassword } = require('../utils/password.util'); 
+const { comparePassword, hashPassword } = require('../utils/password.util'); 
 const { generateToken } = require('../utils/jwt.util');
 const { validationResult } = require('express-validator');
 
@@ -149,6 +149,7 @@ const googleCallback = (req, res) => {
 };
 
 module.exports = {
+  registerUser,
   getCurrentUser,
   loginUser,
   updateUser,

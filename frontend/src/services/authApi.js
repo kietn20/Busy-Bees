@@ -22,7 +22,7 @@ export const logout = async () => {
 
 export const signup = async ({ firstName, lastName, email, password }) => {
   try {
-    const response = await api.post("/account/register", {
+    const response = await api.post("/auth/register", {
       firstName,
       lastName,
       email,
