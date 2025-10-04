@@ -1,6 +1,7 @@
 // purpose of this file is to serve as the controller for course group related actions
 const CourseGroup = require('../models/CourseGroup.model');
 const Invite = require('../models/Invite.model');
+const User = require('../models/User.model');
 const { generateInviteCode } = require('../utils/invite.util');
 
 // @desc    Generate or retrieve an invite code for a group
@@ -56,6 +57,75 @@ const generateInvite = async (req, res) => {
   }
 };
 
+// @desc    Join a course group using an invite code
+// @route   POST /api/groups/join
+// @access  Private
+const joinGroup = async (req, res) => {
+  try {
+    const { inviteCode } = req.body;
+    const userId = req.user._id;
+
+    // 1. validate input
+    if (!inviteCode) {
+      return res.status(400).json({ message: 'Invite code is required.' });
+    }
+
+    // 2. validate the invite code
+    const invite = await Invite.findOne({
+      code: inviteCode,
+      expiresAt: { $gt: new Date() } // ensure it's not expired
+    });
+
+    if (!invite) {
+      return res.status(400).json({ message: 'Invalid or expired invite code.' });
+    }
+
+    // 3. find the associated group
+    const group = await CourseGroup.findById(invite.courseGroup);
+    if (!group) {
+      // clean up the invalid invite
+      await Invite.findByIdAndDelete(invite._id);
+      return res.status(404).json({ message: 'The group for this invite no longer exists.' });
+    }
+
+    // 4. check if user is already the owner or a member
+    if (group.ownerId.equals(userId)) {
+      return res.status(409).json({ message: 'You are the owner of this group.' });
+    }
+    
+    // .some() checks if at least one element in the array passes the test
+    const isAlreadyMember = group.members.some(memberId => memberId.equals(userId));
+    if (isAlreadyMember) {
+      return res.status(409).json({ message: 'You are already a member of this group.' });
+    }
+
+    // 5. add user to the group's members list
+    group.members.push(userId);
+    await group.save();
+
+
+
+    // 6. add the group to the user's registeredCourses (NOT IMPLEMENTED YET BECAUSE USER MODEL DOESN'T HAVE IT)
+    // const courseInfo = { courseId: group._id, courseName: group.groupName };
+    // await User.findByIdAndUpdate(userId, { $addToSet: { registeredCourses: courseInfo } });
+
+
+
+    res.status(200).json({
+      message: 'Successfully joined the group.',
+      group: {
+        id: group._id,
+        groupName: group.groupName,
+      }
+    });
+
+  } catch (error) {
+    console.error('Error joining group:', error);
+    res.status(500).json({ message: 'Internal server error.' });
+  }
+};
+
 module.exports = {
   generateInvite,
+  joinGroup,
 };
