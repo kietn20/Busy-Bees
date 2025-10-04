@@ -20,7 +20,7 @@ export default function GroupPage() {
 
   const handleGenerateInvite = async () => {
     setIsModalOpen(true);
-    if (inviteCode) return;
+    if (inviteCode) return; // dont fetch if we already have a code
 
     setIsLoading(true);
     setError(null);
