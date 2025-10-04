@@ -25,14 +25,9 @@ const courseGroupSchema = new mongoose.Schema(
             ref: "User"
         }
     ],
-    // users invited will be stored here
-    // users will be removed if they decline invite
-    invites: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "User"
-        }
-    ]
+ },
+ {
+    timestamps: true
  }
 
 )

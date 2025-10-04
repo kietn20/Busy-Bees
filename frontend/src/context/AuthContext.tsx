@@ -10,7 +10,7 @@ import React, {
 import { logout as apiLogout } from "@/services/authApi";
 
 // define the shape of the user object
-interface User {
+export interface User {
     id: string;
     firstName: string;
     email: string;
