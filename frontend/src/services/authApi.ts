@@ -1,5 +1,6 @@
 import api from "./config";
-import { User } from "@/context/AuthContext"; // Assuming User type is exported from AuthContext
+import { User } from "@/context/AuthContext";
+import { AxiosError } from "axios";
 
 // Define the shape of the function arguments for type safety
 interface LoginCredentials {
@@ -24,8 +25,7 @@ export const login = async ({ email, password }: LoginCredentials): Promise<Auth
   return response.data;
 };
 
-export const logout = async (): Promise<any> => {
-  // Assuming the logout response data is not critical
+export const logout = async (): Promise<void> => {
   const res = await api.post("/account/logout");
   return res.data;
 };
@@ -34,22 +34,10 @@ export const signup = async (data: SignupData): Promise<AuthResponse> => {
   try {
     const response = await api.post<AuthResponse>("/auth/register", data);
     return response.data;
-  } catch (error: any) {
-    console.error('Signup API Error:', error.response?.data || error.message);
-    
-    // Provide more specific error messages
-    if (error.response?.data?.message) {
-      throw new Error(error.response.data.message);
-    } else if (error.response?.data?.errors && Array.isArray(error.response.data.errors)) {
-      const validationErrors = error.response.data.errors.map(err => err.msg).join(', ');
-      throw new Error(`Validation Error: ${validationErrors}`);
-    } else if (error.response?.status === 400) {
-      throw new Error("Invalid signup data. Please check your inputs.");
-    } else if (error.response?.status === 409) {
-      throw new Error("An account with this email already exists.");
-    } else {
-      throw new Error("Signup failed. Please try again.");
-    }
+  } catch (error) {
+    const axiosError = error as AxiosError<{ message: string }>;
+    const message = axiosError.response?.data?.message || "Signup failed. Please try again.";
+    throw new Error(message);
   }
 };
 

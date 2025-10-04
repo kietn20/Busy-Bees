@@ -6,6 +6,7 @@ import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { joinGroup } from '@/services/groupApi';
+import { AxiosError } from 'axios'; 
 
 export default function JoinGroupPage() {
   const [inviteCode, setInviteCode] = useState('');
@@ -29,8 +30,9 @@ export default function JoinGroupPage() {
 
       // WE SHOULD ADD A TOAST NOTIFICATION HERE TO CONFIRM SUCCESSFUL JOIN HERE
 
-    } catch (err: any) {
-      const message = err.response?.data?.message || 'Failed to join group. Please check the code and try again.';
+    } catch (error) {
+      const axiosError = error as AxiosError<{ message: string }>;
+      const message = axiosError.response?.data?.message || 'Failed to join group. Please check the code and try again.';
       setError(message);
     } finally {
       setIsLoading(false);
