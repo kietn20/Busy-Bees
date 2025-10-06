@@ -16,13 +16,13 @@ export default function HomePage() {
             id: "1",
             name: "CECS 329: Computer Theory",
             link: "https://example.com/course1",
-            image: "",
+            image: "/beige.jpg",
           },
           {
             id: "2",
             name: "Course 2",
             link: "https://example.com/course2",
-            image: "",
+            image: "/beige.jpg",
           },
         ]}
       />

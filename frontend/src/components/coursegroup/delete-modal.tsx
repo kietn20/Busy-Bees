@@ -9,17 +9,14 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
 
-const DeleteModal = ({
-  isOpen,
-  onClose,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-}) => {
+const DeleteModal = () => {
   return (
-    <AlertDialog open={isOpen} onOpenChange={onClose}>
-      <AlertDialogTrigger>Delete</AlertDialogTrigger>
+    <AlertDialog>
+      <AlertDialogTrigger>
+        <Button variant="destructive">Delete</Button>
+      </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
@@ -30,7 +27,7 @@ const DeleteModal = ({
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction>Delete</AlertDialogAction>
+          <AlertDialogAction className="bg-red-500">Delete</AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
