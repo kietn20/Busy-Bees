@@ -17,18 +17,35 @@ export default function GroupSettings() {
     memberCount: 8,
     inviteCode: "CECS329-2024",
   };
-
   // State for editable fields
   const [name, setName] = useState(group.name);
   const [description, setDescription] = useState(group.description);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Check if there are unsaved changes
   const hasChanges = name !== group.name || description !== group.description;
 
-  // Handle save changes
-  const handleSave = () => {
-    // TODO: Implement API call to save changes
-    console.log("Saving changes:", { name, description });
+  // Handle save changes - ready for backend integration
+  const handleSave = async () => {
+    setIsSaving(true);
+
+    try {
+      // Prepare data for API call
+      const updateData = {
+        name: name.trim(),
+        description: description.trim(),
+      };
+
+      // TODO: Replace with actual API call
+
+      // Update local group data (in real app, this would come from API response)
+      group.name = name.trim();
+      group.description = description.trim();
+    } catch (error) {
+      console.error("Error saving group:", error);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // Handle revert changes
@@ -38,57 +55,68 @@ export default function GroupSettings() {
   };
 
   return (
-    <div className="container mx-auto px-6 py-8 max-w-4xl">
+    <ProtectedRoute>
+      <div className="container mx-auto px-6 py-8 max-w-4xl">
       <h1 className="text-xl font-bold text-gray-800 mb-4">Settings</h1>
 
       <div className="p-6">
         <h2 className="text-lg font-semibold mb-6 text-gray-800 border-b pb-2">
           Profile
         </h2>
-        <div className="flex flex-col">
-          <div className="space-y-2 mx-4 my-2 py-2">
-            <label
-              htmlFor="name"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Name
-            </label>
-            <Input
-              id="name"
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="bg-white border-gray-300 focus:border-blue-500"
-            />
+        <form onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
+          <div className="flex flex-col">
+            <div className="space-y-2 mx-4 my-2 py-2">
+              <label
+                htmlFor="name"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Name
+              </label>
+              <Input
+                id="name"
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="bg-white border-gray-300 focus:border-blue-500"
+                required
+              />
+            </div>
+            <div className="space-y-2 mx-4 my-2 py-2">
+              <label
+                htmlFor="description"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Description
+              </label>
+              <Input
+                id="description"
+                type="text"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="bg-white border-gray-300 focus:border-blue-500"
+                required
+              />
+            </div>
           </div>
-          <div className="space-y-2 mx-4 my-2 py-2">
-            <label
-              htmlFor="description"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Description
-            </label>
-            <Input
-              id="description"
-              type="text"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="bg-white border-gray-300 focus:border-blue-500"
-            />
-          </div>
-        </div>
 
-        {/* Save/Revert buttons - only show when there are changes */}
-        {hasChanges && (
-          <div className="flex justify-end gap-3 mx-4 mt-4">
-            <Button variant="outline" onClick={handleRevert} className="px-4">
-              Revert
-            </Button>
-            <Button onClick={handleSave} className="px-4">
-              Save Changes
-            </Button>
-          </div>
-        )}
+          {/* Save/Revert buttons - only show when there are changes */}
+          {hasChanges && (
+            <div className="flex justify-end gap-3 mx-4 mt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleRevert}
+                className="px-4"
+                disabled={isSaving}
+              >
+                Revert
+              </Button>
+              <Button type="submit" className="px-4" disabled={isSaving}>
+                {isSaving ? "Saving..." : "Save Changes"}
+              </Button>
+            </div>
+          )}
+        </form>
       </div>
 
       <div className="p-6">
@@ -130,6 +158,7 @@ export default function GroupSettings() {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </ProtectedRoute>
   );
 }
