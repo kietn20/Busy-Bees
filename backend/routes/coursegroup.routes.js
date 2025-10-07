@@ -9,6 +9,9 @@ const router = express.Router();
 // all routes in this file will be protected, so we can use the middleware at the top level
 router.use(protect);
 
+//route to create a group
+router.post("/", createCourseGroup);
+
 // route to join a group
 router.post('/join', joinGroup);
 

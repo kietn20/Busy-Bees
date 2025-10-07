@@ -4,6 +4,36 @@ const Invite = require('../models/Invite.model');
 const User = require('../models/User.model');
 const { generateInviteCode } = require('../utils/invite.util');
 
+// creates a new course group
+exports.createCourseGroup = async (req, res) => {
+   try {
+    const { groupName, description } = req.body;
+
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({ message: "User must be logged in to create a group." });
+    }
+
+    if (!groupName || groupName.trim() === "") {
+      return res.status(400).json({ message: "Group name is required." });
+    }
+
+    const newGroup = await CourseGroup.create({
+      groupName,
+      description,
+      ownerId: req.user._id,
+      members: [req.user._id],
+    });
+
+    res.status(201).json({
+      message: "Course group created successfully.",
+      group: newGroup,
+    });
+  } catch (error) {
+    console.error("Error creating course group:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
 // @desc    Generate or retrieve an invite code for a group
 // @route   GET /api/groups/:groupId/invite
 // @access  Private (Group Owner)
