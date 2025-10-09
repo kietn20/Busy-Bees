@@ -1,7 +1,7 @@
 // Purpose: Defines routes for all course group related actions
 
 const express = require('express');
-const { generateInvite, joinGroup } = require('../controllers/coursegroup.controller'); 
+const { generateInvite, joinGroup, createCourseGroup } = require('../controllers/coursegroup.controller'); 
 const { protect } = require('../middleware/auth.middleware');
 
 const router = express.Router();
