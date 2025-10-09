@@ -5,7 +5,7 @@ const User = require('../models/User.model');
 const { generateInviteCode } = require('../utils/invite.util');
 
 // creates a new course group
-exports.createCourseGroup = async (req, res) => {
+const createCourseGroup = async (req, res) => {
    try {
     const { groupName, description } = req.body;
 
