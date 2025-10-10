@@ -223,4 +223,5 @@ exports.validateInviteCode = (req, res) => {
 module.exports = {
   generateInvite,
   joinGroup,
+   createCourseGroup,
 };
