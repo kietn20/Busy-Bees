@@ -12,6 +12,9 @@ router.use(protect);
 //route to create a group
 router.post("/", courseGroupController.createCourseGroup);
 
+// Get group details by ID
+router.get("/:id", courseGroupController.getCourseGroupById);
+
 // route to join a group
 router.post('/join', courseGroupController.joinGroup);
 
