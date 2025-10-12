@@ -4,9 +4,11 @@ const Invite = require('../models/Invite.model');
 const User = require('../models/User.model');
 const { generateInviteCode } = require('../utils/invite.util');
 
-// creates a new course group
+// @desc    Create a new course group
+// @route   POST /api/groups
+// @access  Private
 const createCourseGroup = async (req, res) => {
-   try {
+  try {
     const { groupName, description } = req.body;
 
     if (!req.user || !req.user._id) {
@@ -30,6 +32,29 @@ const createCourseGroup = async (req, res) => {
     });
   } catch (error) {
     console.error("Error creating course group:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+// @desc    Get a course group by ID
+// @route   GET /api/groups/:id
+// @access  Private
+const getCourseGroupById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const group = await CourseGroup.findById(id).populate("members", "firstName lastName email");
+
+    if (!group) {
+      return res.status(404).json({ message: "Group not found" });
+    }
+
+    res.status(200).json({
+      message: "Group details fetched successfully",
+      group,
+    });
+  } catch (error) {
+    console.error("Error fetching group details:", error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
@@ -157,23 +182,9 @@ const joinGroup = async (req, res) => {
 
 
 
-
-
-
-
-// creates a new course group
-exports.createCourseGroup = (req, res) => {
-  res.status(201).json({ message: "Stub: createCourseGroup" });
-};
-
 // gets all course groups
 exports.getCourseGroups = (req, res) => {
   res.status(200).json({ message: "Stub: getCourseGroups" });
-};
-
-// gets a specific course group by ID
-exports.getCourseGroupById = (req, res) => {
-  res.status(200).json({ message: "Stub: getCourseGroupById" });
 };
 
 // updates a specific course group by ID (owners only)
@@ -217,11 +228,9 @@ exports.validateInviteCode = (req, res) => {
 };
 
 
-
-
-
 module.exports = {
   generateInvite,
   joinGroup,
-   createCourseGroup,
+  createCourseGroup,
+  getCourseGroupById
 };
