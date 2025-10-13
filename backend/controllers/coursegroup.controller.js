@@ -180,21 +180,82 @@ const joinGroup = async (req, res) => {
   }
 };
 
+// @desc    Update course group details (owner only)
+// @route   PUT /api/groups/:id
+// @access  Private
+const updateCourseGroup = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { groupName, description } = req.body;
+    const userId = req.user._id;
+
+    // find group
+    const group = await CourseGroup.findById(id);
+    if (!group) {
+      return res.status(404).json({ message: "Group not found" });
+    }
+
+    // authorize owner
+    if (!group.ownerId.equals(userId)) {
+      return res.status(403).json({ message: "Only the owner can edit this group" });
+    }
+
+    // update values (only if provided)
+    if (groupName) group.groupName = groupName.trim();
+    if (description) group.description = description.trim();
+
+    await group.save();
+
+    res.status(200).json({
+      message: "Course group updated successfully",
+      group,
+    });
+  } catch (error) {
+    console.error("Error updating course group:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+// @desc    Delete a course group (owner only)
+// @route   DELETE /api/groups/:groupId
+// @access  Private
+const deleteCourseGroup = async (req, res) => {
+  try {
+    const { groupId } = req.params;
+
+    // Ensure user is logged in
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({ message: "Unauthorized: Please log in." });
+    }
+
+    // Find the group
+    const group = await CourseGroup.findById(groupId);
+    if (!group) {
+      return res.status(404).json({ message: "Group not found." });
+    }
+
+    // Ensure only the owner can delete
+    if (!group.ownerId.equals(req.user._id)) {
+      return res.status(403).json({ message: "You are not authorized to delete this group." });
+    }
+
+    // Delete all related invites first
+    await Invite.deleteMany({ courseGroup: groupId });
+
+    // Delete the group
+    await CourseGroup.findByIdAndDelete(groupId);
+
+    res.status(200).json({ message: "Course group and related invites deleted successfully." });
+  } catch (error) {
+    console.error("Error deleting course group:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
 
 
 // gets all course groups
 exports.getCourseGroups = (req, res) => {
   res.status(200).json({ message: "Stub: getCourseGroups" });
-};
-
-// updates a specific course group by ID (owners only)
-exports.updateCourseGroup = (req, res) => {
-  res.status(200).json({ message: "Stub: updateCourseGroup" });
-};
-
-// deletes a specific course group by ID (owners only)
-exports.deleteCourseGroup = (req, res) => {
-  res.status(200).json({ message: "Stub: deleteCourseGroup" });
 };
 
 // join group via invite
@@ -232,5 +293,7 @@ module.exports = {
   generateInvite,
   joinGroup,
   createCourseGroup,
-  getCourseGroupById
+  getCourseGroupById,
+  updateCourseGroup,
+  deleteCourseGroup
 };
