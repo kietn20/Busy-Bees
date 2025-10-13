@@ -252,6 +252,49 @@ const deleteCourseGroup = async (req, res) => {
   }
 };
 
+// @desc    Leave a course group
+// @route   POST /api/groups/:groupId/leave
+// @access  Private
+const leaveGroup = async (req, res) => {
+  try {
+    const { groupId } = req.params;
+    const userId = req.user._id;
+
+    // Find the group
+    const group = await CourseGroup.findById(groupId);
+    if (!group) {
+      return res.status(404).json({ message: "Group not found." });
+    }
+
+    // Check if user is the owner
+    if (group.ownerId.equals(userId)) {
+      return res.status(403).json({
+        message: "Group owners cannot leave their own group. Transfer ownership first.",
+      });
+    }
+
+    // Check if user is a member
+    const isMember = group.members.some((id) => id.equals(userId));
+    if (!isMember) {
+      return res.status(400).json({ message: "You are not a member of this group." });
+    }
+
+    // Remove user from members list
+    group.members = group.members.filter((id) => !id.equals(userId));
+    await group.save();
+
+    await User.findByIdAndUpdate(userId, { $pull: { registeredCourses: { courseId: groupId } } });
+
+    res.status(200).json({
+      message: "Successfully left the group.",
+      groupId: group._id,
+    });
+  } catch (error) {
+    console.error("Error leaving group:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
 
 // gets all course groups
 exports.getCourseGroups = (req, res) => {
@@ -295,5 +338,6 @@ module.exports = {
   createCourseGroup,
   getCourseGroupById,
   updateCourseGroup,
-  deleteCourseGroup
+  deleteCourseGroup,
+  leaveGroup
 };

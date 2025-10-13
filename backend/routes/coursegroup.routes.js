@@ -24,6 +24,9 @@ router.delete("/:groupId", courseGroupController.deleteCourseGroup);
 // route to join a group
 router.post('/join', courseGroupController.joinGroup);
 
+// Leave group (requires authentication)
+router.post("/:groupId/leave", courseGroupController.leaveGroup);
+
 // route to generate an invite code for a specific group
 router.get('/:groupId/invite', courseGroupController.generateInvite);
 
