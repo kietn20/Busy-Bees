@@ -12,8 +12,14 @@ router.use(protect);
 //route to create a group
 router.post("/", courseGroupController.createCourseGroup);
 
-// Get group details by ID
+// route to get group details by ID
 router.get("/:id", courseGroupController.getCourseGroupById);
+
+// route to update a group's details
+router.put("/:id", courseGroupController.updateCourseGroup);
+
+// Delete a course group
+router.delete("/:groupId", courseGroupController.deleteCourseGroup);
 
 // route to join a group
 router.post('/join', courseGroupController.joinGroup);
