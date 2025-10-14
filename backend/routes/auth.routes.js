@@ -1,8 +1,9 @@
 const express = require('express');
+const { loginUser, getCurrentUser, registerUser } = require('../controllers/auth.controller');
 const { protect } = require('../middleware/auth.middleware');
+const { registerValidation } = require('../middleware/account.middleware');
 const passport = require('passport');
 const authController = require('../controllers/auth.controller');
-const accountController = require('../controllers/account.controller');
 
 const router = express.Router();
 
@@ -19,8 +20,9 @@ router.post('/login', authController.loginUser);
 // @route   POST /api/auth/register
 // @desc    Register a new user
 // @access  public
-// test accountMiddleware.registerValidation in this route later
-router.post('/register', accountController.registerUser);
+router.post('/register', registerValidation, registerUser);
+
+
 
 // Initiate Google OAuth login
 router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));

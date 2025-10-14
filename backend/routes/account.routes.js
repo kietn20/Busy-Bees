@@ -13,9 +13,10 @@ router.get(
   accountController.getAccount
 );
 
-// PUT /api/users/:id - Update user details
+// PUT /api/account - Update current user's profile
 router.put(
-  "/users/:id",
+  "/",
+  allowJwtOrGoogle,
   accountMiddleware.updateValidation,
   accountController.updateUser
 );

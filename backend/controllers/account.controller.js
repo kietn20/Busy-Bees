@@ -1,56 +1,6 @@
-const bcrypt = require("bcrypt");
 const User = require("../models/User.model");
 const { validationResult } = require("express-validator");
 const { hashPassword } = require('../utils/password.util');
-const { generateToken } = require('../utils/jwt.util');
-
-exports.registerUser = async (req, res) => {
-      try {
-          const { firstName, lastName, email, password } = req.body;
-      
-          // 1. validate input
-          if (!firstName || !lastName || !email || !password) {
-            return res.status(400).json({ message: 'All fields are required.' });
-          }
-      
-          // 2. check if user already exist
-          const existingUser = await User.findOne({ email });
-          if (existingUser) {
-            return res.status(400).json({ message: 'An account with this email already exists.' });
-          }
-      
-          // 3. hash the password
-          const hashedPassword = await hashPassword(password);
-      
-          // 4. Create the new user
-          const newUser = new User({
-            firstName,
-            lastName,
-            email,
-            password: hashedPassword,
-          });
-          
-          await newUser.save();
-          
-          // 5. generate a JWT and send response
-          const token = generateToken(newUser._id);
-          
-          newUser.password = undefined;
-      
-          res.status(201).json({
-            token,
-            user: {
-              id: newUser._id,
-              firstName: newUser.firstName,
-              email: newUser.email,
-            }
-          });
-      
-        } catch (error) {
-          console.error('Registration error:', error);
-          res.status(500).json({ message: 'Internal server error.' });
-        }
-};
 
 exports.updateUser = async (req, res) => {
     const errors = validationResult(req);
@@ -66,23 +16,31 @@ exports.updateUser = async (req, res) => {
       if (lastName) updates.lastName = lastName;
       if (email) updates.email = email;
       if (password) {
-        updates.password = await bcrypt.hash(password, 10);
+        updates.password = await hashPassword(password);
       }
 
       const updatedUser = await User.findByIdAndUpdate(
-        req.params.id,
+        req.user._id,
         updates,
         { new: true, runValidators: true }
       ).select("-password");
 
       if (!updatedUser) {
-        return res.status(404).json({ error: "User not found" });
+        return res.status(404).json({ message: "User not found" });
       }
 
-      res.json({ message: "User updated successfully", user: updatedUser });
+      res.json({ 
+        message: "User updated successfully", 
+        user: {
+          id: updatedUser._id,
+          firstName: updatedUser.firstName,
+          lastName: updatedUser.lastName,
+          email: updatedUser.email
+        }
+      });
     } catch (err) {
-      console.error("Error in /api/users/:id:", err);
-      res.status(500).json({ error: "Server error" });
+      console.error("Error updating user:", err);
+      res.status(500).json({ message: "Internal server error" });
     }
 };
 

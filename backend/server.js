@@ -14,6 +14,7 @@ require("./config/db"); // MongoDB connection
 // Route files
 const authRoutes = require("./routes/auth.routes");
 const accountRoutes = require("./routes/account.routes");
+const courseGroupRoutes = require("./routes/coursegroup.routes");
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -42,6 +43,7 @@ app.use(passport.session());
 // --- Routes ---
 app.use("/api/account", accountRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/groups', courseGroupRoutes);
 
 // Health Check Endpoint
 app.get('/api/health', (req, res) => {
