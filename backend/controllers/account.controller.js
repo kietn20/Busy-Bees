@@ -2,7 +2,7 @@ const User = require("../models/User.model");
 const { validationResult } = require("express-validator");
 const { hashPassword } = require('../utils/password.util');
 
-exports.updateUser = async (req, res) => {
+const updateUser = async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
@@ -44,7 +44,7 @@ exports.updateUser = async (req, res) => {
     }
 };
 
-exports.logoutUser = (req, res) => {
+const logoutUser = (req, res) => {
     if (req.logout) {
     req.logout(function () {
       req.session?.destroy(() => {
@@ -60,7 +60,7 @@ exports.logoutUser = (req, res) => {
   }
 };
 
-exports.getAccount = (req, res) => {
+const getAccount = (req, res) => {
   if (!req.user) {
     return res.status(401).json({ message: 'Not authenticated' });
   }
@@ -73,7 +73,7 @@ exports.getAccount = (req, res) => {
   res.json({ user: normalized });
 };
 
-exports.deleteAccount = async (req, res) => {
+const deleteAccount = async (req, res) => {
   try {
     const userId = req.user._id;
     const deletedUser = await User.findByIdAndDelete(userId);
@@ -88,3 +88,10 @@ exports.deleteAccount = async (req, res) => {
     return res.status(500).json({ message: 'Internal server error' });
   }
 };
+
+module.exports = {
+  updateUser,
+  logoutUser,
+  getAccount,
+  deleteAccount
+}

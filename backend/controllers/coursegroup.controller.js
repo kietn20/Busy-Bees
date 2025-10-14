@@ -155,13 +155,11 @@ const joinGroup = async (req, res) => {
   }
 };
 
-
-
-
-
-
-
+// -------------------------------------------------------------------------
+// dont use exports. from now on use module.exports = { func1, func2, ... }
+// -------------------------------------------------------------------------
 // creates a new course group
+
 exports.createCourseGroup = (req, res) => {
   res.status(201).json({ message: "Stub: createCourseGroup" });
 };
@@ -215,9 +213,6 @@ exports.getGroupInviteLink = (req, res) => {
 exports.validateInviteCode = (req, res) => {
   res.status(200).json({ message: "Stub: validateInviteCode" });
 };
-
-
-
 
 
 module.exports = {
