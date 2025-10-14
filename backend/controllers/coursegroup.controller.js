@@ -4,9 +4,11 @@ const Invite = require('../models/Invite.model');
 const User = require('../models/User.model');
 const { generateInviteCode } = require('../utils/invite.util');
 
-// creates a new course group
+// @desc    Create a new course group
+// @route   POST /api/groups
+// @access  Private
 const createCourseGroup = async (req, res) => {
-   try {
+  try {
     const { groupName, description } = req.body;
 
     if (!req.user || !req.user._id) {
@@ -30,6 +32,29 @@ const createCourseGroup = async (req, res) => {
     });
   } catch (error) {
     console.error("Error creating course group:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+// @desc    Get a course group by ID
+// @route   GET /api/groups/:id
+// @access  Private
+const getCourseGroupById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const group = await CourseGroup.findById(id).populate("members", "firstName lastName email");
+
+    if (!group) {
+      return res.status(404).json({ message: "Group not found" });
+    }
+
+    res.status(200).json({
+      message: "Group details fetched successfully",
+      group,
+    });
+  } catch (error) {
+    console.error("Error fetching group details:", error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
@@ -155,35 +180,125 @@ const joinGroup = async (req, res) => {
   }
 };
 
+// @desc    Update course group details (owner only)
+// @route   PUT /api/groups/:id
+// @access  Private
+const updateCourseGroup = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { groupName, description } = req.body;
+    const userId = req.user._id;
 
+    // find group
+    const group = await CourseGroup.findById(id);
+    if (!group) {
+      return res.status(404).json({ message: "Group not found" });
+    }
 
+    // authorize owner
+    if (!group.ownerId.equals(userId)) {
+      return res.status(403).json({ message: "Only the owner can edit this group" });
+    }
 
+    // update values (only if provided)
+    if (groupName) group.groupName = groupName.trim();
+    if (description) group.description = description.trim();
 
+    await group.save();
 
-
-// creates a new course group
-exports.createCourseGroup = (req, res) => {
-  res.status(201).json({ message: "Stub: createCourseGroup" });
+    res.status(200).json({
+      message: "Course group updated successfully",
+      group,
+    });
+  } catch (error) {
+    console.error("Error updating course group:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
 };
+
+// @desc    Delete a course group (owner only)
+// @route   DELETE /api/groups/:groupId
+// @access  Private
+const deleteCourseGroup = async (req, res) => {
+  try {
+    const { groupId } = req.params;
+
+    // Ensure user is logged in
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({ message: "Unauthorized: Please log in." });
+    }
+
+    // Find the group
+    const group = await CourseGroup.findById(groupId);
+    if (!group) {
+      return res.status(404).json({ message: "Group not found." });
+    }
+
+    // Ensure only the owner can delete
+    if (!group.ownerId.equals(req.user._id)) {
+      return res.status(403).json({ message: "You are not authorized to delete this group." });
+    }
+
+    // Delete all related invites first
+    await Invite.deleteMany({ courseGroup: groupId });
+
+    // Delete the group
+    await CourseGroup.findByIdAndDelete(groupId);
+
+    res.status(200).json({ message: "Course group and related invites deleted successfully." });
+  } catch (error) {
+    console.error("Error deleting course group:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+// @desc    Leave a course group
+// @route   POST /api/groups/:groupId/leave
+// @access  Private
+const leaveGroup = async (req, res) => {
+  try {
+    const { groupId } = req.params;
+    const userId = req.user._id;
+
+    // Find the group
+    const group = await CourseGroup.findById(groupId);
+    if (!group) {
+      return res.status(404).json({ message: "Group not found." });
+    }
+
+    // Check if user is the owner
+    if (group.ownerId.equals(userId)) {
+      return res.status(403).json({
+        message: "Group owners cannot leave their own group. Transfer ownership first.",
+      });
+    }
+
+    // Check if user is a member
+    const isMember = group.members.some((id) => id.equals(userId));
+    if (!isMember) {
+      return res.status(400).json({ message: "You are not a member of this group." });
+    }
+
+    // Remove user from members list
+    group.members = group.members.filter((id) => !id.equals(userId));
+    await group.save();
+
+    await User.findByIdAndUpdate(userId, { $pull: { registeredCourses: { courseId: groupId } } });
+
+    res.status(200).json({
+      message: "Successfully left the group.",
+      groupId: group._id,
+    });
+  } catch (error) {
+    console.error("Error leaving group:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
 
 // gets all course groups
 exports.getCourseGroups = (req, res) => {
   res.status(200).json({ message: "Stub: getCourseGroups" });
-};
-
-// gets a specific course group by ID
-exports.getCourseGroupById = (req, res) => {
-  res.status(200).json({ message: "Stub: getCourseGroupById" });
-};
-
-// updates a specific course group by ID (owners only)
-exports.updateCourseGroup = (req, res) => {
-  res.status(200).json({ message: "Stub: updateCourseGroup" });
-};
-
-// deletes a specific course group by ID (owners only)
-exports.deleteCourseGroup = (req, res) => {
-  res.status(200).json({ message: "Stub: deleteCourseGroup" });
 };
 
 // join group via invite
@@ -217,11 +332,12 @@ exports.validateInviteCode = (req, res) => {
 };
 
 
-
-
-
 module.exports = {
   generateInvite,
   joinGroup,
-   createCourseGroup,
+  createCourseGroup,
+  getCourseGroupById,
+  updateCourseGroup,
+  deleteCourseGroup,
+  leaveGroup
 };
