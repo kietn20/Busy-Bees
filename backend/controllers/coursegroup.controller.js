@@ -297,37 +297,37 @@ const leaveGroup = async (req, res) => {
 
 
 // gets all course groups
-exports.getCourseGroups = (req, res) => {
+const getCourseGroups = (req, res) => {
   res.status(200).json({ message: "Stub: getCourseGroups" });
 };
 
 // join group via invite
-exports.addUserToCourseGroup = (req, res) => {
+const addUserToCourseGroup = (req, res) => {
   res.status(200).json({ message: "Stub: addUserToCourseGroup" });
 };
 
 // leave group (non-owners only)
-exports.removeUserFromCourseGroup = (req, res) => {
+const removeUserFromCourseGroup = (req, res) => {
   res.status(200).json({ message: "Stub: removeUserFromCourseGroup" });
 };
 
 // transfers ownership of a course group to another user
-exports.transferCourseGroupOwnership = (req, res) => {
+const transferCourseGroupOwnership = (req, res) => {
   res.status(200).json({ message: "Stub: transferCourseGroupOwnership" });
 };
 
 // lists all members of a course group
-exports.getGroupMembers = (req, res) => {
+const getGroupMembers = (req, res) => {
   res.status(200).json({ message: "Stub: getGroupMembers" });
 };
 
 // fetch group invite link
-exports.getGroupInviteLink = (req, res) => {
+const getGroupInviteLink = (req, res) => {
   res.status(200).json({ message: "Stub: getGroupInviteLink" });
 };
 
 // validate invite before joining
-exports.validateInviteCode = (req, res) => {
+const validateInviteCode = (req, res) => {
   res.status(200).json({ message: "Stub: validateInviteCode" });
 };
 
