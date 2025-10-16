@@ -1,7 +1,7 @@
 const express = require('express');
 const { allowJwtOrGoogle } = require('../middleware/auth.middleware');
-const accountController = require('../controllers/account.controller');
-const accountMiddleware = require('../middleware/account.middleware');
+const { getAccount, updateUser, logoutUser, deleteAccount } = require('../controllers/account.controller');
+const { updateValidation } = require('../middleware/account.middleware');
 
 const router = express.Router();
 
@@ -10,26 +10,26 @@ const router = express.Router();
 router.get(
   '/', 
   allowJwtOrGoogle, 
-  accountController.getAccount
+  getAccount
 );
 
 // PUT /api/account - Update current user's profile
 router.put(
   "/",
   allowJwtOrGoogle,
-  accountMiddleware.updateValidation,
-  accountController.updateUser
+  updateValidation,
+  updateUser
 );
 
 // POST logout
 // need to add functionality for users authenticated by OAuth/session
-router.post("/logout", accountController.logoutUser)
+router.post("/logout", logoutUser);
 
 // DELETE /api/account - Delete only users authenticated by OAuth/session
 router.delete(
   '/', 
   allowJwtOrGoogle, 
-  accountController.deleteAccount
+  deleteAccount
 );
 
 module.exports = router;

@@ -1,6 +1,6 @@
 const { body } = require("express-validator");
 
-exports.registerValidation = [
+const registerValidation = [
   //body("userId").notEmpty().withMessage("User ID is required"),
   body("firstName")
     .notEmpty()
@@ -26,7 +26,7 @@ exports.registerValidation = [
     ),
 ];
 
-exports.updateValidation = [
+const updateValidation = [
   body("firstName")
     .optional()
     .isLength({ max: 50 })
@@ -41,3 +41,8 @@ exports.updateValidation = [
     .isLength({ min: 8 })
     .withMessage("Password must be at least 8 characters"),
 ];
+
+module.exports = {
+  registerValidation,
+  updateValidation,
+}
