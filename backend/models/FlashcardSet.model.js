@@ -7,6 +7,11 @@ const flashcardSetSchema = new mongoose.Schema(
             ref: "User",
             required: true,
         },
+        courseGroupId: { // associated course group
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "CourseGroup",
+            required: true,
+        },
         setName: {
             type: String,
             required: true,
