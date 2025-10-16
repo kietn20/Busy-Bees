@@ -11,14 +11,12 @@ const createFlashcard = async (req, res) => {
     if (!frontDescription || !backDescription) {
       return res.status(400).json({ message: 'Front and back descriptions are required.' });
     }
-    // create flashcard
-    const newFlashcard = new flashcard({
+
+    // create and save flashcard to database
+    const savedFlashcard = await flashcard.create({
       frontDescription,
       backDescription
     });
-
-    // save flashcard to database
-    const savedFlashcard = await newFlashcard.save();
 
     // respond with the created flashcard
     res.status(201).json({
@@ -27,6 +25,9 @@ const createFlashcard = async (req, res) => {
     });
 
   } catch (error) {
+    if (error.name === 'CastError') {
+      return res.status(400).json({ message: 'Invalid flashcard ID format.' });
+    }
     console.error('Error creating flashcard:', error);
     res.status(500).json({ message: 'Internal server error.' });
   }
@@ -49,8 +50,11 @@ const getFlashcardById = async (req, res) => {
       flashcard: foundFlashcard
     });
   } catch (error) {
+    if (error.name === 'CastError') {
+      return res.status(400).json({ message: 'Invalid flashcard ID format.' });
+    }
     console.error('Error retrieving flashcard:', error);
-    res.status(500).json({ message: 'Internal server error.' })
+    res.status(500).json({ message: 'Internal server error.' });
   }
 };
 
@@ -62,7 +66,7 @@ const updateFlashcard = async (req, res) => {
     const { frontDescription, backDescription } = req.body;
 
     // validate required fields
-    if (!frontDescription || !backDescription) {
+    if (!frontDescription && !backDescription) {
       return res.status(400).json({ message: 'Front and back descriptions are required.' });
     }
 
@@ -88,6 +92,9 @@ const updateFlashcard = async (req, res) => {
       flashcard: updatedFlashcard
     });
   } catch (error) {
+    if (error.name === 'CastError') {
+      return res.status(400).json({ message: 'Invalid flashcard ID format.' });
+    }
     console.error('Error updating flashcard:', error);
     res.status(500).json({ message: 'Internal server error.' });
   }
@@ -103,10 +110,17 @@ const deleteFlashcard = async (req, res) => {
 
     // check if flashcard exists
     if (!deletedFlashcard) {
-      return res.status(404).json({ message: 'Flashcard not found.' });
+      return res.status(404).json({ 
+        message: 'Flashcard not found.',
+        flashcard: deletedFlashcard
+      });
     }
+
     res.status(200).json({ message: 'Flashcard deleted successfully.' });
   } catch (error) {
+    if (error.name === 'CastError') {
+      return res.status(400).json({ message: 'Invalid flashcard ID format.' });
+    }
     console.error('Error deleting flashcard:', error);
     res.status(500).json({ message: 'Internal server error.' });
   }
