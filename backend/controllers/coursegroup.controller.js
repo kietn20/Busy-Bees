@@ -22,8 +22,10 @@ const createCourseGroup = async (req, res) => {
     const newGroup = await CourseGroup.create({
       groupName,
       description,
-      ownerId: req.user._id,
-      members: [req.user._id],
+      ownerId: req.user._id, // keep here for easy reference
+      members: [
+        { userId: req.user._id, role: "owner" }  // add owner as first member
+      ],
     });
 
     res.status(201).json({
@@ -43,7 +45,10 @@ const getCourseGroupById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const group = await CourseGroup.findById(id).populate("members", "firstName lastName email");
+    // returns the group with populated member and owner details
+    const group = await CourseGroup.findById(id)
+    .populate("members.userId", "firstName lastName email")
+    .populate("ownerId", "firstName lastName email");
 
     if (!group) {
       return res.status(404).json({ message: "Group not found" });
@@ -66,25 +71,16 @@ const generateInvite = async (req, res) => {
   try {
     const { groupId } = req.params;
     const userId = req.user._id; // from our 'protect' middleware
+    const group = req.group; // from our 'requireGroupOwner' middleware
+  
 
-    // 1. find the course group
-    const group = await CourseGroup.findById(groupId);
-    if (!group) {
-      return res.status(404).json({ message: 'Course group not found.' });
-    }
-
-    // 2. authorize: check if the user is the group owner
-    if (!group.ownerId.equals(userId)) {
-      return res.status(403).json({ message: 'Forbidden: You are not the owner of this group.' });
-    }
-
-    // 3. check for an existing, valid invite
+    // 1. check for an existing, valid invite
     let invite = await Invite.findOne({
       courseGroup: groupId,
       expiresAt: { $gt: new Date() } // check if the expiration date is in the future
     });
 
-    // 4. if no valid invite exists, create one
+    // 2. if no valid invite exists, create one
     if (!invite) {
       const code = await generateInviteCode();
       
@@ -100,7 +96,7 @@ const generateInvite = async (req, res) => {
       await invite.save();
     }
 
-    // 5. return the invite code
+    // 3. return the invite code
     res.status(200).json({
       inviteCode: invite.code,
       expiresAt: invite.expiresAt,
@@ -144,18 +140,15 @@ const joinGroup = async (req, res) => {
     }
 
     // 4. check if user is already the owner or a member
-    if (group.ownerId.equals(userId)) {
-      return res.status(409).json({ message: 'You are the owner of this group.' });
-    }
     
     // .some() checks if at least one element in the array passes the test
-    const isAlreadyMember = group.members.some(memberId => memberId.equals(userId));
+    const isAlreadyMember = group.members.some(memberId => memberId.userId.equals(userId));
     if (isAlreadyMember) {
       return res.status(409).json({ message: 'You are already a member of this group.' });
     }
 
     // 5. add user to the group's members list
-    group.members.push(userId);
+    group.members.push({ userId, role: "member" });
     await group.save();
 
 
@@ -185,20 +178,8 @@ const joinGroup = async (req, res) => {
 // @access  Private
 const updateCourseGroup = async (req, res) => {
   try {
-    const { id } = req.params;
     const { groupName, description } = req.body;
-    const userId = req.user._id;
-
-    // find group
-    const group = await CourseGroup.findById(id);
-    if (!group) {
-      return res.status(404).json({ message: "Group not found" });
-    }
-
-    // authorize owner
-    if (!group.ownerId.equals(userId)) {
-      return res.status(403).json({ message: "Only the owner can edit this group" });
-    }
+    const group = req.group; // from our 'requireGroupOwner' middleware
 
     // update values (only if provided)
     if (groupName) group.groupName = groupName.trim();
@@ -221,29 +202,13 @@ const updateCourseGroup = async (req, res) => {
 // @access  Private
 const deleteCourseGroup = async (req, res) => {
   try {
-    const { groupId } = req.params;
-
-    // Ensure user is logged in
-    if (!req.user || !req.user._id) {
-      return res.status(401).json({ message: "Unauthorized: Please log in." });
-    }
-
-    // Find the group
-    const group = await CourseGroup.findById(groupId);
-    if (!group) {
-      return res.status(404).json({ message: "Group not found." });
-    }
-
-    // Ensure only the owner can delete
-    if (!group.ownerId.equals(req.user._id)) {
-      return res.status(403).json({ message: "You are not authorized to delete this group." });
-    }
+    const group = req.group; // from our 'requireGroupOwner' middleware
 
     // Delete all related invites first
-    await Invite.deleteMany({ courseGroup: groupId });
+    await Invite.deleteMany({ courseGroup: group._id });
 
     // Delete the group
-    await CourseGroup.findByIdAndDelete(groupId);
+    await CourseGroup.findByIdAndDelete(group._id);
 
     res.status(200).json({ message: "Course group and related invites deleted successfully." });
   } catch (error) {
@@ -259,28 +224,18 @@ const leaveGroup = async (req, res) => {
   try {
     const { groupId } = req.params;
     const userId = req.user._id;
+    const group = req.group; // from our 'requireGroup' middleware
+    const memberRecord = req.memberRecord; // from our 'requireGroup' middleware
 
-    // Find the group
-    const group = await CourseGroup.findById(groupId);
-    if (!group) {
-      return res.status(404).json({ message: "Group not found." });
-    }
-
-    // Check if user is the owner
-    if (group.ownerId.equals(userId)) {
+    // Check if user is the owner (by role)
+    if (memberRecord.role === "owner") {
       return res.status(403).json({
         message: "Group owners cannot leave their own group. Transfer ownership first.",
       });
     }
 
-    // Check if user is a member
-    const isMember = group.members.some((id) => id.equals(userId));
-    if (!isMember) {
-      return res.status(400).json({ message: "You are not a member of this group." });
-    }
-
     // Remove user from members list
-    group.members = group.members.filter((id) => !id.equals(userId));
+    group.members = group.members.filter((member) => !member.userId.equals(userId));
     await group.save();
 
     await User.findByIdAndUpdate(userId, { $pull: { registeredCourses: { courseId: groupId } } });
