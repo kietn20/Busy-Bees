@@ -7,9 +7,10 @@ interface EventListProps {
   events: Event[];
   isLoading: boolean;
   error: string | null;
+  onEventClick: (eventId: string) => void;
 }
 
-export default function EventList({ events, isLoading, error }: EventListProps) {
+export default function EventList({ events, isLoading, error, onEventClick }: EventListProps) {
   if (isLoading) {
     return <p className="text-center text-gray-500">Loading events...</p>;
   }
@@ -25,9 +26,13 @@ export default function EventList({ events, isLoading, error }: EventListProps) 
   return (
     <div className="mt-8">
       <h2 className="text-2xl font-bold mb-4">Upcoming Events</h2>
-      <div className="bg-white p-6 rounded-lg shadow-md">
+      <div className="bg-white p-6 rounded-lg shadow-md divide-y divide-gray-200">
         {events.map((event) => (
-          <EventListItem key={event._id} event={event} />
+          <EventListItem
+            key={event._id}
+            event={event}
+            onClick={() => onEventClick(event._id)}
+          />
         ))}
       </div>
     </div>

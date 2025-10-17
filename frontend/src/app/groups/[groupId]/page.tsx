@@ -8,7 +8,9 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import { Button } from '@/components/ui/button';
 import { InviteModal } from '@/components/InviteModal';
 import { generateInvite, getGroupEvents, Event } from '@/services/groupApi';
+import { getEventById } from '@/services/eventApi';
 import EventList from '@/components/events/EventList';
+import EventDetailModal from '@/components/events/EventDetailModal';
 
 export default function GroupPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -19,6 +21,10 @@ export default function GroupPage() {
   const [events, setEvents] = useState<Event[]>([]);
   const [isEventsLoading, setIsEventsLoading] = useState(true);
   const [eventsError, setEventsError] = useState<string | null>(null);
+
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isDetailLoading, setIsDetailLoading] = useState(false);
 
   const params = useParams();
   const groupId = params.groupId as string; // get groupId from URL
@@ -40,6 +46,25 @@ export default function GroupPage() {
 
     fetchEvents();
   }, [groupId]); // Dependency array ensures this runs once when groupId is available
+
+  const handleViewEvent = async (eventId: string) => {
+    setIsDetailModalOpen(true);
+    setIsDetailLoading(true);
+    try {
+      const fetchedEvent = await getEventById(eventId);
+      setSelectedEvent(fetchedEvent);
+    } catch (err) {
+      console.error("Failed to fetch event details", err);
+      // Optionally, show an error toast here
+    } finally {
+      setIsDetailLoading(false);
+    }
+  };
+
+  const handleCloseDetailModal = () => {
+    setIsDetailModalOpen(false);
+    setSelectedEvent(null); // Clear selection on close
+  }
 
   const handleGenerateInvite = async () => {
     setIsModalOpen(true);
@@ -65,8 +90,12 @@ export default function GroupPage() {
           <Button onClick={handleGenerateInvite}>Invite Members</Button>
         </div>
         
-        <EventList events={events} isLoading={isEventsLoading} error={eventsError} />
-
+        <EventList
+          events={events}
+          isLoading={isEventsLoading}
+          error={eventsError}
+          onEventClick={handleViewEvent}
+        />
 
 
         <InviteModal
@@ -74,6 +103,14 @@ export default function GroupPage() {
           onClose={() => setIsModalOpen(false)}
           inviteCode={inviteCode}
           isLoading={isInviteLoading}
+        />
+
+
+        <EventDetailModal
+          isOpen={isDetailModalOpen}
+          onClose={handleCloseDetailModal}
+          event={selectedEvent}
+          isLoading={isDetailLoading}
         />
       </div>
     </ProtectedRoute>

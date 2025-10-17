@@ -5,9 +5,10 @@ import { Calendar, UserCircle } from 'lucide-react';
 
 interface EventListItemProps {
   event: Event;
+  onClick: () => void;
 }
 
-export default function EventListItem({ event }: EventListItemProps) {
+export default function EventListItem({ event, onClick }: EventListItemProps) {
   const eventDate = new Date(event.startTime).toLocaleDateString('en-US', {
     weekday: 'long',
     year: 'numeric',
@@ -20,7 +21,10 @@ export default function EventListItem({ event }: EventListItemProps) {
   });
 
   return (
-    <div className="border-b border-gray-200 py-4">
+    <div
+      className="border-b border-gray-200 py-4 cursor-pointer hover:bg-gray-50 transition-colors"
+      onClick={onClick}
+    >
       <h3 className="font-semibold text-lg">{event.title}</h3>
       <div className="flex items-center text-sm text-gray-500 mt-2 space-x-4">
         <div className="flex items-center">
