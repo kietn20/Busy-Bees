@@ -1,7 +1,52 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import CourseList from "@/components/coursegroup/course-list";
 import AddGroup from "@/components/coursegroup/add-group";
+import { getUserGroups } from "@/services/groupApi";
+import type { CourseGroup } from "@/services/groupApi";
+import { useAuth } from "@/context/AuthContext";
 
 export default function HomePage() {
+  const [groups, setGroups] = useState<CourseGroup[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { user, isLoading: authLoading } = useAuth();
+
+  useEffect(() => {
+    // Only fetch groups if user is authenticated
+    if (authLoading) return;
+
+    if (!user) {
+      setLoading(false);
+      setGroups([]);
+      return;
+    }
+
+    const fetchGroups = async () => {
+      try {
+        setLoading(true);
+        const fetchedGroups = await getUserGroups();
+        setGroups(fetchedGroups);
+      } catch (err) {
+        console.error("Error fetching groups:", err);
+        setError("Failed to load groups. Please try again later.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchGroups();
+  }, [user, authLoading]);
+
+  // Transform CourseGroup data to Course format for CourseList component
+  const courses = groups.map((group) => ({
+    id: group._id,
+    name: group.groupName,
+    link: `/groups/${group._id}`,
+    image: "/beige.jpg", // default image
+  }));
+
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-24">
       <div className="text-center">
@@ -10,7 +55,21 @@ export default function HomePage() {
           Your collaborative study platform.
         </p>
       </div>
-      <CourseList
+
+      {!user ? (
+        <div className="mt-8 text-center">
+          <p className="text-gray-600">Please log in to view your groups.</p>
+        </div>
+      ) : loading ? (
+        <p className="mt-8 text-gray-600">Loading your groups...</p>
+      ) : error ? (
+        <p className="mt-8 text-red-600">{error}</p>
+      ) : (
+        <CourseList courses={courses} />
+      )}
+
+      {/* Temporary hardcoded groups - commented out */}
+      {/* <CourseList
         courses={[
           {
             id: "1",
@@ -25,8 +84,9 @@ export default function HomePage() {
             image: "/beige.jpg",
           },
         ]}
-      />
-      <AddGroup />
+      /> */}
+
+      {user && <AddGroup />}
     </main>
   );
 }

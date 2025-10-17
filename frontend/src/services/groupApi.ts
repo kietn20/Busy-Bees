@@ -27,17 +27,18 @@ export interface CourseGroup {
     _id: string;
     groupName: string;
     description?: string;
-    ownerId: string;
-    members: {
-        userId: { // when populated, this will be the full user object
-            _id: string;
-            firstName: string;
-            lastName: string;
-            email: string;
-        };
-        role: 'owner' | 'member'; // use a union type for specific roles
+    ownerId: string | {
         _id: string;
-    }[];
+        firstName: string;
+        lastName: string;
+        email: string;
+    };
+    members: Array<{
+        _id: string;
+        firstName: string;
+        lastName: string;
+        email: string;
+    } | string>; // Can be populated user objects or just IDs
 }
 
 
@@ -84,4 +85,9 @@ export const getGroupEvents = async (groupId: string): Promise<Event[]> => {
 export const getGroupById = async (groupId: string): Promise<CourseGroup> => {
   const response = await api.get<{ group: CourseGroup }>(`/groups/${groupId}`);
   return response.data.group;
+};
+
+export const getUserGroups = async (): Promise<CourseGroup[]> => {
+  const response = await api.get<{ groups: CourseGroup[] }>('/groups');
+  return response.data.groups;
 };
