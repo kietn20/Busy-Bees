@@ -1,20 +1,23 @@
 const express = require('express');
-const { createEvent, getGroupEvents } = require('../controllers/event.controller');
-const { createEvent } = require('../controllers/event.controller');
+const { createEvent, getGroupEvents, getEventById } = require('../controllers/event.controller');
 const { protect } = require('../middleware/auth.middleware');
 const { requireGroupMember } = require('../middleware/coursegroup.middleware');
 const { validateEvent } = require('../middleware/event.middleware');
 
-// need to enable mergeParams to access :groupId from the parent router
-const router = express.Router({ mergeParams: true });
+// router for routes nested under /api/groups/:groupId
+const nestedRouter = express.Router({ mergeParams: true });
+nestedRouter.use(protect, requireGroupMember);
+nestedRouter.get('/', getGroupEvents);
+nestedRouter.post('/', validateEvent, createEvent);
 
-// all routes here are protected and require group membership
-router.use(protect, requireGroupMember);
+// router for top-level routes like /api/events
+const topLevelRouter = express.Router();
+topLevelRouter.use(protect); // All event routes should be protected
+topLevelRouter.get('/:eventId', getEventById);
 
-// route to get all events for a group
-router.get('/', getGroupEvents);
 
-// route to create a new event
-router.post('/', validateEvent, createEvent);
-
-module.exports = router;
+// export both routers
+module.exports = {
+  nestedEventRouter: nestedRouter,
+  eventRouter: topLevelRouter,
+};
