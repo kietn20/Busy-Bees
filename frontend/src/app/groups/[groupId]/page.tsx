@@ -2,35 +2,58 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { Button } from '@/components/ui/button';
 import { InviteModal } from '@/components/InviteModal';
-import { generateInvite } from '@/services/groupApi';
+import { generateInvite, getGroupEvents, Event } from '@/services/groupApi';
+import EventList from '@/components/events/EventList';
 
 export default function GroupPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [inviteCode, setInviteCode] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [isInviteLoading, setIsInviteLoading] = useState(false);
+  const [inviteError, setInviteError] = useState<string | null>(null);
+
+  const [events, setEvents] = useState<Event[]>([]);
+  const [isEventsLoading, setIsEventsLoading] = useState(true);
+  const [eventsError, setEventsError] = useState<string | null>(null);
 
   const params = useParams();
   const groupId = params.groupId as string; // get groupId from URL
 
+  useEffect(() => {
+    if (!groupId) return;
+
+    const fetchEvents = async () => {
+      try {
+        setIsEventsLoading(true);
+        const fetchedEvents = await getGroupEvents(groupId);
+        setEvents(fetchedEvents);
+      } catch (err) {
+        setEventsError('Failed to load events.');
+      } finally {
+        setIsEventsLoading(false);
+      }
+    };
+
+    fetchEvents();
+  }, [groupId]); // Dependency array ensures this runs once when groupId is available
+
   const handleGenerateInvite = async () => {
     setIsModalOpen(true);
-    if (inviteCode) return; // dont fetch if we already have a code
+    if (inviteCode) return;
 
-    setIsLoading(true);
-    setError(null);
+    setIsInviteLoading(true);
+    setInviteError(null);
     try {
       const response = await generateInvite(groupId);
       setInviteCode(response.data.inviteCode);
     } catch (err) {
-      setError('Failed to generate invite code. Please try again.');
+      setInviteError('Failed to generate invite code. Please try again.');
     } finally {
-      setIsLoading(false);
+      setIsInviteLoading(false);
     }
   };
 
@@ -39,28 +62,18 @@ export default function GroupPage() {
       <div className="container mx-auto p-8">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold">Course Group Details</h1>
-          <Button onClick={handleGenerateInvite}>
-            Invite Members
-          </Button>
+          <Button onClick={handleGenerateInvite}>Invite Members</Button>
         </div>
+        
+        <EventList events={events} isLoading={isEventsLoading} error={eventsError} />
 
 
-
-
-
-
-
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <p>Group ID: {groupId}</p>
-          <p>This is where the group&apos;s notes, flashcards, and events will be displayed.</p>
-          {error && <p className="text-red-500 mt-4">{error}</p>}
-        </div>
 
         <InviteModal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           inviteCode={inviteCode}
-          isLoading={isLoading}
+          isLoading={isInviteLoading}
         />
       </div>
     </ProtectedRoute>
