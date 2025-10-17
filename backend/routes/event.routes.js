@@ -2,13 +2,14 @@ const express = require('express');
 const { createEvent, getGroupEvents } = require('../controllers/event.controller');
 const { createEvent } = require('../controllers/event.controller');
 const { protect } = require('../middleware/auth.middleware');
-const { isGroupMember, validateEvent } = require('../middleware/event.middleware');
+const { requireGroupMember } = require('../middleware/coursegroup.middleware');
+const { validateEvent } = require('../middleware/event.middleware');
 
 // need to enable mergeParams to access :groupId from the parent router
 const router = express.Router({ mergeParams: true });
 
 // all routes here are protected and require group membership
-router.use(protect, isGroupMember);
+router.use(protect, requireGroupMember);
 
 // route to get all events for a group
 router.get('/', getGroupEvents);

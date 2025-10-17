@@ -31,7 +31,7 @@ const isGroupMember = async (req, res, next) => {
 const validateEvent = [
   body('title', 'Title is required').not().isEmpty().trim().escape(),
   body('startTime', 'A valid start time is required').isISO8601().toDate(),
-  body('endTime').optional().isISO8601().toDate(),
+  body('endTime').optional({ checkFalsy: true }).isISO8601().toDate(), // allow null/empty string
   body('description').optional().trim().escape(),
 ];
 

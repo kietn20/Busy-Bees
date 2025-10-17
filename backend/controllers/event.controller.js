@@ -20,7 +20,7 @@ const createEvent = async (req, res) => {
       title,
       description,
       startTime,
-      endTime,
+      endTime: endTime || null,
       courseGroup: groupId,
       createdBy: userId,
     });
@@ -44,8 +44,8 @@ const getGroupEvents = async (req, res) => {
     const { groupId } = req.params;
 
     const events = await Event.find({ courseGroup: groupId })
-      .sort({ startTime: 'asc' }) // sort by start time
-      .populate('createdBy', 'firstName lastName'); // populate creator name
+      .sort({ startTime: 'asc' }) // sort by start time ascending
+      .populate('createdBy', 'firstName lastName email'); // populate creator details
 
     res.status(200).json(events);
 
