@@ -1,5 +1,6 @@
 const CourseGroup = require('../models/CourseGroup.model');
 const { body, validationResult } = require('express-validator');
+const Event = require('../models/Event.model');
 
 // middleware to check if the user is a member of the group
 const isGroupMember = async (req, res, next) => {
@@ -27,6 +28,34 @@ const isGroupMember = async (req, res, next) => {
   }
 };
 
+const isEventHost = async (req, res, next) => {
+  try {
+    const { eventId } = req.params;
+    const userId = req.user._id;
+
+    const event = await Event.findById(eventId);
+
+    if (!event) {
+      return res.status(404).json({ message: 'Event not found.' });
+    }
+
+    // check if the logged in user is the one who created the event
+    if (!event.createdBy.equals(userId)) {
+      return res.status(403).json({ message: 'Forbidden: You are not the host of this event.' });
+    }
+    
+    // attach the event to the request to avoid fetching it again in the controller
+    req.event = event; 
+    next();
+  } catch (error) {
+    console.error(error);
+    if (error.kind === 'ObjectId') {
+        return res.status(404).json({ message: 'Event not found.' });
+    }
+    res.status(500).json({ message: 'Server error during event host authorization.' });
+  }
+};
+
 // validation rules for creating/updating an event
 const validateEvent = [
   body('title', 'Title is required').not().isEmpty().trim().escape(),
@@ -38,4 +67,5 @@ const validateEvent = [
 module.exports = {
   isGroupMember,
   validateEvent,
+  isEventHost,
 };

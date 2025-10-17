@@ -97,8 +97,40 @@ const getEventById = async (req, res) => {
 };
 
 
+// @desc    Update an event's details
+// @route   PUT /api/events/:eventId
+// @access  Private (Event Host)
+const updateEvent = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+  
+  try {
+    const { title, description, startTime, endTime } = req.body;
+    // the event is already fetched and attached by the isEventHost middleware
+    const event = req.event; 
+
+    // update fields if they were provided in the request body
+    if (title) event.title = title;
+    if (description) event.description = description;
+    if (startTime) event.startTime = startTime;
+    if (endTime) event.endTime = endTime;
+
+    const updatedEvent = await event.save();
+
+    res.status(200).json(updatedEvent);
+
+  } catch (error) {
+    console.error('Error updating event:', error);
+    res.status(500).json({ message: 'Internal server error.' });
+  }
+};
+
+
 module.exports = {
   createEvent,
   getGroupEvents,
   getEventById,
+  updateEvent,
 };
