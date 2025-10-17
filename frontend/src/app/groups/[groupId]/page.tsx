@@ -11,6 +11,7 @@ import { generateInvite, getGroupEvents, Event } from '@/services/groupApi';
 import { getEventById } from '@/services/eventApi';
 import EventList from '@/components/events/EventList';
 import EventDetailModal from '@/components/events/EventDetailModal';
+import CreateEventModal from '@/components/events/CreateEventModal';
 
 export default function GroupPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -26,26 +27,27 @@ export default function GroupPage() {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isDetailLoading, setIsDetailLoading] = useState(false);
 
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+
   const params = useParams();
   const groupId = params.groupId as string; // get groupId from URL
 
+  const fetchEvents = async () => {
+    try {
+      setIsEventsLoading(true);
+      const fetchedEvents = await getGroupEvents(groupId);
+      setEvents(fetchedEvents);
+    } catch (err) {
+      setEventsError('Failed to load events.');
+    } finally {
+      setIsEventsLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (!groupId) return;
-
-    const fetchEvents = async () => {
-      try {
-        setIsEventsLoading(true);
-        const fetchedEvents = await getGroupEvents(groupId);
-        setEvents(fetchedEvents);
-      } catch (err) {
-        setEventsError('Failed to load events.');
-      } finally {
-        setIsEventsLoading(false);
-      }
-    };
-
     fetchEvents();
-  }, [groupId]); // Dependency array ensures this runs once when groupId is available
+  }, [groupId]);
 
   const handleViewEvent = async (eventId: string) => {
     setIsDetailModalOpen(true);
@@ -87,9 +89,15 @@ export default function GroupPage() {
       <div className="container mx-auto p-8">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold">Course Group Details</h1>
-          <Button onClick={handleGenerateInvite}>Invite Members</Button>
+          <div className="flex space-x-2">
+            <Button variant="outline" onClick={() => setIsCreateModalOpen(true)}>
+              Create Event
+            </Button>
+            <Button onClick={handleGenerateInvite}>Invite Members</Button>
+          </div>
         </div>
-        
+
+        {/* --- PASS the fetchEvents function to the onEventCreated prop --- */}
         <EventList
           events={events}
           isLoading={isEventsLoading}
@@ -111,6 +119,14 @@ export default function GroupPage() {
           onClose={handleCloseDetailModal}
           event={selectedEvent}
           isLoading={isDetailLoading}
+        />
+
+
+        <CreateEventModal
+          isOpen={isCreateModalOpen}
+          onClose={() => setIsCreateModalOpen(false)}
+          groupId={groupId}
+          onEventCreated={fetchEvents} // Pass the refetch function
         />
       </div>
     </ProtectedRoute>

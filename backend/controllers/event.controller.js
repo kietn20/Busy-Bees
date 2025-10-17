@@ -64,31 +64,28 @@ const getEventById = async (req, res) => {
     const { eventId } = req.params;
     const userId = req.user._id;
 
-    const event = await Event.findById(eventId)
-      .populate('createdBy', 'firstName lastName email')
-      .populate('courseGroup', 'groupName ownerId members'); // get group details
+    // step 1: Find the event and populate its associated course group.
+    const event = await Event.findById(eventId).populate('courseGroup');
 
     if (!event) {
       return res.status(404).json({ message: 'Event not found.' });
     }
 
-    // check if the requesting user is a member of the event's group
+    // step 2: Perform the authorization check using the populated group data
     const group = event.courseGroup;
-    const isMember = group.members.some(member => member.userId.equals(userId));
+    if (!group) {
+        return res.status(404).json({ message: 'The group for this event no longer exists.' });
+    }
     
+    const isMember = group.members.some(member => member.equals(userId));
     if (!isMember) {
-        return res.status(403).json({ message: 'Forbidden: You are not a member of this event\'s group.' });
+      return res.status(403).json({ message: 'Forbidden: You are not a member of this event\'s group.' });
     }
 
-    // to avoid sending the whole members array to the client, we can create a new object
-    const eventResponse = event.toObject();
-    eventResponse.courseGroup = {
-        _id: group._id,
-        groupName: group.groupName
-    };
+    // step 3: populate the creator's information for the response.
+    await event.populate('createdBy', 'firstName lastName email');
 
-
-    res.status(200).json(eventResponse);
+    res.status(200).json(event);
 
   } catch (error) {
     console.error('Error fetching event by ID:', error);
@@ -98,6 +95,7 @@ const getEventById = async (req, res) => {
     res.status(500).json({ message: 'Internal server error.' });
   }
 };
+
 
 module.exports = {
   createEvent,
