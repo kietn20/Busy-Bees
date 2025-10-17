@@ -8,7 +8,8 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import { Button } from '@/components/ui/button';
 import { InviteModal } from '@/components/InviteModal';
 import { generateInvite, getGroupEvents, Event } from '@/services/groupApi';
-import { getEventById } from '@/services/eventApi';
+import { getGroupById, CourseGroup } from '@/services/groupApi';
+import { getEventById  } from '@/services/eventApi';
 import EventList from '@/components/events/EventList';
 import EventDetailModal from '@/components/events/EventDetailModal';
 import CreateEventModal from '@/components/events/CreateEventModal';
@@ -29,8 +30,32 @@ export default function GroupPage() {
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
+  const [group, setGroup] = useState<CourseGroup | null>(null);
+
   const params = useParams();
   const groupId = params.groupId as string; // get groupId from URL
+
+
+  useEffect(() => {
+    if (!groupId) return;
+    const fetchGroupDetails = async () => {
+      try {
+        const fetchedGroup = await getGroupById(groupId);
+        setGroup(fetchedGroup);
+      } catch (err) {
+        console.error("Failed to fetch group details", err);
+        // We can set an error state for the whole page here
+      }
+    };
+    fetchGroupDetails();
+  }, [groupId]);
+
+  useEffect(() => {
+    if (!groupId) return;
+    fetchEvents();
+  }, [groupId]);
+
+
 
   const fetchEvents = async () => {
     try {
@@ -88,7 +113,7 @@ export default function GroupPage() {
     <ProtectedRoute>
       <div className="container mx-auto p-8">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">Course Group Details</h1>
+          <h1 className="text-3xl font-bold">{group ? group.groupName : 'Course Group Details'}</h1>
           <div className="flex space-x-2">
             <Button variant="outline" onClick={() => setIsCreateModalOpen(true)}>
               Create Event
@@ -119,6 +144,11 @@ export default function GroupPage() {
           onClose={handleCloseDetailModal}
           event={selectedEvent}
           isLoading={isDetailLoading}
+          groupOwnerId={group?.ownerId || null}
+          onEventUpdated={() => {
+            handleCloseDetailModal();
+            fetchEvents();
+          }}
         />
 
 

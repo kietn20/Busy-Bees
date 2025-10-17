@@ -1,41 +1,54 @@
-// Purpose: API service for all course group related endpoints
-
 import api from './config';
 
 interface InviteResponse {
     inviteCode: string;
     expiresAt: string;
 }
-
 export interface Event {
     _id: string;
     title: string;
     description?: string;
-    startTime: string; // Dates are strings in JSON
+    startTime: string;
     endTime?: string;
     createdBy: {
         _id: string;
         firstName: string;
         lastName: string;
+        email: string;
+    };
+    courseGroup: {
+      _id: string;
+      groupName: string;
     };
 }
 
-export interface Group {
+
+export interface CourseGroup {
     _id: string;
     groupName: string;
     description?: string;
     ownerId: string;
-    members: string[];
+    members: {
+        userId: { // when populated, this will be the full user object
+            _id: string;
+            firstName: string;
+            lastName: string;
+            email: string;
+        };
+        role: 'owner' | 'member'; // use a union type for specific roles
+        _id: string;
+    }[];
 }
+
 
 export interface CreateGroupResponse {
     message: string;
-    group: Group;
+    group: CourseGroup;
 }
 
 export interface JoinGroupResponse {
     message: string;
-    group: Group;
+    group: CourseGroup;
 }
 
 interface CreateEventData {
@@ -44,6 +57,7 @@ interface CreateEventData {
   startTime: string;
   endTime?: string;
 }
+
 
 export const createGroup = (groupName: string, description?: string) => {
   return api.post<CreateGroupResponse>('/groups', { groupName, description });
@@ -65,4 +79,9 @@ export const createEvent = async (groupId: string, eventData: CreateEventData): 
 export const getGroupEvents = async (groupId: string): Promise<Event[]> => {
     const response = await api.get<Event[]>(`/groups/${groupId}/events`);
     return response.data;
+};
+
+export const getGroupById = async (groupId: string): Promise<CourseGroup> => {
+  const response = await api.get<{ group: CourseGroup }>(`/groups/${groupId}`);
+  return response.data.group;
 };
