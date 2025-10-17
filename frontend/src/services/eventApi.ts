@@ -20,3 +20,7 @@ export const updateEvent = async (eventId: string, eventData: UpdateEventData): 
   const response = await api.put<Event>(`/events/${eventId}`, eventData);
   return response.data;
 };
+
+export const deleteEvent = async (eventId: string): Promise<void> => {
+  await api.delete(`/events/${eventId}`);
+};

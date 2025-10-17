@@ -1,13 +1,24 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from '@/context/AuthContext';
-import { updateEvent } from '@/services/eventApi';
+import { updateEvent, deleteEvent } from '@/services/eventApi';
 import { Event } from '@/services/groupApi';
 
 interface EventDetailModalProps {
@@ -22,6 +33,7 @@ interface EventDetailModalProps {
 export default function EventDetailModal({ isOpen, onClose, event, isLoading, groupOwnerId, onEventUpdated }: EventDetailModalProps) {
   const { user } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // states for the edit form
   const [title, setTitle] = useState('');
@@ -39,6 +51,13 @@ export default function EventDetailModal({ isOpen, onClose, event, isLoading, gr
       setStartTime(localDateTime);
     }
   }, [event]);
+
+  // Reset edit mode when modal is closed or event changes
+  useEffect(() => {
+    if (!isOpen) {
+      setIsEditing(false);
+    }
+  }, [isOpen]);
 
   if (!event && !isLoading) return null;
 
@@ -63,6 +82,20 @@ export default function EventDetailModal({ isOpen, onClose, event, isLoading, gr
       console.error("Failed to update event", error);
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!event) return;
+    setIsDeleting(true);
+    try {
+      await deleteEvent(event._id);
+      onEventUpdated(); // refresh the parent list
+      onClose();
+    } catch (error) {
+      console.error("Failed to delete event", error);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -98,17 +131,43 @@ export default function EventDetailModal({ isOpen, onClose, event, isLoading, gr
         )}
 
 
-        <DialogFooter>
-          {canModify && (
-            isEditing ? (
-              <>
-                <Button variant="ghost" onClick={() => setIsEditing(false)}>Cancel</Button>
-                <Button onClick={handleSaveChanges} disabled={isSaving}>{isSaving ? 'Saving...' : 'Save Changes'}</Button>
-              </>
-            ) : (
-              <Button variant="outline" onClick={() => setIsEditing(true)}>Edit</Button>
-            )
-          )}
+        <DialogFooter className="sm:justify-between">
+          <div>
+            {canModify && !isEditing && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive">Delete</Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone. This will permanently delete the event "{event?.title}".
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDelete} disabled={isDeleting}>
+                      {isDeleting ? 'Deleting...' : 'Continue'}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+          </div>
+
+          <div className="flex space-x-2">
+            {canModify && (
+              isEditing ? (
+                <>
+                  <Button variant="ghost" onClick={() => setIsEditing(false)}>Cancel</Button>
+                  <Button onClick={handleSaveChanges} disabled={isSaving}>{isSaving ? 'Saving...' : 'Save Changes'}</Button>
+                </>
+              ) : (
+                <Button variant="outline" onClick={() => setIsEditing(true)}>Edit</Button>
+              )
+            )}
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
