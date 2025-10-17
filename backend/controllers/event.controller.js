@@ -128,9 +128,27 @@ const updateEvent = async (req, res) => {
 };
 
 
+// @desc    Delete an event
+// @route   DELETE /api/events/:eventId
+// @access  Private (Event Host or Group Owner)
+const deleteEvent = async (req, res) => {
+  try {
+    // the event is already fetched and user permission is verified by the canModifyEvent middleware
+    await Event.findByIdAndDelete(req.params.eventId);
+
+    res.status(200).json({ message: 'Event deleted successfully.' });
+
+  } catch (error) {
+    console.error('Error deleting event:', error);
+    res.status(500).json({ message: 'Internal server error.' });
+  }
+};
+
+
 module.exports = {
   createEvent,
   getGroupEvents,
   getEventById,
   updateEvent,
+  deleteEvent,
 };

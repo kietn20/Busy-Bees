@@ -1,8 +1,8 @@
 const express = require('express');
-const { createEvent, getGroupEvents, getEventById, updateEvent } = require('../controllers/event.controller');
+const { createEvent, getGroupEvents, getEventById, updateEvent, deleteEvent } = require('../controllers/event.controller');
 const { protect } = require('../middleware/auth.middleware');
 const { requireGroupMember } = require('../middleware/coursegroup.middleware');
-const { validateEvent, isEventHost} = require('../middleware/event.middleware');
+const { validateEvent, canModifyEvent} = require('../middleware/event.middleware');
 
 // router for routes nested under /api/groups/:groupId
 const nestedRouter = express.Router({ mergeParams: true });
@@ -14,7 +14,8 @@ nestedRouter.post('/', validateEvent, createEvent);
 const topLevelRouter = express.Router();
 topLevelRouter.use(protect); // All event routes should be protected
 topLevelRouter.get('/:eventId', getEventById);
-topLevelRouter.put('/:eventId', isEventHost, validateEvent, updateEvent); // only event host can update the event
+topLevelRouter.put('/:eventId', canModifyEvent, validateEvent, updateEvent); // only event host can update the event
+topLevelRouter.delete('/:eventId', canModifyEvent, deleteEvent); // event host or group owner can delete the event
 
 // export both routers
 module.exports = {

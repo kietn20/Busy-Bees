@@ -28,23 +28,31 @@ const isGroupMember = async (req, res, next) => {
   }
 };
 
-const isEventHost = async (req, res, next) => {
+// middleware to check if the user can modify an event (is host OR group owner)
+const canModifyEvent = async (req, res, next) => {
   try {
     const { eventId } = req.params;
     const userId = req.user._id;
 
-    const event = await Event.findById(eventId);
+    // populate the group owner's ID when fetching the event
+    const event = await Event.findById(eventId).populate({
+        path: 'courseGroup',
+        select: 'ownerId'
+    });
 
     if (!event) {
       return res.status(404).json({ message: 'Event not found.' });
     }
 
-    // check if the logged in user is the one who created the event
-    if (!event.createdBy.equals(userId)) {
-      return res.status(403).json({ message: 'Forbidden: You are not the host of this event.' });
+    const isEventHost = event.createdBy.equals(userId);
+    const isGroupOwner = event.courseGroup.ownerId.equals(userId);
+
+    // if the user is neither the host nor the group owner, deny access
+    if (!isEventHost && !isGroupOwner) {
+      return res.status(403).json({ message: 'Forbidden: You do not have permission to modify this event.' });
     }
-    
-    // attach the event to the request to avoid fetching it again in the controller
+
+    // attach the event to the request to avoid fetching it again
     req.event = event; 
     next();
   } catch (error) {
@@ -52,10 +60,9 @@ const isEventHost = async (req, res, next) => {
     if (error.kind === 'ObjectId') {
         return res.status(404).json({ message: 'Event not found.' });
     }
-    res.status(500).json({ message: 'Server error during event host authorization.' });
+    res.status(500).json({ message: 'Server error during event permission check.' });
   }
 };
-
 // validation rules for creating/updating an event
 const validateEvent = [
   body('title', 'Title is required').not().isEmpty().trim().escape(),
@@ -67,5 +74,5 @@ const validateEvent = [
 module.exports = {
   isGroupMember,
   validateEvent,
-  isEventHost,
+  canModifyEvent,
 };
