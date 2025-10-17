@@ -35,6 +35,27 @@ const createEvent = async (req, res) => {
   }
 };
 
+
+// @desc    Get all events for a specific group
+// @route   GET /api/groups/:groupId/events
+// @access  Private (Group Members)
+const getGroupEvents = async (req, res) => {
+  try {
+    const { groupId } = req.params;
+
+    const events = await Event.find({ courseGroup: groupId })
+      .sort({ startTime: 'asc' }) // sort by start time
+      .populate('createdBy', 'firstName lastName'); // populate creator name
+
+    res.status(200).json(events);
+
+  } catch (error) {
+    console.error('Error fetching group events:', error);
+    res.status(500).json({ message: 'Internal server error.' });
+  }
+};
+
 module.exports = {
   createEvent,
+  getGroupEvents,
 };
