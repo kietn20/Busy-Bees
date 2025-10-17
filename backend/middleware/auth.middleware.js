@@ -40,20 +40,18 @@ const protect = async (req, res, next) => {
 
 // Checks if user is authenticated via either JWT or Google OAuth/session
 const allowJwtOrGoogle = async (req, res, next) => {
-  // Try OAuth first
-  if (req.isAuthenticated && req.isAuthenticated()) {
+  // Try OAuth first - check if user is authenticated via session
+  if (req.isAuthenticated && req.isAuthenticated() && req.user) {
     return next();
   }
-  // Try JWT
-  try {
-    await protect(req, res, (err) => {
-        if (err) throw err;
-        next();
-    });
-  } catch (error) {
-    console.error('JWT authentication error:', error);
-    return res.status(401).json({ message: 'Not authorized, token invalid' });
+  
+  // Try JWT - check for Authorization header
+  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+    return protect(req, res, next);
   }
+  
+  // No valid authentication found
+  return res.status(401).json({ message: 'Not authorized, no valid authentication' });
 };
 
 module.exports = { 

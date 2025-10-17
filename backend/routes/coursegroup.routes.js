@@ -3,14 +3,18 @@
 const express = require('express');
 const { createCourseGroup, joinGroup, generateInvite, 
         getCourseGroupById, updateCourseGroup, deleteCourseGroup,
-        leaveGroup } 
+        leaveGroup, getUserGroups } 
         = require('../controllers/coursegroup.controller'); 
-const { protect } = require('../middleware/auth.middleware');
+const { allowJwtOrGoogle } = require('../middleware/auth.middleware');
 
 const router = express.Router();
 
 // all routes in this file will be protected, so we can use the middleware at the top level
-router.use(protect);
+// Use allowJwtOrGoogle to support both JWT and OAuth sessions
+router.use(allowJwtOrGoogle);
+
+// route to get all groups for the current user
+router.get("/", getUserGroups);
 
 //route to create a group
 router.post("/", createCourseGroup);

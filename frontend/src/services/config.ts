@@ -32,4 +32,19 @@ api.interceptors.request.use(
   }
 );
 
+// Add response interceptor to handle errors
+api.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  (error) => {
+    // Log the error for debugging but don't auto-redirect
+    // Let individual components or ProtectedRoute handle auth failures
+    if (error.response?.status === 401) {
+      console.warn('Authentication error: 401 Unauthorized');
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default api;
