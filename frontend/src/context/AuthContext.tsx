@@ -40,29 +40,54 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        // try to load the token from localStorage
-        const storedToken = localStorage.getItem("authToken");
-        if (storedToken) {
-            setToken(storedToken);
-        }
-        setIsLoading(false);
-    }, []);
+        const initAuth = async () => {
+            // Step 1: Check for JWT token in localStorage
+            const storedToken = localStorage.getItem("authToken");
+            if (storedToken) {
+                setToken(storedToken);
+                // Try to fetch user data with the JWT token
+                try {
+                    const res = await fetch("http://localhost:8080/api/account", {
+                        credentials: "include",
+                        headers: {
+                            'Authorization': `Bearer ${storedToken}`
+                        }
+                    });
 
-    // if no JWT token and no user, fetch user info using session cookie from Google OAuth
-    useEffect(() => {
-        if (!token && !user) {
-            setIsLoading(true);
-            fetch("http://localhost:8080/api/account", { credentials: "include" })
-                .then((res) => res.ok ? res.json() : null)
-                .then((data) => {
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data && data.user) {
+                            setUser(data.user);
+                        }
+                    }
+                } catch (error) {
+                    console.error("Error fetching user with JWT:", error);
+                }
+                setIsLoading(false);
+                return;
+            }
+
+            // Step 2: If no JWT token, try to fetch user from OAuth session
+            try {
+                const res = await fetch("http://localhost:8080/api/account", {
+                    credentials: "include"
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
                     if (data && data.user) {
                         setUser(data.user);
                     }
-                    setIsLoading(false);
-                })
-                .catch(() => setIsLoading(false));
-        }
-    }, [token, user]);
+                }
+            } catch (error) {
+                console.error("Error fetching user from session:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        initAuth();
+    }, []); // Only run once on mount
 
     const login = (newToken: string, userData: User) => {
         setUser(userData);
