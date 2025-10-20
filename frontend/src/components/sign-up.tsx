@@ -28,9 +28,23 @@ const signupSchema = z.object({
   email: z.email({
     message: "Please enter a valid email address.",
   }),
-  password: z.string().min(8, {
-    message: "Password must be at least 8 characters.",
-  }),
+  password: z
+    .string()
+    .min(8, {
+      message: "Password must be at least 8 characters.",
+    })
+    .regex(/[a-z]/, {
+      message: "Password must contain at least one lowercase letter.",
+    })
+    .regex(/[A-Z]/, {
+      message: "Password must contain at least one uppercase letter.",
+    })
+    .regex(/[0-9]/, {
+      message: "Password must contain at least one number.",
+    })
+    .regex(/[^a-zA-Z0-9]/, {
+      message: "Password must contain at least one special character.",
+    }),
 });
 
 const SignUpForm = () => {
@@ -63,8 +77,12 @@ const SignUpForm = () => {
 
       // Redirect to the dashboard after
       router.push("/dashboard");
-    } catch (error) {
-      setError("Signup failed. Please try again.");
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Signup failed. Please try again.");
+      }
     } finally {
       setIsLoading(false);
     }

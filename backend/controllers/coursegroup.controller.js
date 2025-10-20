@@ -286,6 +286,30 @@ const validateInviteCode = (req, res) => {
   res.status(200).json({ message: "Stub: validateInviteCode" });
 };
 
+// @desc    Get all groups where the user is a member
+// @route   GET /api/groups
+// @access  Private
+const getUserGroups = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    // Find all groups where the user is a member
+    const groups = await CourseGroup.find({
+      members: userId
+    }).populate('ownerId', 'firstName lastName email')
+      .populate('members', 'firstName lastName email')
+      .sort({ createdAt: -1 }); // Sort by newest first
+
+    res.status(200).json({
+      message: 'Groups fetched successfully',
+      groups
+    });
+  } catch (error) {
+    console.error('Error fetching user groups:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
 
 module.exports = {
   generateInvite,
@@ -294,5 +318,6 @@ module.exports = {
   getCourseGroupById,
   updateCourseGroup,
   deleteCourseGroup,
-  leaveGroup
+  leaveGroup,
+  getUserGroups
 };

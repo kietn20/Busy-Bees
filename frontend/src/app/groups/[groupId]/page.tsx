@@ -2,35 +2,110 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { Button } from '@/components/ui/button';
 import { InviteModal } from '@/components/InviteModal';
-import { generateInvite } from '@/services/groupApi';
+import { generateInvite, getGroupEvents, Event } from '@/services/groupApi';
+import { getGroupById, CourseGroup } from '@/services/groupApi';
+import { getEventById  } from '@/services/eventApi';
+import EventList from '@/components/events/EventList';
+import EventDetailModal from '@/components/events/EventDetailModal';
+import CreateEventModal from '@/components/events/CreateEventModal';
 
 export default function GroupPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [inviteCode, setInviteCode] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [isInviteLoading, setIsInviteLoading] = useState(false);
+  const [inviteError, setInviteError] = useState<string | null>(null);
+
+  const [events, setEvents] = useState<Event[]>([]);
+  const [isEventsLoading, setIsEventsLoading] = useState(true);
+  const [eventsError, setEventsError] = useState<string | null>(null);
+
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isDetailLoading, setIsDetailLoading] = useState(false);
+
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+
+  const [group, setGroup] = useState<CourseGroup | null>(null);
 
   const params = useParams();
   const groupId = params.groupId as string; // get groupId from URL
 
+
+  useEffect(() => {
+    if (!groupId) return;
+    const fetchGroupDetails = async () => {
+      try {
+        const fetchedGroup = await getGroupById(groupId);
+        setGroup(fetchedGroup);
+      } catch (err) {
+        console.error("Failed to fetch group details", err);
+        // We can set an error state for the whole page here
+      }
+    };
+    fetchGroupDetails();
+  }, [groupId]);
+
+  useEffect(() => {
+    if (!groupId) return;
+    fetchEvents();
+  }, [groupId]);
+
+
+
+  const fetchEvents = async () => {
+    try {
+      setIsEventsLoading(true);
+      const fetchedEvents = await getGroupEvents(groupId);
+      setEvents(fetchedEvents);
+    } catch (err) {
+      setEventsError('Failed to load events.');
+    } finally {
+      setIsEventsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!groupId) return;
+    fetchEvents();
+  }, [groupId]);
+
+  const handleViewEvent = async (eventId: string) => {
+    setIsDetailModalOpen(true);
+    setIsDetailLoading(true);
+    try {
+      const fetchedEvent = await getEventById(eventId);
+      setSelectedEvent(fetchedEvent);
+    } catch (err) {
+      console.error("Failed to fetch event details", err);
+      // Optionally, show an error toast here
+    } finally {
+      setIsDetailLoading(false);
+    }
+  };
+
+  const handleCloseDetailModal = () => {
+    setIsDetailModalOpen(false);
+    setSelectedEvent(null); // Clear selection on close
+  }
+
   const handleGenerateInvite = async () => {
     setIsModalOpen(true);
-    if (inviteCode) return; // dont fetch if we already have a code
+    if (inviteCode) return;
 
-    setIsLoading(true);
-    setError(null);
+    setIsInviteLoading(true);
+    setInviteError(null);
     try {
       const response = await generateInvite(groupId);
       setInviteCode(response.data.inviteCode);
     } catch (err) {
-      setError('Failed to generate invite code. Please try again.');
+      setInviteError('Failed to generate invite code. Please try again.');
     } finally {
-      setIsLoading(false);
+      setIsInviteLoading(false);
     }
   };
 
@@ -38,29 +113,50 @@ export default function GroupPage() {
     <ProtectedRoute>
       <div className="container mx-auto p-8">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">Course Group Details</h1>
-          <Button onClick={handleGenerateInvite}>
-            Invite Members
-          </Button>
+          <h1 className="text-3xl font-bold">{group ? group.groupName : 'Course Group Details'}</h1>
+          <div className="flex space-x-2">
+            <Button variant="outline" onClick={() => setIsCreateModalOpen(true)}>
+              Create Event
+            </Button>
+            <Button onClick={handleGenerateInvite}>Invite Members</Button>
+          </div>
         </div>
 
+        {/* --- PASS the fetchEvents function to the onEventCreated prop --- */}
+        <EventList
+          events={events}
+          isLoading={isEventsLoading}
+          error={eventsError}
+          onEventClick={handleViewEvent}
+        />
 
-
-
-
-
-
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <p>Group ID: {groupId}</p>
-          <p>This is where the group&apos;s notes, flashcards, and events will be displayed.</p>
-          {error && <p className="text-red-500 mt-4">{error}</p>}
-        </div>
 
         <InviteModal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           inviteCode={inviteCode}
-          isLoading={isLoading}
+          isLoading={isInviteLoading}
+        />
+
+
+        <EventDetailModal
+          isOpen={isDetailModalOpen}
+          onClose={handleCloseDetailModal}
+          event={selectedEvent}
+          isLoading={isDetailLoading}
+          groupOwnerId={group?.ownerId || null}
+          onEventUpdated={() => {
+            handleCloseDetailModal();
+            fetchEvents();
+          }}
+        />
+
+
+        <CreateEventModal
+          isOpen={isCreateModalOpen}
+          onClose={() => setIsCreateModalOpen(false)}
+          groupId={groupId}
+          onEventCreated={fetchEvents} // Pass the refetch function
         />
       </div>
     </ProtectedRoute>
