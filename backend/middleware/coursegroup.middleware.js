@@ -16,13 +16,19 @@ const requireGroupOwner = async (req, res, next) => {
       return res.status(404).json({ message: "Group not found" });
     }
 
-    // Check if user is the owner - THIS BLOCKS NON-OWNERS
-    if (!group.ownerId.equals(userId)) {
+    // Check if user is the owner by role - THIS BLOCKS NON-OWNERS
+    const memberRecord = group.members.find(member => member.userId.equals(userId));
+    if (!memberRecord) {
+      return res.status(403).json({ message: "You are not a member of this group" });
+    }
+    
+    if (memberRecord.role !== "owner") {
       return res.status(403).json({ message: "Access denied: Only the group owner can perform this action" });
     }
 
     // Only owners reach this point - attach group to request
     req.group = group;
+    req.memberRecord = memberRecord;
     next();
 
   } catch (error) {
@@ -48,13 +54,14 @@ const requireGroupMember = async (req, res, next) => {
     }
 
     // Check if user is a member (any role) - THIS BLOCKS NON-MEMBERS
-    const isMember = group.members.some(memberId => memberId.equals(userId));
-    if (!isMember) {
+    const memberRecord = group.members.find(member => member.userId.equals(userId));
+    if (!memberRecord) {
       return res.status(403).json({ message: "Access denied: You must be a member of this group" });
     }
 
-    // Attach group to request
+    // Attach group and member record to request
     req.group = group;
+    req.memberRecord = memberRecord;
     next();
 
   } catch (error) {
