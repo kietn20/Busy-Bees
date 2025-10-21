@@ -91,3 +91,11 @@ export const getUserGroups = async (): Promise<CourseGroup[]> => {
   const response = await api.get<{ groups: CourseGroup[] }>('/groups');
   return response.data.groups;
 };
+
+// Update a course group's details (owner only)
+export const updateCourseGroup = (groupId: string, data: { groupName?: string; description?: string }) => {
+  return api.put<{ message: string; group: CourseGroup }>(`/groups/${groupId}`, {
+    groupName: data.groupName,
+    description: data.description,
+  });
+};
