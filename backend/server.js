@@ -6,7 +6,7 @@ const passport = require("passport");
 const mongoose = require("mongoose");
 const User = require("./models/User.model");
 
-dotenv.config();
+dotenv.config({ path: __dirname + "/.env" });
 
 require("./config/passport"); // Passport config
 require("./config/db"); // MongoDB connection
@@ -16,6 +16,7 @@ const authRoutes = require("./routes/auth.routes");
 const accountRoutes = require("./routes/account.routes");
 const courseGroupRoutes = require("./routes/coursegroup.routes");
 const { nestedEventRouter, eventRouter } = require("./routes/event.routes"); 
+const { nestedNotesRouter, noteRouter } = require('./routes/notes.routes');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -47,6 +48,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/groups', courseGroupRoutes);
 app.use('/api/groups/:groupId/events', nestedEventRouter); // nested routes for group events
 app.use('/api/events', eventRouter); // top-level event routes
+app.use('/api/groups/:groupId/notes', nestedNotesRouter);
+app.use('/api/notes', noteRouter);
 
 
 // Health Check Endpoint
