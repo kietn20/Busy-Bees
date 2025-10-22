@@ -41,6 +41,29 @@ export interface CourseGroup {
     } | string>; // Can be populated user objects or just IDs
 }
 
+// need to add this interface for members list since 
+// i dont want to update the existing CourseGroup interface
+export interface PopulatedCourseGroup {
+    _id: string;
+    groupName: string;
+    description?: string;
+    ownerId: {
+        _id: string;
+        firstName: string;
+        lastName: string;
+        email: string;
+    };
+    members: Array<{
+        userId: {
+            _id: string;
+            firstName: string;
+            lastName: string;
+            email: string;
+        };
+        role: 'owner' | 'member';
+        joinedAt?: string;
+    }>;
+}
 
 export interface CreateGroupResponse {
     message: string;
@@ -84,6 +107,14 @@ export const getGroupEvents = async (groupId: string): Promise<Event[]> => {
 
 export const getGroupById = async (groupId: string): Promise<CourseGroup> => {
   const response = await api.get<{ group: CourseGroup }>(`/groups/${groupId}`);
+  return response.data.group;
+};
+
+// uses populated course group interface,
+// does the same thing as getGroupById but returns populated members
+// used for group members list
+export const getGroupWithMembers = async (groupId: string): Promise<PopulatedCourseGroup> => {
+  const response = await api.get<{ group: PopulatedCourseGroup }>(`/groups/${groupId}`);
   return response.data.group;
 };
 
