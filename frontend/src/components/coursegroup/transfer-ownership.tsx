@@ -12,10 +12,22 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import toast from 'react-hot-toast';
+import {
   transferCourseGroupOwnership,
   getGroupWithMembers,
   PopulatedCourseGroup
 } from '@/services/groupApi';
+import { set } from "zod";
 
 interface TransferOwnershipProps {
   groupId: string;
@@ -26,9 +38,11 @@ export default function TransferOwnership({ groupId, currentOwnerEmail }: Transf
   const router = useRouter();
   const [populatedGroup, setPopulatedGroup] = useState<PopulatedCourseGroup | null>(null);
   const [selectedMemberId, setSelectedMemberId] = useState<string>("");
+  const [selectedMemberName, setSelectedMemberName] = useState<string>("");
   const [selectedMemberEmail, setSelectedMemberEmail] = useState<string>("");
   const [transferring, setTransferring] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
   useEffect(() => {
     const fetchMembers = async () => {
@@ -52,38 +66,43 @@ export default function TransferOwnership({ groupId, currentOwnerEmail }: Transf
     const member = nonOwnerMembers.find(m => m.userId._id === memberId);
     if (member) {
       setSelectedMemberEmail(member.userId.email);
+      setSelectedMemberName(`${member.userId.firstName} ${member.userId.lastName}`);
     }
   };
 
   const handleTransferOwnership = async () => {
     if (!selectedMemberId) {
-      alert("Please select a member to transfer ownership to.");
       return;
     }
-
-    const selectedMember = nonOwnerMembers.find(m => m.userId._id === selectedMemberId);
-    if (!selectedMember) return;
-
-    const memberName = `${selectedMember.userId.firstName} ${selectedMember.userId.lastName}`;
     
-    if (!confirm(`Are you sure you want to transfer ownership to ${memberName} (${selectedMember.userId.email})? You will become a regular member.`)) {
-      return;
-    }
-
     try {
       setTransferring(true);
       const result = await transferCourseGroupOwnership(groupId, selectedMemberId);
-      alert(result.message);
+      toast.success(result.message, 
+        { duration: 2000 } // keeps notif visible for 3 seconds
+      );
+      
+      setShowConfirmDialog(false);
       
       // Redirect to group page since user is no longer owner
       router.push(`/groups/${groupId}`);
     } catch (err: any) {
       console.error("Transfer failed:", err);
-      alert(err.response?.data?.message || "Failed to transfer ownership");
+      toast.error(err.response?.data?.message || "Failed to transfer ownership");
+      setShowConfirmDialog(false);
     } finally {
       setTransferring(false);
     }
   };
+
+  const handleTransferClick = () => {
+    if (!selectedMemberId) {
+      toast.error("Please select a member to transfer ownership to.");
+      return;
+    }
+    setShowConfirmDialog(true);
+  };
+
 
   // Get non-owner members for the dropdown
   const nonOwnerMembers = populatedGroup?.members.filter(m => m.role !== 'owner') || [];
@@ -137,26 +156,11 @@ export default function TransferOwnership({ groupId, currentOwnerEmail }: Transf
               </Select>
             </div>
 
-            {/* Input field that shows selected member's email */}
-            <div className="space-y-2">
-              <label htmlFor="new-owner" className="block text-sm font-medium text-gray-700">
-                New Owner Email
-              </label>
-              <Input 
-                id="new-owner" 
-                type="text" 
-                value={selectedMemberEmail}
-                disabled 
-                className="bg-white" 
-                placeholder="Select a member from dropdown"
-              />
-            </div>
-
             {/* Change Owner Button */}
             <Button 
               variant="outline" 
               className="w-full"
-              onClick={handleTransferOwnership}
+              onClick={handleTransferClick}
               disabled={!selectedMemberId || transferring}
             >
               {transferring ? "Transferring..." : "Change Owner"}
@@ -168,6 +172,41 @@ export default function TransferOwnership({ groupId, currentOwnerEmail }: Transf
           </p>
         )}
       </div>
+      {/* Confirmation Dialog */}
+      <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Transfer Group Ownership?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3">
+                <div>
+                  You are about to transfer ownership of this group to:
+                </div>
+                <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
+                  <div className="font-semibold text-blue-900">{selectedMemberName}</div>
+                  <div className="text-sm text-blue-700">{selectedMemberEmail}</div>
+                </div>
+                <div className="text-red-600 font-medium pt-2">
+                  ⚠️ You will lose ownership privileges and become a regular member.
+                </div>
+                <div className="text-sm text-gray-600">
+                  This action cannot be undone without the new owner transferring it back.
+                </div>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={transferring}>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleTransferOwnership}
+              disabled={transferring}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {transferring ? "Transferring..." : "Yes, Transfer Ownership"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

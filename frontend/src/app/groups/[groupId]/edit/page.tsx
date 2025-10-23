@@ -5,10 +5,12 @@ import { useParams, useRouter } from "next/navigation";
 import ProtectedRoute from '@/components/ProtectedRoute';
 import EditGroupForm from '@/components/coursegroup/edit-group';
 import DeleteModal from '@/components/coursegroup/delete-modal';
+import TransferOwnership from '@/components/coursegroup/transfer-ownership';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { getGroupById, updateCourseGroup, CourseGroup } from '@/services/groupApi';
 import { useAuth } from '@/context/AuthContext';
+
 
 export default function EditGroupPage() {
   const params = useParams();
@@ -99,6 +101,11 @@ export default function EditGroupPage() {
     );
   }
 
+  // Get current owner email for TransferOwnership component
+  const currentOwnerEmail = typeof group.ownerId === 'string' 
+    ? group.ownerId 
+    : (group.ownerId as any)?.email || "";
+
   return (
     <ProtectedRoute>
       <div className="container mx-auto px-6 py-8 max-w-4xl">
@@ -111,6 +118,8 @@ export default function EditGroupPage() {
             Security
           </h2>
 
+          <TransferOwnership groupId={groupId} currentOwnerEmail={currentOwnerEmail} />
+          {/* OLD IMPLEMENTATION - REPLACED BY TransferOwnership COMPONENT
           <div className="mb-6">
             <div className="flex justify-between items-center">
               <div className="space-y-2 mb-4 w-full mx-4">
@@ -120,6 +129,8 @@ export default function EditGroupPage() {
 
               <Button variant="outline" className="w-full sm:w-auto mt-2 w-1/4">Change Owner</Button>
             </div>
+          </div> 
+          */}
 
             <div className="flex justify-between items-center w-full py-4">
               <div className="space-y-1 mx-4">
@@ -130,7 +141,6 @@ export default function EditGroupPage() {
             </div>
           </div>
         </div>
-      </div>
     </ProtectedRoute>
   );
 }
