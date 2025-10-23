@@ -250,22 +250,6 @@ const leaveGroup = async (req, res) => {
   }
 };
 
-
-// gets all course groups
-const getCourseGroups = (req, res) => {
-  res.status(200).json({ message: "Stub: getCourseGroups" });
-};
-
-// join group via invite
-const addUserToCourseGroup = (req, res) => {
-  res.status(200).json({ message: "Stub: addUserToCourseGroup" });
-};
-
-// leave group (non-owners only)
-const removeUserFromCourseGroup = (req, res) => {
-  res.status(200).json({ message: "Stub: removeUserFromCourseGroup" });
-};
-
 // @desc    Transfer ownership of a course group to another member
 // @route   PUT /api/groups/:groupId/transfer-ownership
 // @access  Private (Owner only)
@@ -319,21 +303,6 @@ const transferCourseGroupOwnership = async (req, res) => {
   }
 };
 
-// lists all members of a course group
-const getGroupMembers = (req, res) => {
-  res.status(200).json({ message: "Stub: getGroupMembers" });
-};
-
-// fetch group invite link
-const getGroupInviteLink = (req, res) => {
-  res.status(200).json({ message: "Stub: getGroupInviteLink" });
-};
-
-// validate invite before joining
-const validateInviteCode = (req, res) => {
-  res.status(200).json({ message: "Stub: validateInviteCode" });
-};
-
 // @desc    Get all groups where the user is a member
 // @route   GET /api/groups
 // @access  Private
@@ -358,6 +327,45 @@ const getUserGroups = async (req, res) => {
   }
 };
 
+
+
+// gets all course groups
+// not really necessary we have getUserGroups
+const getCourseGroups = (req, res) => {
+  res.status(200).json({ message: "Stub: getCourseGroups" });
+};
+
+// join group via invite
+// we already have joinGroup
+const addUserToCourseGroup = (req, res) => {
+  res.status(200).json({ message: "Stub: addUserToCourseGroup" });
+};
+
+// leave group (non-owners only)
+// leaveGroup function along with middleware handles this already
+const removeUserFromCourseGroup = (req, res) => {
+  res.status(200).json({ message: "Stub: removeUserFromCourseGroup" });
+};
+
+
+// lists all members of a course group
+// we do not need this for displaying members
+// but we could use it later if we need only members w/o group data
+const getGroupMembers = (req, res) => {
+  res.status(200).json({ message: "Stub: getGroupMembers" });
+};
+
+// fetch group invite link
+// we dont need this we already have generateInvite
+const getGroupInviteLink = (req, res) => {
+  res.status(200).json({ message: "Stub: getGroupInviteLink" });
+};
+
+// validate invite before joining
+// we dont need this, join group already validates it
+const validateInviteCode = (req, res) => {
+  res.status(200).json({ message: "Stub: validateInviteCode" });
+};
 
 module.exports = {
   generateInvite,
