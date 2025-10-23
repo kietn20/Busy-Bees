@@ -137,15 +137,19 @@ export const updateCourseGroup = (groupId: string, data: { groupName?: string; d
     description: data.description,
   });
 };
-
 // transfer group ownership to another member (owner only)
 export const transferCourseGroupOwnership = async (
-  groupId: string, 
-  newOwnerId: string
-): Promise<TransferOwnershipResponse> => {
+    groupId: string, 
+    newOwnerId: string
+  ): Promise<TransferOwnershipResponse> => {
   const response = await api.put<TransferOwnershipResponse>(
     `/groups/${groupId}/transfer-ownership`,
     { newOwnerId }
   );
   return response.data;
+};
+
+// Delete a course group (owner only)
+export const deleteCourseGroup = (groupId: string) => {
+  return api.delete<{ message: string }>(`/groups/${groupId}`);
 };
