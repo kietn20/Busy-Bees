@@ -8,10 +8,13 @@ import DeleteModal from '@/components/coursegroup/delete-modal';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { getGroupById, updateCourseGroup, CourseGroup } from '@/services/groupApi';
+import { useAuth } from '@/context/AuthContext';
 
 export default function EditGroupPage() {
   const params = useParams();
   const router = useRouter();
+  const { user } = useAuth();
+
   if (!params || !params.groupId) {
     return (
       <ProtectedRoute>
@@ -26,6 +29,34 @@ export default function EditGroupPage() {
   const [description, setDescription] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // prevent members from accesing edit page here using a useEffect
+  // redirect them to 403 page if they are not owners
+
+  useEffect(() => {
+  const checkOwnership = async () => {
+    if (!groupId || !user) return;
+      
+    try {
+      const g = await getGroupById(groupId);
+        
+        // Check if current user is the owner using role from members array
+        const ownerMember = g.members?.find(
+          (member: any) => member.userId._id === user.id && member.role === 'owner'
+        );
+        
+        if (!ownerMember) {
+          // User is not the owner - redirect to 403 page
+          router.push('/403');
+        }
+      } catch (error) {
+        console.error('Error checking ownership:', error);
+        router.push('/403');
+      }
+    };
+    
+    checkOwnership();
+  }, [groupId, user, router]);
 
   useEffect(() => {
     if (!groupId) return;

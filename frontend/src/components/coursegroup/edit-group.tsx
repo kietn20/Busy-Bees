@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { getGroupById, updateCourseGroup } from '@/services/groupApi';
+import GroupMembersList from './group-members-list';
 
 type InitialGroupShape = {
   id?: string;
@@ -102,6 +103,14 @@ export default function EditGroupForm({ groupId, initialGroup, onSaved }: Props)
           </div>
         )}
       </form>
+      {/* Group members list */}
+      {(groupId || group?.id) && (
+        <div className="mt-8 border-t pt-6">
+          <GroupMembersList groupId={groupId || group?.id || ''} />
+        </div>
+      )}
+
+
     </div>
   );
 }
