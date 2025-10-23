@@ -49,7 +49,10 @@ export interface CreateGroupResponse {
 
 export interface JoinGroupResponse {
     message: string;
-    group: CourseGroup;
+    group: {
+        id: string;
+        groupName: string;
+    };
 }
 
 interface CreateEventData {
