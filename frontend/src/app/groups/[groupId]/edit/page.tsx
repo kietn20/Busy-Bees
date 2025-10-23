@@ -95,7 +95,7 @@ export default function EditGroupPage() {
                 <h4 className="font-medium text-gray-800">Delete Group</h4>
                 <p className="text-sm text-gray-600">Permanently delete the group and all associated data. This action cannot be undone.</p>
               </div>
-              <DeleteModal />
+              <DeleteModal groupId={groupId} />
             </div>
           </div>
         </div>
