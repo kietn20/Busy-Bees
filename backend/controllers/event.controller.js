@@ -77,8 +77,9 @@ const getEventById = async (req, res) => {
         return res.status(404).json({ message: 'The group for this event no longer exists.' });
     }
     
-    const isMember = group.members.some(member => member.equals(userId));
-    if (!isMember) {
+    const isOwner = group.ownerId.equals(userId);
+    const isMember = group.members.some(member => member.userId.equals(userId));
+    if (!isOwner && !isMember) {
       return res.status(403).json({ message: 'Forbidden: You are not a member of this event\'s group.' });
     }
 
