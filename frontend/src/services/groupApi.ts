@@ -133,3 +133,8 @@ export const updateCourseGroup = (groupId: string, data: { groupName?: string; d
     description: data.description,
   });
 };
+
+// Delete a course group (owner only)
+export const deleteCourseGroup = (groupId: string) => {
+  return api.delete<{ message: string }>(`/groups/${groupId}`);
+};
