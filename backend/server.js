@@ -6,7 +6,7 @@ const passport = require("passport");
 const mongoose = require("mongoose");
 const User = require("./models/User.model");
 
-dotenv.config({ path: __dirname + "/.env" });
+dotenv.config();
 
 require("./config/passport"); // Passport config
 require("./config/db"); // MongoDB connection
