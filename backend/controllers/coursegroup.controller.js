@@ -2,6 +2,8 @@
 const CourseGroup = require('../models/CourseGroup.model');
 const Invite = require('../models/Invite.model');
 const User = require('../models/User.model');
+const Note = require('../models/Note.model');
+const Event = require('../models/Event.model');
 const { generateInviteCode } = require('../utils/invite.util');
 
 // @desc    Create a new course group
@@ -19,13 +21,22 @@ const createCourseGroup = async (req, res) => {
       return res.status(400).json({ message: "Group name is required." });
     }
 
+    // 1. Create the course group
     const newGroup = await CourseGroup.create({
       groupName,
       description,
-      ownerId: req.user._id, // keep here for easy reference
-      members: [
-        { userId: req.user._id, role: "owner" }  // add owner as first member
-      ],
+      ownerId: req.user._id,
+      members: [{ userId: req.user._id, role: "owner" }],
+    });
+
+    // 2. Add the group to owner's registeredCourses
+    await User.findByIdAndUpdate(req.user._id, {
+      $addToSet: {
+        registeredCourses: {
+          courseId: newGroup._id,
+          courseName: newGroup.groupName,
+        },
+      },
     });
 
     res.status(201).json({
@@ -154,8 +165,8 @@ const joinGroup = async (req, res) => {
 
 
     // 6. add the group to the user's registeredCourses (NOT IMPLEMENTED YET BECAUSE USER MODEL DOESN'T HAVE IT)
-    // const courseInfo = { courseId: group._id, courseName: group.groupName };
-    // await User.findByIdAndUpdate(userId, { $addToSet: { registeredCourses: courseInfo } });
+    const courseInfo = { courseId: group._id, courseName: group.groupName };
+    await User.findByIdAndUpdate(userId, { $addToSet: { registeredCourses: courseInfo } });
 
 
 
@@ -202,15 +213,27 @@ const updateCourseGroup = async (req, res) => {
 // @access  Private
 const deleteCourseGroup = async (req, res) => {
   try {
-    const group = req.group; // from our 'requireGroupOwner' middleware
+    const group = req.group; // from requireGroupOwner
 
-    // Delete all related invites first
+    // 1) Delete all invites for this group
     await Invite.deleteMany({ courseGroup: group._id });
 
-    // Delete the group
+    // 2) Delete all notes for this group
+    await Note.deleteMany({ groupId: group._id });
+
+    // 3) Remove this group from every user's registeredCourses
+    await User.updateMany(
+      { "registeredCourses.courseId": group._id },
+      { $pull: { registeredCourses: { courseId: group._id } } }
+    );
+
+    // 4) Delete all events related to this group
+    await Event.deleteMany({ groupId: group._id });
+
+    // 5) Delete the group itself
     await CourseGroup.findByIdAndDelete(group._id);
 
-    res.status(200).json({ message: "Course group and related invites deleted successfully." });
+    res.status(200).json({ message: "Course group and related data deleted successfully." });
   } catch (error) {
     console.error("Error deleting course group:", error);
     res.status(500).json({ message: "Server error", error: error.message });
@@ -224,21 +247,36 @@ const leaveGroup = async (req, res) => {
   try {
     const { groupId } = req.params;
     const userId = req.user._id;
-    const group = req.group; // from our 'requireGroup' middleware
-    const memberRecord = req.memberRecord; // from our 'requireGroup' middleware
+    const group = req.group; // from requireGroup middleware
+    const memberRecord = req.memberRecord; // from requireGroup middleware
 
-    // Check if user is the owner (by role)
+    // Prevent owner from leaving
     if (memberRecord.role === "owner") {
       return res.status(403).json({
         message: "Group owners cannot leave their own group. Transfer ownership first.",
       });
     }
 
-    // Remove user from members list
-    group.members = group.members.filter((member) => !member.userId.equals(userId));
+    // Check if they're already not a member
+    const isMember = group.members.some((member) =>
+      member.userId.toString() === userId.toString()
+    );
+    if (!isMember) {
+      return res.status(409).json({
+        message: "You are not a member of this group.",
+      });
+    }
+
+    // Remove from group's member list
+    group.members = group.members.filter(
+      (member) => !member.userId.equals(userId)
+    );
     await group.save();
 
-    await User.findByIdAndUpdate(userId, { $pull: { registeredCourses: { courseId: groupId } } });
+    // Remove from user's registeredCourses
+    await User.findByIdAndUpdate(userId, {
+      $pull: { registeredCourses: { courseId: groupId } },
+    });
 
     res.status(200).json({
       message: "Successfully left the group.",
