@@ -85,6 +85,10 @@ interface CreateEventData {
   endTime?: string;
 }
 
+interface TransferOwnershipResponse {
+  message: string;
+  group: CourseGroup;
+}
 
 export const createGroup = (groupName: string, description?: string) => {
   return api.post<CreateGroupResponse>('/groups', { groupName, description });
@@ -132,6 +136,17 @@ export const updateCourseGroup = (groupId: string, data: { groupName?: string; d
     groupName: data.groupName,
     description: data.description,
   });
+};
+// transfer group ownership to another member (owner only)
+export const transferCourseGroupOwnership = async (
+    groupId: string, 
+    newOwnerId: string
+  ): Promise<TransferOwnershipResponse> => {
+  const response = await api.put<TransferOwnershipResponse>(
+    `/groups/${groupId}/transfer-ownership`,
+    { newOwnerId }
+  );
+  return response.data;
 };
 
 // Delete a course group (owner only)

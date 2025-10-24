@@ -250,6 +250,59 @@ const leaveGroup = async (req, res) => {
   }
 };
 
+// @desc    Transfer ownership of a course group to another member
+// @route   PUT /api/groups/:groupId/transfer-ownership
+// @access  Private (Owner only)
+const transferCourseGroupOwnership = async (req, res) => {
+  try {
+    const { groupId } = req.params; // mongoDB id of the group
+    const { newOwnerId } = req.body; // mongoDB id of the new owner
+    const currentUserId = req.user._id; // from our 'allowJwtOrGoogle' middleware
+    const group = req.group; // from our 'requireGroupOwner' middleware
+
+    // validate input
+    if (!newOwnerId) {
+      return res.status(400).json({ message: 'New owner ID is required.' });
+    }
+
+    // check if new owner is different from current owner
+    if (group.ownerId.equals(newOwnerId)) {
+      return res.status(400).json({ message: 'New owner must be different from current owner.' });
+    }
+
+    // check if new owner is member of the group and find the owner
+    const newOwnerMember = group.members.find(member => member.userId.equals(newOwnerId));
+    const currentOwnerMember = group.members.find(member => member.userId.equals(currentUserId));
+
+    if (!newOwnerMember) {
+      return res.status(404).json({ message: 'The specified new owner is not a member of the group.' });
+    }
+    
+    // update roles in members array
+    currentOwnerMember.role = "member";
+    newOwnerMember.role = "owner";
+
+    // update ownerId property as well to keep in sync with members array
+    group.ownerId = newOwnerId;
+
+    // save changes
+    await group.save();
+
+    // populate updated group for response
+    const updatedGroup = await CourseGroup.findById(groupId)
+      .populate("members.userId", "firstName lastName email")
+      .populate("ownerId", "firstName lastName email");
+
+    res.status(200).json({
+      message: "Ownership transferred successfully.",
+      group: updatedGroup
+    });
+  } catch (error) {
+    console.error("Error transferring ownership:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
 // @desc    Get all groups where the user is a member
 // @route   GET /api/groups
 // @access  Private
@@ -274,10 +327,6 @@ const getUserGroups = async (req, res) => {
   }
 };
 
-// transfers ownership of a course group to another user
-const transferCourseGroupOwnership = (req, res) => {
-  res.status(200).json({ message: "Stub: transferCourseGroupOwnership" });
-};
 
 
 // gets all course groups
@@ -326,5 +375,6 @@ module.exports = {
   updateCourseGroup,
   deleteCourseGroup,
   leaveGroup,
-  getUserGroups
+  getUserGroups,
+  transferCourseGroupOwnership
 };
