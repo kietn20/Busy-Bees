@@ -41,6 +41,29 @@ export interface CourseGroup {
     } | string>; // Can be populated user objects or just IDs
 }
 
+// need to add this interface for members list since 
+// i dont want to update the existing CourseGroup interface
+export interface PopulatedCourseGroup {
+    _id: string;
+    groupName: string;
+    description?: string;
+    ownerId: {
+        _id: string;
+        firstName: string;
+        lastName: string;
+        email: string;
+    };
+    members: Array<{
+        userId: {
+            _id: string;
+            firstName: string;
+            lastName: string;
+            email: string;
+        };
+        role: 'owner' | 'member';
+        joinedAt?: string;
+    }>;
+}
 
 export interface CreateGroupResponse {
     message: string;
@@ -49,7 +72,10 @@ export interface CreateGroupResponse {
 
 export interface JoinGroupResponse {
     message: string;
-    group: CourseGroup;
+    group: {
+        id: string;
+        groupName: string;
+    };
 }
 
 interface CreateEventData {
@@ -87,7 +113,28 @@ export const getGroupById = async (groupId: string): Promise<CourseGroup> => {
   return response.data.group;
 };
 
+// uses populated course group interface,
+// does the same thing as getGroupById but returns populated members
+// used for group members list
+export const getGroupWithMembers = async (groupId: string): Promise<PopulatedCourseGroup> => {
+  const response = await api.get<{ group: PopulatedCourseGroup }>(`/groups/${groupId}`);
+  return response.data.group;
+};
+
 export const getUserGroups = async (): Promise<CourseGroup[]> => {
   const response = await api.get<{ groups: CourseGroup[] }>('/groups');
   return response.data.groups;
+};
+
+// Update a course group's details (owner only)
+export const updateCourseGroup = (groupId: string, data: { groupName?: string; description?: string }) => {
+  return api.put<{ message: string; group: CourseGroup }>(`/groups/${groupId}`, {
+    groupName: data.groupName,
+    description: data.description,
+  });
+};
+
+// Delete a course group (owner only)
+export const deleteCourseGroup = (groupId: string) => {
+  return api.delete<{ message: string }>(`/groups/${groupId}`);
 };

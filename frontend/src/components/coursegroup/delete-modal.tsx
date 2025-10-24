@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -10,11 +13,32 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
+import { deleteCourseGroup } from "@/services/groupApi";
 
-const DeleteModal = () => {
+const DeleteModal = ({ groupId }: { groupId: string }) => {
+  const router = useRouter();
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    setError(null);
+    try {
+      await deleteCourseGroup(groupId);
+      // navigate back to groups list after deletion
+      router.push('/groups');
+    } catch (err: any) {
+      console.error('Failed to delete group', err);
+      setError(err?.response?.data?.message || 'Failed to delete group');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <AlertDialog>
-      <AlertDialogTrigger>
+      <AlertDialogTrigger asChild>
         <Button variant="destructive">Delete</Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
@@ -27,7 +51,9 @@ const DeleteModal = () => {
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction className="bg-red-500">Delete</AlertDialogAction>
+           <AlertDialogAction onClick={handleDelete} className="bg-red-500" disabled={isDeleting}>
+            {isDeleting ? 'Deleting...' : 'Delete'}
+          </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

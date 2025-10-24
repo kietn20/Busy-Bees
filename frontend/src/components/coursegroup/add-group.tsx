@@ -51,7 +51,7 @@ const AddGroup = () => {
         // Close the dialog and redirect
         setIsOpen(false);
         setInputValue("");
-        router.push(`/groups/${response.data.group._id}`);
+        router.push(`/groups/${response.data.group.id}`);
         router.refresh();
       }
     } catch (err) {
