@@ -1,18 +1,24 @@
 /* BlockNote Custom Styles */
 
 .bn-container {
-  font-family: Inter, sans-serif;
+  font-family: Inter, sans-serif !important;
+  height: 100% !important;
+  max-height: 100% !important;
+  overflow-y: auto !important;
 }
 
 .bn-editor {
-  border: 1px solid hsl(var(--border));
-  border-radius: 8px;
-  background: hsl(var(--background));
+  border-radius: 8px !important;
+  background: hsl(var(--background)) !important;
+  height: 100% !important;
+  max-height: 100% !important;
+  overflow-y: auto !important;
 }
 
 .bn-editor .ProseMirror {
-  padding: 16px;
-  min-height: 200px;
+  padding: 16px !important;
+  max-height: 100% !important;
+  overflow-y: auto !important;
 }
 
 /* Ensure proper theming */
