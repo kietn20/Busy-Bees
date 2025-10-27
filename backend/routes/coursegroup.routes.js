@@ -36,7 +36,7 @@ router.put("/:id", requireGroupOwner, updateCourseGroup);
 router.delete("/:groupId", requireGroupOwner, deleteCourseGroup);
 
 // route to generate an invite code for a specific group
-router.get('/:groupId/invite', requireGroupOwner, generateInvite);
+router.get('/:groupId/invite', requireGroupMember, generateInvite);
 
 // route to transfer group ownership
 router.put("/:groupId/transfer-ownership", requireGroupOwner, transferCourseGroupOwnership);
