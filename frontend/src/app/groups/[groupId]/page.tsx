@@ -35,6 +35,7 @@ export default function GroupPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const [group, setGroup] = useState<CourseGroup | null>(null);
+  const [isLeaveHover, setIsLeaveHover] = useState(false);
 
   const params = useParams();
   if (!params || !params.groupId) {
@@ -156,10 +157,23 @@ export default function GroupPage() {
                 variant="outline"
                 size="icon"
                 title="Leave group"
+                onMouseEnter={() => setIsLeaveHover(true)}
+                onMouseLeave={() => setIsLeaveHover(false)}
+                className={`relative inline-flex items-center justify-center p-2 rounded-md shadow-xs transition-all duration-300 ease-in-out hover:bg-red-600 hover:text-white ${
+                  isLeaveHover ? "bg-red-600 text-white opacity-100" : "opacity-60"
+                } focus:outline-none`}
               >
                 <span className="flex items-center justify-center">
-                  <DoorClosed className="w-5 h-5 transition-opacity duration-500 ease-in-out opacity-100 group-hover:opacity-0" />
-                  <DoorOpen className="w-5 h-5 absolute transition-opacity duration-500 ease-in-out opacity-0 group-hover:opacity-100" />
+                  <DoorClosed
+                    className={`w-5 h-5 transition-opacity duration-500 ease-in-out ${
+                      isLeaveHover ? "opacity-0" : "opacity-100"
+                    }`}
+                  />
+                  <DoorOpen
+                    className={`w-5 h-5 absolute transition-opacity duration-500 ease-in-out ${
+                      isLeaveHover ? "opacity-100" : "opacity-0"
+                    }`}
+                  />
                 </span>
               </Button>
             </LeaveModal>
