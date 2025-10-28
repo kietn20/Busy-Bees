@@ -1,0 +1,203 @@
+/* BlockNote Custom Styles */
+
+.bn-container {
+  font-family: Inter, sans-serif !important;
+  height: 100% !important;
+  max-height: 100% !important;
+  overflow-y: auto !important;
+}
+
+.bn-editor {
+  border-radius: 8px !important;
+  background: hsl(var(--background)) !important;
+  height: 100% !important;
+  max-height: 100% !important;
+  overflow-y: auto !important;
+}
+
+.bn-editor .ProseMirror {
+  padding: 16px !important;
+  max-height: 100% !important;
+  overflow-y: auto !important;
+}
+
+/* Ensure proper theming */
+.bn-editor .bn-block-content {
+  color: hsl(var(--foreground));
+}
+
+/* Slash Menu Styling */
+.bn-suggestion-menu,
+[data-suggestion-menu] {
+  max-height: 300px !important;
+  overflow-y: auto !important;
+  border-radius: 8px !important;
+  border: 1px solid hsl(var(--border)) !important;
+  background: hsl(var(--background)) !important;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
+}
+
+/* Menu Items */
+.bn-suggestion-menu .bn-suggestion-menu-item,
+[data-suggestion-menu] [class*="item"] {
+  border-radius: 6px !important;
+  margin: 2px 4px !important;
+  padding: 2px 4px !important;
+  font-size: 14px !important;
+  transition: all 0.15s ease !important;
+  cursor: pointer !important;
+}
+
+/* Menu Item Text */
+.bn-suggestion-menu .bn-suggestion-menu-item .bn-suggestion-menu-item-title,
+[data-suggestion-menu] [class*="item"] [class*="title"] {
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  color: hsl(var(--foreground)) !important;
+}
+
+.bn-suggestion-menu
+  .bn-suggestion-menu-item
+  .bn-suggestion-menu-item-description,
+[data-suggestion-menu] [class*="item"] [class*="description"] {
+  font-size: 12px !important;
+  color: hsl(var(--muted-foreground)) !important;
+  opacity: 0.9 !important;
+}
+
+/* Group Labels */
+.bn-suggestion-menu .bn-suggestion-menu-label,
+[data-suggestion-menu] [class*="label"] {
+  padding: 6px 10px 3px 10px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  color: hsl(var(--muted-foreground)) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+}
+
+/* Custom Scrollbar */
+.bn-suggestion-menu::-webkit-scrollbar,
+[data-suggestion-menu]::-webkit-scrollbar {
+  width: 6px;
+}
+
+.bn-suggestion-menu::-webkit-scrollbar-track,
+[data-suggestion-menu]::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.bn-suggestion-menu::-webkit-scrollbar-thumb,
+[data-suggestion-menu]::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+  border-radius: 3px;
+}
+
+.bn-suggestion-menu::-webkit-scrollbar-thumb:hover,
+[data-suggestion-menu]::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground));
+}
+
+.bn-container .bn-editor {
+  color: black;
+}
+
+.bn-toolbar {
+  background-color: white;
+}
+
+/* Toolbar Items Cursor */
+.bn-toolbar .bn-toolbar-item,
+.bn-toolbar button,
+.bn-toolbar [role="button"],
+.bn-toolbar .bn-button,
+[data-toolbar] button,
+[data-toolbar] [role="button"] {
+  cursor: pointer !important;
+}
+
+.bn-side-menu {
+  align-items: center !important;
+  display: flex !important;
+  justify-content: center !important;
+  background-color: white !important;
+}
+
+/* Side Menu Container */
+.bn-side-menu,
+[data-side-menu] {
+  background: white !important;
+  border-radius: 6px !important;
+}
+
+/* Side Menu Dropdown */
+.bn-side-menu-dropdown,
+[data-side-menu-dropdown] {
+  background: white !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1) !important;
+  padding: 3px !important;
+}
+
+/* Side Menu Items */
+.bn-side-menu-dropdown .bn-side-menu-item,
+[data-side-menu-dropdown] [class*="item"] {
+  color: #000000 !important;
+  padding: 8px 12px !important;
+  border-radius: 6px !important;
+  cursor: pointer !important;
+}
+
+/* Force all popover/dropdown text to be dark */
+[data-radix-popper-content-wrapper],
+[role="dialog"],
+[role="menu"],
+[role="listbox"] {
+  background: white !important;
+  border-radius: 8px !important;
+}
+
+/* Color Menu Items - Make them wider */
+[data-radix-popper-content-wrapper] > div > div,
+[role="menu"] > div,
+[role="listbox"] > div {
+  padding: 5px 10px !important;
+  border-radius: 6px !important;
+  min-height: 36px !important;
+}
+/* Target menu items by their specific attributes */
+[role="menuitemcheckbox"],
+[role="menuitem"],
+[data-radix-collection-item],
+div[role="menuitemcheckbox"],
+div[role="menuitem"] {
+  cursor: pointer !important;
+  padding: 8px 12px !important;
+  border-radius: 6px !important;
+  margin: 2px 0 !important;
+}
+
+/* Hover effects for menu items */
+[role="menuitemcheckbox"]:hover,
+[role="menuitem"]:hover,
+[data-radix-collection-item]:hover {
+  background: #f3f4f6 !important;
+}
+
+/* button background colors */
+[role="menuitemcheckbox"],
+[role="menuitem"],
+[data-radix-collection-item],
+div[role="menuitemcheckbox"],
+div[role="menuitem"] {
+  background: white !important;
+  color: #000000 !important;
+}
+
+/* Ensure buttons stay white when not hovered */
+button[role="menuitemcheckbox"],
+button[role="menuitem"] {
+  background: white !important;
+  color: #000000 !important;
+}
