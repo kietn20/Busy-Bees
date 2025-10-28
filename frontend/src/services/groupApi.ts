@@ -153,3 +153,7 @@ export const transferCourseGroupOwnership = async (
 export const deleteCourseGroup = (groupId: string) => {
   return api.delete<{ message: string }>(`/groups/${groupId}`);
 };
+
+export const leaveCourseGroup = (groupId: string) => {
+  return api.post<{ message: string }>(`/groups/${groupId}/leave`);
+};

@@ -7,6 +7,8 @@ import { useParams, useRouter } from "next/navigation";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { Button } from "@/components/ui/button";
 import { InviteModal } from "@/components/InviteModal";
+import LeaveModal from "@/components/coursegroup/leave-modal";
+import { DoorOpen, DoorClosed } from "lucide-react";
 import { generateInvite, getGroupEvents, Event } from "@/services/groupApi";
 import { getGroupById, CourseGroup } from "@/services/groupApi";
 import { useAuth } from "@/context/AuthContext";
@@ -33,6 +35,7 @@ export default function GroupPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const [group, setGroup] = useState<CourseGroup | null>(null);
+  const [isLeaveHover, setIsLeaveHover] = useState(false);
 
   const params = useParams();
   if (!params || !params.groupId) {
@@ -149,6 +152,31 @@ export default function GroupPage() {
               Create Event
             </Button>
             <Button onClick={handleGenerateInvite}>Invite Members</Button>
+            <LeaveModal groupId={groupId}>
+              <Button
+                variant="outline"
+                size="icon"
+                title="Leave group"
+                onMouseEnter={() => setIsLeaveHover(true)}
+                onMouseLeave={() => setIsLeaveHover(false)}
+                className={`relative inline-flex items-center justify-center p-2 rounded-md shadow-xs transition-all duration-300 ease-in-out hover:bg-red-600 hover:text-white ${
+                  isLeaveHover ? "bg-red-600 text-white opacity-100" : "opacity-60"
+                } focus:outline-none`}
+              >
+                <span className="flex items-center justify-center">
+                  <DoorClosed
+                    className={`w-5 h-5 transition-opacity duration-500 ease-in-out ${
+                      isLeaveHover ? "opacity-0" : "opacity-100"
+                    }`}
+                  />
+                  <DoorOpen
+                    className={`w-5 h-5 absolute transition-opacity duration-500 ease-in-out ${
+                      isLeaveHover ? "opacity-100" : "opacity-0"
+                    }`}
+                  />
+                </span>
+              </Button>
+            </LeaveModal>
           </div>
         </div>
 
