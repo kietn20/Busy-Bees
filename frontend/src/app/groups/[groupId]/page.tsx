@@ -2,18 +2,18 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
-import ProtectedRoute from '@/components/ProtectedRoute';
-import { Button } from '@/components/ui/button';
-import { InviteModal } from '@/components/InviteModal';
-import { generateInvite, getGroupEvents, Event } from '@/services/groupApi';
-import { getGroupById, CourseGroup } from '@/services/groupApi';
-import { useAuth } from '@/context/AuthContext';
-import { getEventById  } from '@/services/eventApi';
-import EventList from '@/components/events/EventList';
-import EventDetailModal from '@/components/events/EventDetailModal';
-import CreateEventModal from '@/components/events/CreateEventModal';
+import { useState, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
+import ProtectedRoute from "@/components/ProtectedRoute";
+import { Button } from "@/components/ui/button";
+import { InviteModal } from "@/components/InviteModal";
+import { generateInvite, getGroupEvents, Event } from "@/services/groupApi";
+import { getGroupById, CourseGroup } from "@/services/groupApi";
+import { useAuth } from "@/context/AuthContext";
+import { getEventById } from "@/services/eventApi";
+import EventList from "@/components/events/EventList";
+import EventDetailModal from "@/components/events/EventDetailModal";
+import CreateEventModal from "@/components/events/CreateEventModal";
 
 export default function GroupPage() {
   const router = useRouter();
@@ -64,7 +64,7 @@ export default function GroupPage() {
     if (!user || !group) return false;
     const owner = (group as any).ownerId;
     if (!owner) return false;
-    if (typeof owner === 'string') {
+    if (typeof owner === "string") {
       return owner === user.id;
     }
     if (owner._id) return owner._id === user.id;
@@ -133,11 +133,19 @@ export default function GroupPage() {
           </h1>
           <div className="flex space-x-2">
             {isOwner() && (
-              <Button variant="outline" onClick={() => window.location.assign(`/groups/${groupId}/edit`)}>
+              <Button
+                variant="outline"
+                onClick={() =>
+                  window.location.assign(`/groups/${groupId}/edit`)
+                }
+              >
                 Edit Group
               </Button>
             )}
-            <Button variant="outline" onClick={() => setIsCreateModalOpen(true)}>
+            <Button
+              variant="outline"
+              onClick={() => setIsCreateModalOpen(true)}
+            >
               Create Event
             </Button>
             <Button onClick={handleGenerateInvite}>Invite Members</Button>
@@ -167,7 +175,7 @@ export default function GroupPage() {
           groupOwnerId={(() => {
             const owner = (group as any)?.ownerId;
             if (!owner) return null;
-            if (typeof owner === 'string') return owner;
+            if (typeof owner === "string") return owner;
             return owner._id || null;
           })()}
           onEventUpdated={() => {
