@@ -15,7 +15,7 @@ const DeleteAccountButton = () => {
     );
     if (!confirmed) return;
     try {
-      await deleteAccount(token);
+      await deleteAccount();
       await logout();
       router.push("/");
     } catch (error: any) {
@@ -26,9 +26,9 @@ const DeleteAccountButton = () => {
   return (
     <Button
       variant="destructive"
-      size="lg"
+      className="cursor-pointer"
       onClick={handleDelete}
-      style={{ position: "fixed", right: 20, top: 20 }}
+      
     >
       Delete Account
     </Button>
