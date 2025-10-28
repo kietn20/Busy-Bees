@@ -7,6 +7,8 @@ import { useParams, useRouter } from "next/navigation";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { Button } from "@/components/ui/button";
 import { InviteModal } from "@/components/InviteModal";
+import LeaveModal from "@/components/coursegroup/leave-modal";
+import { DoorOpen, DoorClosed } from "lucide-react";
 import { generateInvite, getGroupEvents, Event } from "@/services/groupApi";
 import { getGroupById, CourseGroup } from "@/services/groupApi";
 import { useAuth } from "@/context/AuthContext";
@@ -149,6 +151,18 @@ export default function GroupPage() {
               Create Event
             </Button>
             <Button onClick={handleGenerateInvite}>Invite Members</Button>
+            <LeaveModal groupId={groupId}>
+              <Button
+                variant="outline"
+                size="icon"
+                title="Leave group"
+              >
+                <span className="flex items-center justify-center">
+                  <DoorClosed className="w-5 h-5 transition-opacity duration-500 ease-in-out opacity-100 group-hover:opacity-0" />
+                  <DoorOpen className="w-5 h-5 absolute transition-opacity duration-500 ease-in-out opacity-0 group-hover:opacity-100" />
+                </span>
+              </Button>
+            </LeaveModal>
           </div>
         </div>
 
