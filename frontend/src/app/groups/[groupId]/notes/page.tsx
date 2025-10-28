@@ -16,6 +16,7 @@ export default function NotesList() {
             title={note.title}
             content={note.content}
             date={note.date}
+            creator={note.creator}
           />
         </div>
       ))}

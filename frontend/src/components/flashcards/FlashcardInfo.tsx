@@ -1,20 +1,20 @@
-import { PenLine, Ellipsis, User } from "lucide-react";
+import { WalletCards, Ellipsis, User } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-const NoteCard = ({
+const FlashcardInfo = ({
   title,
-  content,
-  date,
+  description,
   creator,
+  terms,
 }: {
   title: string;
-  content: string;
-  date: string;
+  description: string;
   creator: string;
+  terms: { id: number; term: string; definition: string }[];
 }) => {
   return (
     <div className="rounded-xl p-6 bg-gray-50 flex flex-col gap-2 cursor-pointer hover:bg-gray-100">
@@ -32,13 +32,11 @@ const NoteCard = ({
           </DropdownMenu>
         </div>
       </div>
-      <p className="text-gray-600 text-sm line-clamp-3">
-        {content.length > 100 ? `${content.substring(0, 100)}...` : content}
-      </p>
+      <p className="text-gray-600 text-sm line-clamp-3">{description}</p>
       <div className="flex items-center gap-2">
         <p className="text-gray-500 text-xs rounded-xl bg-gray-200 w-fit px-4 py-2 flex items-center gap-2 my-2">
-          <PenLine className="w-4 h-4" />
-          {date}
+          <WalletCards className="w-4 h-4" />
+          {terms.length} Terms
         </p>
         <p className="text-gray-500 text-xs rounded-xl bg-gray-200 w-fit px-4 py-2 flex items-center gap-2 my-2">
           <User className="w-4 h-4" />
@@ -49,4 +47,4 @@ const NoteCard = ({
   );
 };
 
-export default NoteCard;
+export default FlashcardInfo;
