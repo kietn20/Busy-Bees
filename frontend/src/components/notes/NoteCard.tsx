@@ -10,14 +10,19 @@ const NoteCard = ({
   content,
   date,
   creator,
+  onClick,
 }: {
   title: string;
   content: string;
   date: string;
   creator: string;
+  onClick: () => void;
 }) => {
   return (
-    <div className="rounded-xl p-6 bg-gray-50 flex flex-col gap-2 cursor-pointer hover:bg-gray-100">
+    <div
+      className="rounded-xl p-6 bg-gray-50 flex flex-col gap-2 cursor-pointer hover:bg-gray-100"
+      onClick={onClick}
+    >
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-semibold">{title}</h1>
         <div className="rounded-xl bg-gray-200 p-2 flex text-gray-500 ">

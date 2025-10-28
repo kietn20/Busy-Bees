@@ -1,7 +1,11 @@
+"use client";
 import NoteCard from "@/components/notes/NoteCard";
 import notesData from "@/lib/notesdata";
 import { Plus } from "lucide-react";
+import { useRouter, useParams } from "next/navigation";
 export default function NotesList() {
+  const router = useRouter();
+  const { groupId } = useParams();
   return (
     <div className="container mx-auto py-12">
       <div className="flex items-center justify-between mb-4 items-centers">
@@ -17,6 +21,7 @@ export default function NotesList() {
             content={note.content}
             date={note.date}
             creator={note.creator}
+            onClick={() => router.push(`/groups/${groupId}/notes/${note.id}`)}
           />
         </div>
       ))}

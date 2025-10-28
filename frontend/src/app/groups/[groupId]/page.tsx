@@ -1,20 +1,21 @@
 // Purpose: Displays the details and actions for a single course group
 
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
-import ProtectedRoute from '@/components/ProtectedRoute';
-import { Button } from '@/components/ui/button';
-import { InviteModal } from '@/components/InviteModal';
-import { generateInvite, getGroupEvents, Event } from '@/services/groupApi';
-import { getGroupById, CourseGroup } from '@/services/groupApi';
-import { getEventById  } from '@/services/eventApi';
-import EventList from '@/components/events/EventList';
-import EventDetailModal from '@/components/events/EventDetailModal';
-import CreateEventModal from '@/components/events/CreateEventModal';
+import { useState, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
+import ProtectedRoute from "@/components/ProtectedRoute";
+import { Button } from "@/components/ui/button";
+import { InviteModal } from "@/components/InviteModal";
+import { generateInvite, getGroupEvents, Event } from "@/services/groupApi";
+import { getGroupById, CourseGroup } from "@/services/groupApi";
+import { getEventById } from "@/services/eventApi";
+import EventList from "@/components/events/EventList";
+import EventDetailModal from "@/components/events/EventDetailModal";
+import CreateEventModal from "@/components/events/CreateEventModal";
 
 export default function GroupPage() {
+  const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [inviteCode, setInviteCode] = useState<string | null>(null);
   const [isInviteLoading, setIsInviteLoading] = useState(false);
@@ -35,7 +36,6 @@ export default function GroupPage() {
   const params = useParams();
   const groupId = params.groupId as string; // get groupId from URL
 
-
   useEffect(() => {
     if (!groupId) return;
     const fetchGroupDetails = async () => {
@@ -55,15 +55,13 @@ export default function GroupPage() {
     fetchEvents();
   }, [groupId]);
 
-
-
   const fetchEvents = async () => {
     try {
       setIsEventsLoading(true);
       const fetchedEvents = await getGroupEvents(groupId);
       setEvents(fetchedEvents);
     } catch (err) {
-      setEventsError('Failed to load events.');
+      setEventsError("Failed to load events.");
     } finally {
       setIsEventsLoading(false);
     }
@@ -91,7 +89,7 @@ export default function GroupPage() {
   const handleCloseDetailModal = () => {
     setIsDetailModalOpen(false);
     setSelectedEvent(null); // Clear selection on close
-  }
+  };
 
   const handleGenerateInvite = async () => {
     setIsModalOpen(true);
@@ -103,7 +101,7 @@ export default function GroupPage() {
       const response = await generateInvite(groupId);
       setInviteCode(response.data.inviteCode);
     } catch (err) {
-      setInviteError('Failed to generate invite code. Please try again.');
+      setInviteError("Failed to generate invite code. Please try again.");
     } finally {
       setIsInviteLoading(false);
     }
@@ -113,9 +111,14 @@ export default function GroupPage() {
     <ProtectedRoute>
       <div className="container mx-auto p-8">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">{group ? group.groupName : 'Course Group Details'}</h1>
+          <h1 className="text-3xl font-bold">
+            {group ? group.groupName : "Course Group Details"}
+          </h1>
           <div className="flex space-x-2">
-            <Button variant="outline" onClick={() => setIsCreateModalOpen(true)}>
+            <Button
+              variant="outline"
+              onClick={() => setIsCreateModalOpen(true)}
+            >
               Create Event
             </Button>
             <Button onClick={handleGenerateInvite}>Invite Members</Button>
@@ -130,14 +133,12 @@ export default function GroupPage() {
           onEventClick={handleViewEvent}
         />
 
-
         <InviteModal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           inviteCode={inviteCode}
           isLoading={isInviteLoading}
         />
-
 
         <EventDetailModal
           isOpen={isDetailModalOpen}
@@ -151,13 +152,24 @@ export default function GroupPage() {
           }}
         />
 
-
         <CreateEventModal
           isOpen={isCreateModalOpen}
           onClose={() => setIsCreateModalOpen(false)}
           groupId={groupId}
           onEventCreated={fetchEvents} // Pass the refetch function
         />
+        <Button
+          variant="outline"
+          onClick={() => router.push(`/groups/${groupId}/flashcards`)}
+        >
+          Flashcards
+        </Button>
+        <Button
+          variant="outline"
+          onClick={() => router.push(`/groups/${groupId}/notes`)}
+        >
+          Notes
+        </Button>
       </div>
     </ProtectedRoute>
   );

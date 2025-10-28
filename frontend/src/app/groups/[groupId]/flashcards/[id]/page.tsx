@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Ellipsis } from "lucide-react";
 import { useRouter } from "next/navigation";
-
+import { useParams } from "next/navigation";
 // Mock data - replace with actual data fetching
 const flashcardData = {
   title: "Use Cases",
@@ -33,6 +33,7 @@ const flashcardData = {
 };
 
 export default function FlashcardPage() {
+  const { groupId, id } = useParams();
   const router = useRouter();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
@@ -69,7 +70,9 @@ export default function FlashcardPage() {
             </DropdownMenuTrigger>
             <DropdownMenuContent className="my-2">
               <DropdownMenuItem
-                onClick={() => router.push("/flashcards/[id]/edit")}
+                onClick={() =>
+                  router.push(`/groups/${groupId}/flashcards/${id}/edit`)
+                }
               >
                 Edit
               </DropdownMenuItem>

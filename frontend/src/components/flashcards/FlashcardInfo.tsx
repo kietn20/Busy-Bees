@@ -5,19 +5,29 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useRouter, useParams } from "next/navigation";
 const FlashcardInfo = ({
   title,
   description,
   creator,
   terms,
+  id,
+  onClick,
 }: {
   title: string;
   description: string;
   creator: string;
   terms: { id: number; term: string; definition: string }[];
+  id: string;
+  onClick: () => void;
 }) => {
+  const router = useRouter();
+  const { groupId } = useParams();
   return (
-    <div className="rounded-xl p-6 bg-gray-50 flex flex-col gap-2 cursor-pointer hover:bg-gray-100">
+    <div
+      onClick={onClick}
+      className="rounded-xl p-6 bg-gray-50 flex flex-col gap-2 cursor-pointer hover:bg-gray-100"
+    >
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-semibold">{title}</h1>
         <div className="rounded-xl bg-gray-200 p-2 flex text-gray-500 ">
@@ -26,8 +36,22 @@ const FlashcardInfo = ({
               <Ellipsis className="w-4 h-4 cursor-pointer" />
             </DropdownMenuTrigger>
             <DropdownMenuContent className="my-2">
-              <DropdownMenuItem>Edit</DropdownMenuItem>
-              <DropdownMenuItem>Delete</DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  router.push(`/groups/${groupId}/flashcards/${id}/edit`);
+                }}
+              >
+                Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  // TODO: Add delete functionality
+                }}
+              >
+                Delete
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
