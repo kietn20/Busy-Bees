@@ -2,11 +2,11 @@
 
 'use client';
 
-import { useState, FormEvent } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, FormEvent, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { joinGroup } from '@/services/groupApi';
-import { AxiosError } from 'axios'; 
+import { AxiosError } from 'axios';
 
 export default function JoinGroupPage() {
   const [inviteCode, setInviteCode] = useState('');
@@ -14,6 +14,47 @@ export default function JoinGroupPage() {
   const [isLoading, setIsLoading] = useState(false);
 
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // auto fill invite code from URL on mount
+  useEffect(() => {
+    const codeFromUrl = searchParams.get('code');
+    if (codeFromUrl) {
+      setInviteCode(codeFromUrl.toUpperCase());
+    }
+  }, [searchParams]);
+
+
+
+  // extract invite code from URL
+  const extractInviteCode = (input: string): string => {
+    try {
+      // check if input contains a URL pattern
+      if (input.includes('://') || input.includes('join?code=')) {
+        const url = new URL(input.startsWith('http') ? input : `http://${input}`);
+        const codeParam = url.searchParams.get('code');
+        if (codeParam) {
+          return codeParam.toUpperCase();
+        }
+      }
+    } catch {
+      // err
+    }
+    return input.toUpperCase();
+  };
+
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pastedText = e.clipboardData.getData('text');
+    const code = extractInviteCode(pastedText);
+    setInviteCode(code);
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.target.value;
+    const code = extractInviteCode(input);
+    setInviteCode(code);
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -21,14 +62,11 @@ export default function JoinGroupPage() {
     setIsLoading(true);
 
     try {
-      await joinGroup(inviteCode);
+      const response = await joinGroup(inviteCode);
 
-      // On success, redirect to the dashboard
-      router.push('/dashboard');
-
-
-
-      // WE SHOULD ADD A TOAST NOTIFICATION HERE TO CONFIRM SUCCESSFUL JOIN HERE
+      // on success, redirect to the group page
+      const groupId = response.data.group.id;
+      router.push(`/groups/${groupId}`);
 
     } catch (error) {
       const axiosError = error as AxiosError<{ message: string }>;
@@ -55,10 +93,11 @@ export default function JoinGroupPage() {
                 id="inviteCode"
                 name="inviteCode"
                 type="text"
-                placeholder="e.g. A4B-7Y2"
+                placeholder="e.g. 12ABCD or paste invite link"
                 required
                 value={inviteCode}
-                onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
+                onChange={handleChange}
+                onPaste={handlePaste}
                 className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-yellow-500 focus:border-yellow-500"
               />
             </div>

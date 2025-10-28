@@ -5,6 +5,7 @@ import "./globals.css";
 
 import Header from "@/components/Header";
 import { AuthProvider } from "@/context/AuthContext";
+import { Toaster } from "react-hot-toast";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -24,6 +25,7 @@ export default function RootLayout({
         <AuthProvider>
           <Header />
           <main>{children}</main>
+          <Toaster />
         </AuthProvider>
       </body>
     </html>

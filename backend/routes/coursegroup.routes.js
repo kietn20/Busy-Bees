@@ -3,7 +3,7 @@
 const express = require('express');
 const { createCourseGroup, joinGroup, generateInvite, 
         getCourseGroupById, updateCourseGroup, deleteCourseGroup,
-        leaveGroup, getUserGroups } 
+        leaveGroup, getUserGroups, transferCourseGroupOwnership } 
         = require('../controllers/coursegroup.controller'); 
 const { protect } = require('../middleware/auth.middleware');
 const { requireGroupOwner, requireGroupMember } = require('../middleware/coursegroup.middleware');
@@ -36,7 +36,10 @@ router.put("/:id", requireGroupOwner, updateCourseGroup);
 router.delete("/:groupId", requireGroupOwner, deleteCourseGroup);
 
 // route to generate an invite code for a specific group
-router.get('/:groupId/invite', requireGroupOwner, generateInvite);
+router.get('/:groupId/invite', requireGroupMember, generateInvite);
+
+// route to transfer group ownership
+router.put("/:groupId/transfer-ownership", requireGroupOwner, transferCourseGroupOwnership);
 
 // MEMBER-ONLY ROUTES
 // Leave group (requires authentication)

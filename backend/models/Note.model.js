@@ -7,6 +7,11 @@ const noteSchema = new mongoose.Schema(
             ref: "User",
             required: true,
         },
+        groupId: { // ensure group-scoped visibility
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "CourseGroup",
+            required: true,
+        },
         title: {
                 type: String,
                 required: true,
