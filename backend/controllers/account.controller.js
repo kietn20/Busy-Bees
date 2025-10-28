@@ -14,6 +14,9 @@ const updateUser = async (req, res) => {
 
       if (firstName) updates.firstName = firstName;
       if (lastName) updates.lastName = lastName;
+
+      // email and password updates are blocked for OAuth users by middleware
+      // only non-OAuth users can reach this point
       if (email) updates.email = email;
       if (password) {
         updates.password = await hashPassword(password);
@@ -68,7 +71,9 @@ const getAccount = (req, res) => {
   const normalized = {
     id: req.user._id,
     firstName: req.user.firstName || '',
+    lastName: req.user.lastName || '',
     email: req.user.email,
+    googleId: req.user.googleId || null
   };
   res.json({ user: normalized });
 };

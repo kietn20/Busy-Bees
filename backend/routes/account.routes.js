@@ -1,7 +1,7 @@
 const express = require('express');
 const { allowJwtOrGoogle } = require('../middleware/auth.middleware');
 const { getAccount, updateUser, logoutUser, deleteAccount } = require('../controllers/account.controller');
-const { updateValidation } = require('../middleware/account.middleware');
+const { updateValidation, preventOAuthEmailPasswordChange } = require('../middleware/account.middleware');
 
 const router = express.Router();
 
@@ -15,9 +15,10 @@ router.get(
 
 // PUT /api/account - Update current user's profile
 router.put(
-  "/",
+  "/update",
   allowJwtOrGoogle,
   updateValidation,
+  preventOAuthEmailPasswordChange,
   updateUser
 );
 

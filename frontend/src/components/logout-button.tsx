@@ -26,8 +26,8 @@ const LogoutButton = () => {
   };
   return (
     <>
-      <Button variant="destructive" onClick={handleLogout} disabled={isLoading}>
-        {isLoading ? "Logging out..." : "Log out"}
+      <Button variant="destructive" className="cursor-pointer" onClick={handleLogout} disabled={isLoading}>
+        {isLoading ? "Logging Out..." : "Log Out"}
       </Button>
     </>
   );

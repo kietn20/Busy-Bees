@@ -42,7 +42,31 @@ const updateValidation = [
     .withMessage("Password must be at least 8 characters"),
 ];
 
+const preventOAuthEmailPasswordChange = (req, res, next) => {
+  const { email, password } = req.body;
+  
+  // If user is OAuth user (has googleId)
+  if (req.user.googleId) {
+    // Check if they're trying to change email
+    if (email && email !== req.user.email) {
+      return res.status(403).json({ 
+        message: "Email cannot be changed for Google accounts" 
+      });
+    }
+    
+    // Check if they're trying to set a password
+    if (password) {
+      return res.status(403).json({ 
+        message: "Password cannot be set for Google accounts" 
+      });
+    }
+  }
+  
+  next();
+};
+
 module.exports = {
   registerValidation,
   updateValidation,
+  preventOAuthEmailPasswordChange
 }

@@ -1,318 +1,303 @@
 "use client";
 
-import { useState, useEffect, ChangeEvent, FormEvent } from "react";
+import { useState, useEffect } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import toast from "react-hot-toast";
 import axios from "axios";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
-interface EditAccountFormProps {
-  userId?: string | null;
-  token?: string | null;
-}
-
-interface FormState {
-  firstName: string;
-  lastName: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
-}
-
-interface ErrorsState {
-  [key: string]: string;
-}
-
-export default function EditAccountForm({ userId = null, token = null }: EditAccountFormProps) {
-  const [form, setForm] = useState<FormState>({
+export default function EditAccount() {
+  const { user, refreshUser } = useAuth();
+  const router = useRouter();
+  
+  const [form, setForm] = useState({
     firstName: "",
     lastName: "",
     email: "",
     password: "",
     confirmPassword: "",
   });
-  const [errors, setErrors] = useState<ErrorsState>({});
-  const [submitError, setSubmitError] = useState<string>("");
-  const [submitSuccess, setSubmitSuccess] = useState<string>("");
-  const [loading, setLoading] = useState<boolean>(Boolean(userId));
+  const [saving, setSaving] = useState(false);
 
-  // Prefill user data if userId provided
+  const isOAuthUser = !!user?.googleId;
+
   useEffect(() => {
-    if (!userId) {
-      setLoading(false);
-      return;
-    }
-
-    async function fetchUser() {
-      try {
-        const res = await axios.get(`/api/users/${userId}`, {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        });
-        const data = res.data;
-        setForm((f) => ({
-          ...f,
-          firstName: data.firstName || "",
-          lastName: data.lastName || "",
-          email: data.email || "",
-          password: "",
-          confirmPassword: "",
-        }));
-      } catch {
-        // ignore
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchUser();
-  }, [userId, token]);
-
-  // Validation helpers
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  const strongPasswordRegex =
-    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>]).{8,}$/;
-
-  // Validate single field
-  function validateField(name: keyof FormState, value: string): boolean {
-    let message = "";
-
-    if (name === "firstName") {
-      if (!value.trim()) message = "First name is required.";
-      else if (value.length > 50) message = "First name must be ≤ 50 chars.";
-    }
-    if (name === "lastName") {
-      if (!value.trim()) message = "Last name is required.";
-      else if (value.length > 50) message = "Last name must be ≤ 50 chars.";
-    }
-    if (name === "email") {
-      if (!value.trim()) message = "Email is required.";
-      else if (!emailRegex.test(value)) message = "Please enter a valid email.";
-    }
-    if (name === "password") {
-      if (value && !strongPasswordRegex.test(value)) {
-        message =
-          "Password must be ≥8 chars, include uppercase, lowercase, number, and special char.";
-      }
-    }
-    if (name === "confirmPassword") {
-      if (value !== form.password) message = "Passwords do not match.";
-    }
-
-    setErrors((prev) => ({ ...prev, [name]: message }));
-    return message === "";
-  }
-
-  // Handle input changes
-  function handleChange(e: ChangeEvent<HTMLInputElement>) {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-
-    setSubmitError("");
-    setSubmitSuccess("");
-
-    if (name !== "confirmPassword") {
-      validateField(name as keyof FormState, value);
-    } else {
-      if (value) validateField("confirmPassword", value);
-      else setErrors((p) => ({ ...p, confirmPassword: "" }));
-    }
-  }
-
-  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setSubmitError("");
-    setSubmitSuccess("");
-
-    const vFirst = validateField("firstName", form.firstName);
-    const vLast = validateField("lastName", form.lastName);
-    const vEmail = validateField("email", form.email);
-    const vPassword = validateField("password", form.password);
-    const vConfirm = validateField("confirmPassword", form.confirmPassword);
-
-    const passwordProvided = Boolean(form.password);
-    const passwordOK = !passwordProvided || (vPassword && vConfirm);
-
-    if (!(vFirst && vLast && vEmail && passwordOK)) {
-      setSubmitError("Please fix the highlighted fields.");
-      return;
-    }
-
-    const payload: Partial<FormState> = {
-      firstName: form.firstName.trim(),
-      lastName: form.lastName.trim(),
-      email: form.email.trim(),
-    };
-    if (passwordProvided) payload.password = form.password;
-
-    try {
-      const url = userId ? `/api/users/${userId}` : `/api/users/update`;
-      const res = await axios.put(url, payload, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
+    if (user) {
+      setForm({
+        firstName: user.firstName || "",
+        lastName: user.lastName || "",
+        email: user.email || "",
+        password: "",
+        confirmPassword: "",
       });
+    }
+  }, [user]);
 
-      setSubmitSuccess(res.data?.message || "Account updated successfully.");
-      setErrors({});
-      setForm((f) => ({ ...f, password: "", confirmPassword: "" }));
-    } catch (err: any) {
-      const resp = err?.response?.data;
-      if (resp?.errors && Array.isArray(resp.errors)) {
-        const byField: ErrorsState = {};
-        resp.errors.forEach((it: any) => {
-          if (it.param) byField[it.param] = it.msg;
-        });
-        setErrors((p) => ({ ...p, ...byField }));
-        setSubmitError("Please fix validation errors.");
-      } else if (resp?.message) {
-        setSubmitError(resp.message);
-      } else {
-        setSubmitError("Update failed. Try again.");
+  const handleSaveProfile = async () => {
+    // Validation
+    if (!form.firstName.trim()) {
+      toast.error("First name is required");
+      return;
+    }
+    if (form.firstName.length > 50) {
+      toast.error("First name must be 50 characters or less");
+      return;
+    }
+    if (!form.lastName.trim()) {
+      toast.error("Last name is required");
+      return;
+    }
+    if (form.lastName.length > 50) {
+      toast.error("Last name must be 50 characters or less");
+      return;
+    }
+    
+    if (!isOAuthUser) {
+      if (!form.email.trim()) {
+        toast.error("Email is required");
+        return;
+      }
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(form.email)) {
+        toast.error("Please enter a valid email address");
+        return;
       }
     }
+
+    if (!isOAuthUser && form.password) {
+      if (form.password.length < 8) {
+        toast.error("Password must be at least 8 characters");
+        return;
+      }
+      const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>]).{8,}$/;
+      if (!strongPasswordRegex.test(form.password)) {
+        toast.error("Password must include uppercase, lowercase, number, and special character");
+        return;
+      }
+      if (form.password !== form.confirmPassword) {
+        toast.error("Passwords do not match");
+        return;
+      }
+    }
+
+    setSaving(true);
+    try {
+      const payload: any = {
+        firstName: form.firstName.trim(),
+        lastName: form.lastName.trim(),
+      };
+
+      if (!isOAuthUser) {
+        payload.email = form.email.trim();
+        if (form.password) {
+          payload.password = form.password;
+        }
+      }
+      
+      const response = await axios.put(
+        "http://localhost:8080/api/account/update",
+        payload,
+        { 
+          withCredentials: true,
+          headers: {
+            ...(localStorage.getItem('authToken') && {
+              'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+            }),
+          }
+        }
+      );
+
+      toast.success(response.data.message || "Profile updated successfully!");
+      
+      await refreshUser();
+
+      setForm(prev => ({
+        ...prev,
+        password: "",
+        confirmPassword: "",
+      }));
+
+      setTimeout(() => {
+        router.push("/account");
+      }, 1000);
+    } catch (error: any) {
+      const message = error.response?.data?.message || "Failed to update profile";
+      toast.error(message);
+      
+      if (error.response?.data?.errors) {
+        error.response.data.errors.forEach((err: any) => {
+          toast.error(err.msg || err.message);
+        });
+      }
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div>Loading...</div>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-8">
-      <div className="w-full max-w-2xl">
-        <div className="bg-white rounded-xl shadow-md overflow-hidden">
-          <div className="px-8 py-10">
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">Edit Account</h1>
-            <p className="text-gray-600 mb-6">
-              Update your profile information below.
-            </p>
+    <ProtectedRoute>
+      <div className="container mx-auto px-6 py-8 max-w-4xl">
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold text-gray-800">Edit Account</h1>
+          <p className="text-gray-600 mt-2">Update your profile information below.</p>
+        </div>
 
-            {loading ? (
-              <div className="text-center py-12">Loading...</div>
-            ) : (
-              <form onSubmit={handleSubmit} noValidate>
-                {/* First + Last side-by-side */}
-                <div className="flex flex-col md:flex-row md:space-x-4">
-                  <div className="flex-1 mb-4 md:mb-0">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      First Name
-                    </label>
-                    <input
-                      name="firstName"
-                      value={form.firstName}
-                      onChange={handleChange}
-                      onBlur={(e) => validateField("firstName", e.target.value)}
-                      className={`block w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 ${
-                        errors.firstName
-                          ? "border-red-300 focus:ring-red-200"
-                          : "border-gray-200 focus:ring-yellow-300"
-                      }`}
-                    />
-                    {errors.firstName && (
-                      <p className="mt-1 text-sm text-red-600">{errors.firstName}</p>
-                    )}
-                  </div>
+        {/* Personal Information */}
+        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+          <h2 className="text-lg font-semibold mb-6 text-gray-800 border-b pb-2">
+            Personal Information
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
+                First Name <span className="text-red-500">*</span>
+              </label>
+              <Input
+                id="firstName"
+                value={form.firstName}
+                onChange={(e) => setForm({ ...form, firstName: e.target.value })}
+                placeholder="Enter your first name"
+                maxLength={50}
+              />
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
+                Last Name <span className="text-red-500">*</span>
+              </label>
+              <Input
+                id="lastName"
+                value={form.lastName}
+                onChange={(e) => setForm({ ...form, lastName: e.target.value })}
+                placeholder="Enter your last name"
+                maxLength={50}
+              />
+            </div>
+          </div>
 
-                  <div className="flex-1">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Last Name
-                    </label>
-                    <input
-                      name="lastName"
-                      value={form.lastName}
-                      onChange={handleChange}
-                      onBlur={(e) => validateField("lastName", e.target.value)}
-                      className={`block w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 ${
-                        errors.lastName
-                          ? "border-red-300 focus:ring-red-200"
-                          : "border-gray-200 focus:ring-yellow-300"
-                      }`}
-                    />
-                    {errors.lastName && (
-                      <p className="mt-1 text-sm text-red-600">{errors.lastName}</p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Email */}
-                <div className="mt-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Email
-                  </label>
-                  <input
-                    name="email"
-                    value={form.email}
-                    onChange={handleChange}
-                    onBlur={(e) => validateField("email", e.target.value)}
-                    type="email"
-                    className={`block w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 ${
-                      errors.email
-                        ? "border-red-300 focus:ring-red-200"
-                        : "border-gray-200 focus:ring-yellow-300"
-                    }`}
-                  />
-                  {errors.email && (
-                    <p className="mt-1 text-sm text-red-600">{errors.email}</p>
-                  )}
-                </div>
-
-                {/* Password */}
-                <div className="mt-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    New Password
-                  </label>
-                  <input
-                    name="password"
-                    value={form.password}
-                    onChange={handleChange}
-                    onBlur={(e) => validateField("password", e.target.value)}
-                    type="password"
-                    placeholder="Leave blank to keep current password"
-                    className={`block w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 ${
-                      errors.password
-                        ? "border-red-300 focus:ring-red-200"
-                        : "border-gray-200 focus:ring-yellow-300"
-                    }`}
-                  />
-                  {errors.password && (
-                    <p className="mt-1 text-sm text-red-600">{errors.password}</p>
-                  )}
-                </div>
-
-                {/* Confirm Password */}
-                <div className="mt-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Confirm New Password
-                  </label>
-                  <input
-                    name="confirmPassword"
-                    value={form.confirmPassword}
-                    onChange={handleChange}
-                    onBlur={(e) => validateField("confirmPassword", e.target.value)}
-                    type="password"
-                    className={`block w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 ${
-                      errors.confirmPassword
-                        ? "border-red-300 focus:ring-red-200"
-                        : "border-gray-200 focus:ring-yellow-300"
-                    }`}
-                  />
-                  {errors.confirmPassword && (
-                    <p className="mt-1 text-sm text-red-600">
-                      {errors.confirmPassword}
-                    </p>
-                  )}
-                </div>
-
-                {/* submit & messages */}
-                {submitError && (
-                  <p className="mt-4 text-center text-red-600">{submitError}</p>
-                )}
-                {submitSuccess && (
-                  <p className="mt-4 text-center text-green-600">{submitSuccess}</p>
-                )}
-
-                <div className="mt-6 flex justify-center">
-                  <button
-                    type="submit"
-                    className="bg-yellow-400 text-black font-semibold px-8 py-2 rounded-full hover:bg-yellow-500 transition"
-                  >
-                    Update
-                  </button>
-                </div>
-              </form>
+          {/* Email - Read-only for OAuth users */}
+          <div className="space-y-2 mt-6">
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              Email Address {!isOAuthUser && <span className="text-red-500">*</span>}
+            </label>
+            <div className="relative">
+              <Input
+                id="email"
+                type="email"
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                disabled={isOAuthUser}
+                className={isOAuthUser ? "bg-gray-50 pr-36" : ""}
+                placeholder="Enter your email"
+              />
+              {isOAuthUser && (
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded font-medium">
+                  Managed by Google
+                </span>
+              )}
+            </div>
+            {isOAuthUser && (
+              <p className="text-xs text-gray-500">
+                Your email is managed through your Google account and cannot be changed here.
+              </p>
             )}
           </div>
         </div>
+
+        {/* Password Section - Only for non-OAuth users */}
+        {!isOAuthUser ? (
+          <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <h2 className="text-lg font-semibold mb-6 text-gray-800 border-b pb-2">
+              Change Password
+            </h2>
+
+            <div className="space-y-4 max-w-md">
+              <div className="space-y-2">
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                  New Password
+                </label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={form.password}
+                  onChange={(e) => setForm({ ...form, password: e.target.value })}
+                  placeholder="Leave blank to keep current password"
+                />
+                <p className="text-xs text-gray-500">
+                  Must be at least 8 characters with uppercase, lowercase, number, and special character
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+                  Confirm New Password
+                </label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  value={form.confirmPassword}
+                  onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
+                  placeholder="Confirm your new password"
+                />
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <h2 className="text-lg font-semibold mb-6 text-gray-800 border-b pb-2">
+              Password
+            </h2>
+            <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+              <div className="flex items-start gap-3">
+                <span className="text-2xl">🔒</span>
+                <div>
+                  <p className="text-sm text-blue-900 font-medium mb-1">
+                    You're signed in with Google
+                  </p>
+                  <p className="text-sm text-blue-800 mb-3">
+                    Your password is managed through your Google account.
+                  </p>
+                  <a
+                    href="https://myaccount.google.com/security"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-blue-600 hover:text-blue-800 hover:underline inline-flex items-center gap-1 font-medium"
+                  >
+                    Manage Google Account Security
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Action Buttons - AT THE BOTTOM */}
+        <div className="flex gap-4 justify-end">
+          <Button variant="outline" onClick={() => router.push("/account")}>
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleSaveProfile} 
+            disabled={saving} 
+            className="bg-yellow-400 hover:bg-yellow-500 text-black font-semibold"
+          >
+            {saving ? "Saving..." : "Save Changes"}
+          </Button>
+        </div>
       </div>
-    </div>
+    </ProtectedRoute>
   );
 }

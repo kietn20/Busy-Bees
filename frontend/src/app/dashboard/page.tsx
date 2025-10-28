@@ -26,8 +26,6 @@ export default function Dashboard() {
             <p className="text-yellow-700">ID: {user?.id}</p>
           </div>
           
-          {/* Change where this goes */}
-          <DeleteAccountButton />
           
         </div>
         

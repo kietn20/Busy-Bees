@@ -8,12 +8,15 @@ import React, {
     ReactNode,
 } from "react";
 import { logout as apiLogout } from "@/services/authApi";
+import { set } from "zod";
 
 // define the shape of the user object
 export interface User {
     id: string;
     firstName: string;
+    lastName: string;
     email: string;
+    googleId?: string;  // optional, only for Google OAuth users
 }
 
 // define the shape of the context's value
@@ -24,6 +27,7 @@ interface AuthContextType {
     login: (token: string, userData: User) => void;
     logout: () => Promise<void>;
     isLoading: boolean;
+    refreshUser: () => Promise<void>;
 }
 
 // create the context with a default undefined value
@@ -39,9 +43,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     const [token, setToken] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
-    useEffect(() => {
-        const initAuth = async () => {
-            // Step 1: Check for JWT token in localStorage
+    // important changes: extracted logic from initAuth into a reusable function fetchUser
+
+    //  resuable function to fetch user data 
+    const fetchUser = async () => {
+        // Step 1: Check for JWT token in localStorage
             const storedToken = localStorage.getItem("authToken");
             if (storedToken) {
                 setToken(storedToken);
@@ -56,6 +62,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
                     if (res.ok) {
                         const data = await res.json();
+                        console.log("Account API response:", data);
                         if (data && data.user) {
                             setUser(data.user);
                         }
@@ -84,6 +91,17 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             } finally {
                 setIsLoading(false);
             }
+    };
+
+    // public refresh function that can be called from anywhere
+    const refreshUser = async () => {
+        await fetchUser();
+    };
+
+    useEffect(() => {
+        const initAuth = async () => {
+            await fetchUser(); // using resuable function
+            setIsLoading(false);
         };
 
         initAuth();
@@ -103,7 +121,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         localStorage.removeItem('authToken');
     };
 
-    const value = { user, token, login, logout, isLoading };
+    const value = { user, token, login, logout, isLoading, refreshUser };
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
