@@ -32,6 +32,7 @@ export default function HomePage() {
         setLoading(true);
         const fetched = await getUserGroups();
         setGroups(fetched || []);
+        console.log("Fetched groups:", fetched);
       } catch (err) {
         console.error("Error fetching groups:", err);
         setError("Failed to load groups. Please try again later.");
@@ -46,7 +47,7 @@ export default function HomePage() {
   const pickName = (g: any) =>
     g.groupName || g.courseName || g.name || g._id || "Untitled Group";
 
-  const pickId = (g: any) => g._id || g.courseId || g.id || "";
+  const pickId = (g: any) => g.courseId
 
   const openDetails = async (group: any) => {
     try {
