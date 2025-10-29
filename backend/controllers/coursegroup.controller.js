@@ -38,7 +38,7 @@ const createCourseGroup = async (req, res) => {
         },
       },
     });
-
+    
     res.status(201).json({
       message: "Course group created successfully.",
       group: newGroup,
@@ -63,6 +63,16 @@ const getCourseGroupById = async (req, res) => {
 
     if (!group) {
       return res.status(404).json({ message: "Group not found" });
+    }
+
+
+    // Filter out members with deleted accounts
+    const validMembers = group.members.filter(m => m.userId != null);
+    
+    if (validMembers.length !== group.members.length) {
+      console.log(`⚠️ Cleaned ${group.members.length - validMembers.length} orphaned members from group ${id}`);
+      group.members = validMembers;
+      await group.save();
     }
 
     res.status(200).json({
@@ -308,6 +318,9 @@ const transferCourseGroupOwnership = async (req, res) => {
       return res.status(400).json({ message: 'New owner must be different from current owner.' });
     }
 
+    // Filter out members with null userId first (deleted accounts)
+    group.members = group.members.filter(m => m.userId != null);
+
     // check if new owner is member of the group and find the owner
     const newOwnerMember = group.members.find(member => member.userId.equals(newOwnerId));
     const currentOwnerMember = group.members.find(member => member.userId.equals(currentUserId));
@@ -315,7 +328,11 @@ const transferCourseGroupOwnership = async (req, res) => {
     if (!newOwnerMember) {
       return res.status(404).json({ message: 'The specified new owner is not a member of the group.' });
     }
-    
+
+    if (!currentOwnerMember) {
+      return res.status(500).json({ message: 'Current owner not found in members list.' });
+    }
+
     // update roles in members array
     currentOwnerMember.role = "member";
     newOwnerMember.role = "owner";
@@ -330,6 +347,11 @@ const transferCourseGroupOwnership = async (req, res) => {
     const updatedGroup = await CourseGroup.findById(groupId)
       .populate("members.userId", "firstName lastName email")
       .populate("ownerId", "firstName lastName email");
+
+    // Filter again after populate (in case any became null during populate)
+    if (updatedGroup) {
+      updatedGroup.members = updatedGroup.members.filter(m => m.userId != null);
+    }
 
     res.status(200).json({
       message: "Ownership transferred successfully.",
@@ -362,7 +384,43 @@ const getUserGroups = async (req, res) => {
   }
 };
 
+// USE THIS IMPLEMENTATION IF WE WANT TO DISPLAY GROUP DETAILS IN HOME PAGE
+// @desc    Get all groups where the user is a member
+// @route   GET /api/groups
+// @access  Private
+// const getUserGroups = async (req, res) => {
+//   try {
+//     const userId = req.user._id;
 
+//     // Find all groups where the user is a member
+//     const groups = await CourseGroup.find({
+//       "members.userId": userId
+//     })
+//       .populate('ownerId', 'firstName lastName email')
+//       .populate('members.userId', 'firstName lastName email')
+//       .sort({ createdAt: -1 }); // sort by newest first
+
+//     // Filter out null members from each group
+//     const cleanedGroups = groups.map(group => {
+//       const validMembers = group.members.filter(m => m.userId != null);
+      
+//       if (validMembers.length !== group.members.length) {
+//         console.log(`⚠️ Cleaned ${group.members.length - validMembers.length} orphaned members from group ${group._id}`);
+//         group.members = validMembers;
+//         group.save(); // Save asynchronously (fire and forget)
+//       }
+      
+//       return group;
+//     });
+//     res.status(200).json({
+//       message: 'Groups fetched successfully',
+//       groups: cleanedGroups
+//     });
+//   } catch (error) {
+//     console.error('Error fetching user groups:', error);
+//     res.status(500).json({ message: 'Internal server error' });
+//   }
+// };
 
 // gets all course groups
 // not really necessary we have getUserGroups

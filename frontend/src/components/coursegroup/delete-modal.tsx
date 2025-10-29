@@ -26,8 +26,8 @@ const DeleteModal = ({ groupId }: { groupId: string }) => {
     setError(null);
     try {
       await deleteCourseGroup(groupId);
-      // navigate back to groups list after deletion
-      router.push('/groups');
+      // navigate back to home page
+      router.push('/');
     } catch (err: any) {
       console.error('Failed to delete group', err);
       setError(err?.response?.data?.message || 'Failed to delete group');
@@ -39,7 +39,7 @@ const DeleteModal = ({ groupId }: { groupId: string }) => {
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button variant="destructive">Delete</Button>
+        <Button variant="destructive" className="cursor-pointer">Delete</Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
@@ -50,8 +50,8 @@ const DeleteModal = ({ groupId }: { groupId: string }) => {
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-           <AlertDialogAction onClick={handleDelete} className="bg-red-500" disabled={isDeleting}>
+          <AlertDialogCancel className="cursor-pointer">Cancel</AlertDialogCancel>
+           <AlertDialogAction onClick={handleDelete} className="bg-red-500 cursor-pointer" disabled={isDeleting}>
             {isDeleting ? 'Deleting...' : 'Delete'}
           </AlertDialogAction>
         </AlertDialogFooter>

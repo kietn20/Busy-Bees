@@ -1,4 +1,5 @@
 const User = require("../models/User.model");
+const CourseGroup = require("../models/CourseGroup.model");
 const { validationResult } = require("express-validator");
 const { hashPassword } = require('../utils/password.util');
 
@@ -47,20 +48,29 @@ const updateUser = async (req, res) => {
     }
 };
 
-const logoutUser = (req, res) => {
-    if (req.logout) {
-    req.logout(function () {
+// NEW: Helper function to clear session for logoutUser and deleteAccount
+const clearSession = (req, res, callback) => {
+  if (req.logout) {
+    req.logout((err) => {
+      if (err) {
+        console.error("Logout error:", err);
+      }
       req.session?.destroy(() => {
         res.clearCookie('connect.sid');
-        return res.status(200).json({ message: 'Logged out' });
+        if (callback) callback();
       });
     });
   } else {
     req.session?.destroy(() => {
       res.clearCookie('connect.sid');
-      return res.status(200).json({ message: 'Logged out' });
+      if (callback) callback();
     });
   }
+};
+const logoutUser = (req, res) => {
+    clearSession(req, res, () => {
+    return res.status(200).json({ message: 'Logged out' });
+  });
 };
 
 const getAccount = (req, res) => {
@@ -81,13 +91,38 @@ const getAccount = (req, res) => {
 const deleteAccount = async (req, res) => {
   try {
     const userId = req.user._id;
+
+    // check if user owns any groups
+    const ownedGroupsCount = await CourseGroup.countDocuments({ ownerId: userId });
+
+    if (ownedGroupsCount > 0) {
+      return res.status(400).json({ 
+        message: `You must transfer ownership of your ${ownedGroupsCount} group(s) before deleting your account. Go to each group's settings to transfer ownership.`,
+        ownedGroupsCount
+      });
+    }
+
+    // remove user from all groups where they're just a member
+    const updateResult = await CourseGroup.updateMany(
+      { "members.userId": userId },
+      { $pull: { members: { userId: userId } } }
+    );
+    console.log(`Removed user from ${updateResult.modifiedCount} group(s)`);
+
+    // delete the user account
     const deletedUser = await User.findByIdAndDelete(userId);
 
     if (!deletedUser) {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    return res.status(200).json({ message: 'User account deleted successfully' });
+    // clear the session (for OAuth users)
+    clearSession(req, res, () => {
+      return res.status(200).json({ 
+        message: 'Account and all associated data deleted successfully' 
+      });
+    });
+
   } catch (error) {
     console.error('Error deleting user account:', error);
     return res.status(500).json({ message: 'Internal server error' });
