@@ -67,7 +67,7 @@ export default function HomePage() {
         setSelectedGroup(data.group);
       }
 
-      setDetailsOpen(true); // ✅ Open modal AFTER setting real data
+      setDetailsOpen(true); 
 
     } catch (err) {
       console.error("Failed to load group details:", err);
