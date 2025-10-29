@@ -346,22 +346,19 @@ const transferCourseGroupOwnership = async (req, res) => {
 // @access  Private
 const getUserGroups = async (req, res) => {
   try {
-    const userId = req.user._id;
+    const user = await User.findById(req.user._id).select("registeredCourses");
 
-    // Find all groups where the user is a member
-    const groups = await CourseGroup.find({
-      members: userId
-    }).populate('ownerId', 'firstName lastName email')
-      .populate('members', 'firstName lastName email')
-      .sort({ createdAt: -1 }); // Sort by newest first
+    if (!user || !user.registeredCourses) {
+      return res.status(404).json({ message: "No registered groups found" });
+    }
 
-    res.status(200).json({
-      message: 'Groups fetched successfully',
-      groups
+    return res.status(200).json({
+      message: "User's registered course groups retrieved successfully",
+      groups: user.registeredCourses
     });
   } catch (error) {
-    console.error('Error fetching user groups:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error("Error fetching user groups:", error);
+    return res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 
