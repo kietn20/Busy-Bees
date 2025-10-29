@@ -384,7 +384,7 @@ const getUserGroups = async (req, res) => {
   }
 };
 
-// USE THIS IMPLEMTATION IF WE WANT TO DISPLAY GROUP DETAILS IN HOME PAGE
+// USE THIS IMPLEMENTATION IF WE WANT TO DISPLAY GROUP DETAILS IN HOME PAGE
 // @desc    Get all groups where the user is a member
 // @route   GET /api/groups
 // @access  Private
