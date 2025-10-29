@@ -141,37 +141,50 @@ export default function HomePage() {
       <div className="w-full h-[2px] bg-gray-200 shadow-sm" />
 
       <main className="min-h-screen px-8 md:px-16 lg:px-24 py-12 bg-white">
-        <div className="flex items-start justify-between mb-8">
-          <div>
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900">
-              My Groups
-            </h1>
-            <p className="mt-2 text-gray-600">
-              Quick access to the course groups you belong to.
-            </p>
-          </div>
-          {user && groups.length > 0 && (
-            <div className="flex items-center mt-1">
-              <AddGroup />
+        {user && (
+          <div className="flex items-start justify-between mb-8 animate-in fade-in slide-in-from-top-3 duration-300">
+            <div>
+              <h1 className="text-3xl md:text-4xl font-bold text-gray-900">
+                My Groups
+              </h1>
+              <p className="mt-2 text-gray-600">
+                Quick access to the course groups you belong to.
+              </p>
             </div>
-          )}
-        </div>
 
-        {!user || authLoading ? (
-          <p className="text-center mt-12 text-gray-600">Loading authentication...</p>
+            {/* Hide Add Group button if user has no groups */}
+            {groups.length > 0 && (
+              <div className="mt-2">
+                <AddGroup />
+              </div>
+            )}
+          </div>
+        )}
+        
+        {authLoading ? (
+          <p className="text-center mt-12 animate-pulse text-gray-600">
+            Loading authentication...
+          </p>
+        ) : !user ? (
+          <div className="flex flex-col items-center justify-center py-24 text-center">
+            <h1 className="text-3xl font-bold text-gray-900">Welcome to Busy Bee!</h1>
+            <p className="mt-3 text-gray-700 text-lg">Please log in to view your courses.</p>
+          </div>
         ) : loading ? (
-          <p className="text-center mt-12 text-gray-600">Loading your groups...</p>
+          <p className="text-center mt-12 animate-pulse text-gray-600">
+            Loading your groups...
+          </p>
         ) : error ? (
           <p className="text-center mt-12 text-red-600">{error}</p>
         ) : groups.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-24">
+          <div className="flex flex-col items-center justify-center py-24 text-center">
             <p className="text-gray-700 text-xl mb-6">
               You are not a member of any course group.
             </p>
             <AddGroup />
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 animate-in fade-in duration-300">
             {groups.map((g) => (
               <Card key={pickId(g)} g={g} />
             ))}
