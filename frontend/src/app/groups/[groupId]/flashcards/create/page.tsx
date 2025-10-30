@@ -9,7 +9,7 @@ import { useRouter, useParams } from "next/navigation";
 import { createFlashcardSet } from "@/services/flashcardApi";
 
 export default function CreateFlashcard() {
-  const [cards, setCards] = useState([{ id: 1, number: 1, term: "", definition: "" }]);
+  const [cards, setCards] = useState([{ id: 1, term: "", definition: "" }]);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [error, setError] = useState("");
@@ -23,7 +23,7 @@ export default function CreateFlashcard() {
   const addNewCard = () => {
     const newId =
       cards.length > 0 ? Math.max(...cards.map((c) => c.id)) + 1 : 1;
-    setCards([...cards, { id: newId, number: cards.length + 1, term: "", definition: ""  }]);
+    setCards([...cards, { id: newId, term: "", definition: "" }]);
   };
 
   const handleSave = async () => {
@@ -74,9 +74,11 @@ export default function CreateFlashcard() {
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
+            maxLength={30}
             className={`bg-white rounded-xl ${error ? "border-red-500 ring-2 ring-red-200" : ""}`}
             placeholder="Enter title"
           />
+          <div className="text-xs text-gray-400 text-right">{title.length}/30</div>
           {error && (
             <div className="text-red-500 text-sm mt-1">
               {error}
@@ -93,7 +95,9 @@ export default function CreateFlashcard() {
             onChange={(e) => setDescription(e.target.value)}
             className="bg-white rounded-xl"
             placeholder="Enter description"
+            maxLength={150}
           />
+          <div className="text-xs text-gray-400 text-right">{description.length}/150</div>
         </div>
       </div>
 
@@ -101,7 +105,7 @@ export default function CreateFlashcard() {
         {cards.map((card, idx) => (
           <CreateCard
             key={card.id}
-            number={card.number}
+            number={idx + 1}
             term={card.term}
             definition={card.definition}
             onTermChange={val => {

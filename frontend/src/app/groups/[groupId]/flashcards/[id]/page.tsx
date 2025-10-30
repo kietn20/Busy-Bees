@@ -105,7 +105,7 @@ export default function FlashcardPage() {
               className="absolute inset-0 w-full h-full bg-white border-2 border-gray-200 rounded-2xl p-12 flex items-center justify-center hover:shadow-lg transition-shadow"
               style={{ backfaceVisibility: "hidden" }}
             >
-              <div className="text-center">
+              <div className="text-center overflow-auto max-h-40 break-words px-2">
                 <h2 className="text-2xl text-gray-800">{currentTerm.term}</h2>
               </div>
             </div>
@@ -118,7 +118,7 @@ export default function FlashcardPage() {
                 transform: "rotateX(180deg)",
               }}
             >
-              <div className="text-center">
+              <div className="text-center overflow-auto max-h-40 break-words px-2">
                 <h2 className="text-2xl text-gray-800">
                   {currentTerm.definition}
                 </h2>
@@ -179,7 +179,7 @@ export default function FlashcardPage() {
                 <div className="flex-shrink-0 w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-sm font-medium text-gray-600">
                   {index + 1}
                 </div>
-                <div className="flex w-full items-center">
+                <div className="flex w-full items-center overflow-auto max-h-40 break-words px-2">
                   <div className="w-1/3">
                     <h4 className="font-semibold text-gray-800 mb-1">
                       {term.term}

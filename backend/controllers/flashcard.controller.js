@@ -1,4 +1,5 @@
 const flashcard = require('../models/Flashcard.model');
+const flashcardset = require('../models/FlashcardSet.model');
 
 // creates a new flashcard in a flashcard set 
 const createFlashcard = async (req, res) => {
@@ -103,6 +104,8 @@ const updateFlashcard = async (req, res) => {
 // deletes a specific flashcard from a set by ID
 const deleteFlashcard = async (req, res) => {
   try {
+    const { id } = req.params;
+
     const deletedFlashcard = await flashcard.findByIdAndDelete(id);
 
     if (!deletedFlashcard) {

@@ -45,10 +45,12 @@ const CreateCard = ({
                 </label>
                 <Textarea
                   placeholder="Enter term"
-                  className="min-h-[100px] bg-white rounded-xl"
+                  className="min-h-[100px] max-h-40 overflow-auto bg-white rounded-xl w-full break-words"
                   value={term}
                   onChange={(e) => onTermChange(e.target.value)}
+                  maxLength={100}
                 />
+                <div className="text-xs text-gray-400 text-right">{term.length}/100</div>
               </div>
               <div className="w-1/2">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -56,10 +58,12 @@ const CreateCard = ({
                 </label>
                 <Textarea
                   placeholder="Enter definition"
-                  className="min-h-[100px] bg-white rounded-xl"
+                  className="min-h-[100px] max-h-40 overflow-auto bg-white rounded-xl w-full break-words"
                   value={definition}
                   onChange={(e) => onDefinitionChange(e.target.value)}
+                  maxLength={300}
                 />
+                <div className="text-xs text-gray-400 text-right">{definition.length}/300</div>
               </div>
             </div>
           </AccordionContent>
