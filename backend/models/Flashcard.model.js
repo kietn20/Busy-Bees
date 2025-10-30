@@ -2,11 +2,11 @@ const mongoose = require("mongoose");
 
 const flashcardSchema = new mongoose.Schema(
     {
-        frontDescription: {
+        term: {
             type: String,
             required: true,
         },
-        backDescription: {
+        definition: {
             type: String,
             required: true,
         },

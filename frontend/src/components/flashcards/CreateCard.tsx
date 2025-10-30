@@ -9,22 +9,24 @@ import { Textarea } from "@/components/ui/textarea";
 import { X } from "lucide-react";
 import { useState } from "react";
 
+type CreateCardProps = {
+  number: number;
+  term: string;
+  definition: string;
+  onTermChange: (val: string) => void;
+  onDefinitionChange: (val: string) => void;
+  onDelete: () => void;
+};
+
 const CreateCard = ({
   number,
+  term,
+  definition,
+  onTermChange,
+  onDefinitionChange,
   onDelete,
-  term = "",
-  definition = "",
-}: {
-  number: number;
-  onDelete?: () => void;
-  term?: string;
-  definition?: string;
-}) => {
-  const [termValue, setTermValue] = useState(term);
-  const [definitionValue, setDefinitionValue] = useState(definition);
-
-  return (
-    <div className="rounded-xl bg-gray-50  relative px-4">
+}: CreateCardProps) => (
+  <div className="rounded-xl bg-gray-50  relative px-4">
       <Accordion type="single" collapsible>
         <AccordionItem value="item-1" className="border-none">
           <div className="flex items-center justify-between">
@@ -44,8 +46,8 @@ const CreateCard = ({
                 <Textarea
                   placeholder="Enter term"
                   className="min-h-[100px] bg-white rounded-xl"
-                  value={termValue}
-                  onChange={(e) => setTermValue(e.target.value)}
+                  value={term}
+                  onChange={(e) => onTermChange(e.target.value)}
                 />
               </div>
               <div className="w-1/2">
@@ -55,8 +57,8 @@ const CreateCard = ({
                 <Textarea
                   placeholder="Enter definition"
                   className="min-h-[100px] bg-white rounded-xl"
-                  value={definitionValue}
-                  onChange={(e) => setDefinitionValue(e.target.value)}
+                  value={definition}
+                  onChange={(e) => onDefinitionChange(e.target.value)}
                 />
               </div>
             </div>
@@ -64,6 +66,5 @@ const CreateCard = ({
         </AccordionItem>
       </Accordion>
     </div>
-  );
-};
+);
 export default CreateCard;

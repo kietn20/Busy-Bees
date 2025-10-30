@@ -1,8 +1,11 @@
 const flashcardset = require('../models/FlashcardSet.model');
+const flashcard = require('../models/Flashcard.model');
+const mongoose = require('mongoose');
 
 // creates a new flashcard set in the course group
 const createFlashcardSet = async (req, res) => {
-  const { userId, courseGroupId, setName, description, flashcards } = req.body;
+  const userId = req.user._id; // from auth middleware
+  const { courseGroupId, setName, description, flashcards } = req.body;
   
   // validation
   if (!userId || !courseGroupId || !setName) {
@@ -11,20 +14,41 @@ const createFlashcardSet = async (req, res) => {
     });
   }
 
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
-    const newFlashcardSet = await flashcardset.create({
+    let flashcardsIds = [];
+    if (Array.isArray(flashcards) && flashcards.length > 0) {
+      const created = await flashcard.insertMany(
+        flashcards.map(f => ({
+          term: f.term,
+          definition: f.definition
+        })),
+        { session }
+      );
+      flashcardsIds = created.map(f => f._id);
+    }
+
+    const newFlashcardSet = await flashcardset.create([{
       userId,
       courseGroupId,
       setName,
       description,
-      flashcards
-    });
+      flashcards: flashcardsIds
+    }], { session });
 
+    await session.commitTransaction();
+    session.endSession();
+    
     res.status(201).json({
       message: "Flashcard set created successfully",
-      flashcardSet: newFlashcardSet
+      flashcardSet: newFlashcardSet[0]
     });
+
   } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
     console.error("Error creating flashcard set:", error);
     res.status(500).json({ message: "Internal server error" });
   }
@@ -123,13 +147,18 @@ const getFlashcardSetByGroup = async (req, res) => {
   try {
     const { groupId } = req.params;
 
-    // find flashcard sets by courseGroupId 
-    const flashcardSets = await flashcardset.find({ courseGroupId: groupId });
+    console.log("groupId param:", groupId, "typeof:", typeof groupId, "length:", groupId.length, "isValid:", mongoose.isValidObjectId(groupId));
+
+    if (!mongoose.isValidObjectId(groupId)) {
+      return res.status(400).json({ message: "Invalid course group ID format" });
+    }
+
+    const flashcardSets = await flashcardset.find({
+      courseGroupId: groupId
+    }).populate("userId", "firstName lastName");
 
     if (!flashcardSets || flashcardSets.length === 0) {
-      return res.status(404).json({ 
-        message: "No flashcard sets found for this course group" 
-      });
+      return res.status(404).json({ message: "No flashcard sets found for this course group" });
     }
 
     res.status(200).json({
