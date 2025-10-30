@@ -12,6 +12,7 @@ export default function CreateFlashcard() {
   const [cards, setCards] = useState([{ id: 1, number: 1, term: "", definition: "" }]);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [error, setError] = useState("");
   const router = useRouter();
   const { groupId } = useParams();
 
@@ -26,9 +27,17 @@ export default function CreateFlashcard() {
   };
 
   const handleSave = async () => {
+    setError("");
+    if (!title.trim()) {
+    setError("Flashcard name required");
+    return;
+  }
     try {
-    // Prepare flashcards array for backend (remove id/number, keep term/definition)
-    const flashcards = cards.map(({ term, definition }) => ({ term, definition }));
+    // prepare flashcards array for backend (remove id/number, keep term/definition)
+    // only allows non-empty term and definition
+    const flashcards = cards
+    .filter(card => card.term.trim() && card.definition.trim())
+    .map(({ term, definition }) => ({ term, definition }));
 
     // Call the API
     await createFlashcardSet(
@@ -40,8 +49,8 @@ export default function CreateFlashcard() {
 
     // Redirect to the flashcard list page
     router.push(`/groups/${groupId}/flashcards`);
-  } catch (error) {
-    // Handle error (show a message, etc.)
+  } catch (error : any) {
+    
     console.error("Failed to create flashcard set:", error);
   }
   };
@@ -60,13 +69,19 @@ export default function CreateFlashcard() {
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Flashcard Name
           </label>
+          
           <Input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="bg-white rounded-xl"
+            className={`bg-white rounded-xl ${error ? "border-red-500 ring-2 ring-red-200" : ""}`}
             placeholder="Enter title"
           />
+          {error && (
+            <div className="text-red-500 text-sm mt-1">
+              {error}
+            </div>
+          )}
         </div>
         <div className="w-1/2">
           <label className="block text-sm font-medium text-gray-700 mb-2">

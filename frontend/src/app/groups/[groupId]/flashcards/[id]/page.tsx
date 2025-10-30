@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,34 +12,35 @@ import {
 import { Ellipsis } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useParams } from "next/navigation";
-// Mock data - replace with actual data fetching
-const flashcardData = {
-  title: "Use Cases",
-  terms: [
-    {
-      id: 1,
-      term: "Use Case",
-      definition:
-        "a description of how a user interacts with a product, software, or system to achieve a goal",
-    },
-    {
-      id: 2,
-      term: "Flow of Events",
-      definition:
-        "the sequence of actions the user/system takes to complete the process",
-    },
-    // Add more terms as needed
-  ],
-};
+import { getFlashcardSetsById } from "@/services/flashcardApi";
+import type { Flashcard } from "@/services/flashcardApi";
 
 export default function FlashcardPage() {
   const { groupId, id } = useParams();
   const router = useRouter();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
+  const [flashcardSet, setFlashcardSet] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-  const currentTerm = flashcardData.terms[currentIndex];
-  const totalTerms = flashcardData.terms.length;
+  // fetch flashcard set data
+  useEffect(() => {
+  async function fetchData() {
+    setLoading(true);
+    try {
+      const data = await getFlashcardSetsById(groupId as string, id as string);
+      setFlashcardSet(data);
+    } catch (error) {
+      // handle error (optional)
+    }
+    setLoading(false);
+  }
+  fetchData();
+}, [groupId, id]);
+
+  const hasTerms = flashcardSet?.flashcards && flashcardSet.flashcards.length > 0;
+  const currentTerm = hasTerms ? flashcardSet.flashcards[currentIndex] : null;
+  const totalTerms = flashcardSet?.flashcards.length || 0;
 
   const nextCard = () => {
     if (currentIndex < totalTerms - 1) {
@@ -59,10 +60,13 @@ export default function FlashcardPage() {
     setIsFlipped(!isFlipped);
   };
 
+  if (loading) return <div>Loading...</div>;
+  if (!flashcardSet) return <div>Flashcard set not found.</div>;
+
   return (
     <div className="container mx-auto py-12 px-6">
       <div className="flex items-center justify-between mb-8">
-        <h1 className="text-2xl font-semibold ">{flashcardData.title}</h1>
+        <h1 className="text-2xl font-semibold ">{flashcardSet?.setName || ""}</h1>
         <div className="rounded-xl bg-gray-200 p-2 flex text-gray-500 ">
           <DropdownMenu>
             <DropdownMenuTrigger>
@@ -83,6 +87,8 @@ export default function FlashcardPage() {
       </div>
 
       <div className="mb-8">
+        {hasTerms ? (
+        <>
         <div
           className="relative w-full h-[300px]"
           style={{ perspective: "1200px" }}
@@ -146,6 +152,12 @@ export default function FlashcardPage() {
             <ChevronRight className="w-4 h-4" />
           </Button>
         </div>
+        </> 
+        ) : (
+        <div className="text-gray-500 text-center py-12">
+          No flashcards in this set yet.
+        </div>
+        )}
       </div>
 
       <div className="mb-4">
@@ -154,9 +166,9 @@ export default function FlashcardPage() {
         </h3>
 
         <div className="space-y-4">
-          {flashcardData.terms.map((term, index) => (
+          {flashcardSet?.flashcards.map((term: Flashcard, index: number) => (
             <div
-              key={term.id}
+              key={term._id}
               className="bg-white border rounded-xl p-6 cursor-pointer border-gray-200 hover:border-gray-300"
               onClick={() => {
                 setCurrentIndex(index);

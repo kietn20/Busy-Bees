@@ -23,12 +23,21 @@ export interface GetFlashcardSetsResponse {
     flashcardSets: FlashcardSet[];
 }
 
+export interface Flashcard {
+  _id: string;
+  term: string;
+  definition: string;
+}
 
 export const getFlashcardSetsByGroup = async (groupId: string): Promise<GetFlashcardSetsResponse> => {
     const response = await api.get(`/groups/${groupId}/flashcards`);
     return response.data;
 }
 
+export const getFlashcardSetsById = async (groupId: string, setId: string): Promise<FlashcardSet> => {
+    const response = await api.get<{ message: string; flashcardSet: FlashcardSet }>(`/groups/${groupId}/flashcards/${setId}`);
+    return response.data.flashcardSet;
+}
 
 export const createFlashcardSet = async (
   groupId: string,
@@ -43,3 +52,4 @@ export const createFlashcardSet = async (
   );
   return response.data;
 };
+
