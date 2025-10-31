@@ -1,4 +1,5 @@
 const flashcard = require('../models/Flashcard.model');
+const flashcardset = require('../models/FlashcardSet.model');
 
 // creates a new flashcard in a flashcard set 
 const createFlashcard = async (req, res) => {
@@ -105,18 +106,22 @@ const deleteFlashcard = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // find and delete flashcard by id
     const deletedFlashcard = await flashcard.findByIdAndDelete(id);
 
-    // check if flashcard exists
     if (!deletedFlashcard) {
-      return res.status(404).json({ 
-        message: 'Flashcard not found.',
-        flashcard: deletedFlashcard
-      });
+      return res.status(404).json({ message: "Flashcard not found" });
     }
 
-    res.status(200).json({ message: 'Flashcard deleted successfully.' });
+    // remove this flashcard's ID from all sets that reference it
+    await flashcardset.updateMany(
+      { flashcards: id },
+      { $pull: { flashcards: id } }
+    );
+
+    res.status(200).json({
+      message: "Flashcard deleted successfully",
+      flashcard: deletedFlashcard
+    });
   } catch (error) {
     if (error.name === 'CastError') {
       return res.status(400).json({ message: 'Invalid flashcard ID format.' });

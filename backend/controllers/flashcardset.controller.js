@@ -20,6 +20,15 @@ const createFlashcardSet = async (req, res) => {
   try {
     let flashcardsIds = [];
     if (Array.isArray(flashcards) && flashcards.length > 0) {
+      // Validate each flashcard
+      for (const f of flashcards) {
+        if (!f.term || !f.definition) {
+          await session.abortTransaction();
+          session.endSession();
+          return res.status(400).json({ message: "Each flashcard must have a term and definition." });
+        }
+      }
+
       const created = await flashcard.insertMany(
         flashcards.map(f => ({
           term: f.term,
@@ -95,6 +104,15 @@ const deleteFlashcardSet = async (req, res) => {
   const { id } = req.params;
 
   try {
+    const set = await flashcardset.findById(id);
+    if (!set) {
+      return res.status(404).json({ message: "Flashcard set not found" });
+    }
+
+    // deletes all flashcards associated with this set
+    await flashcard.deleteMany({ _id: { $in: set.flashcards } });
+
+    // deletes the set 
     const deletedFlashcardSet = await flashcardset.findByIdAndDelete(id);
 
     if (!deletedFlashcardSet) {

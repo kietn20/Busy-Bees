@@ -15,10 +15,12 @@ const flashcardSetSchema = new mongoose.Schema(
         setName: {
             type: String,
             required: true,
+            maxLength: 30
         },
         description: {
             type: String,
             required: false,
+            maxLength: 150
         },
         flashcards: [ // get length of this array to know number of flashcards in the set
             {
