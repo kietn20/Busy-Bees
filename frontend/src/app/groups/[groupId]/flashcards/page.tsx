@@ -1,12 +1,42 @@
 "use client";
 import FlashcardInfo from "@/components/flashcards/FlashcardInfo";
-import flashcardsData from "@/lib/flashcardsdata";
+//import flashcardsData from "@/lib/flashcardsdata";
 import { Plus } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
+import { getFlashcardSetsByGroup, FlashcardSet } from "@/services/flashcardApi";
+import { useEffect, useState } from "react";
 
 export default function FlashcardsList() {
   const router = useRouter();
   const { groupId } = useParams();
+  const [flashcardsData, setFlashcardsData] = useState<FlashcardSet[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false); 
+  console.log("groupId:", groupId);
+  useEffect(() => {
+    if (!groupId) return;
+
+    const fetchSets = async () => {
+      setLoading(true);
+      setNotFound(false); // reset on new fetch
+      try {
+        console.log("Fetching flashcard sets...");
+        console.log("groupId:", groupId, typeof groupId);
+        const response = await getFlashcardSetsByGroup(groupId as string);
+        console.log("Fetched flashcard sets:", response.flashcardSets); 
+        setFlashcardsData(response.flashcardSets);
+      } catch (error: any) {
+        if (error.response && error.response.status === 404) {
+          setNotFound(true);
+        } else {
+          console.error("Failed to fetch flashcard sets:", error);
+        }
+      }
+      setLoading(false);
+    };
+    fetchSets();
+    
+  }, [groupId]);
 
   return (
     <div className="container mx-auto py-12">
@@ -19,21 +49,36 @@ export default function FlashcardsList() {
           <Plus className="w-4 h-4 text-gray-500" />
         </button>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {flashcardsData.map((flashcard) => (
-          <FlashcardInfo
-            key={flashcard.id}
-            id={flashcard.id.toString()}
-            title={flashcard.title}
-            description={flashcard.description}
-            creator={flashcard.creator}
-            terms={flashcard.terms}
-            onClick={() =>
-              router.push(`/groups/${groupId}/flashcards/${flashcard.id}`)
-            }
-          />
-        ))}
-      </div>
+      {loading ? (
+        <div>Loading...</div>
+      ) : notFound ? (
+        <div className="text-gray-500 text-center py-8">
+          No flashcard sets found for this group.
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {flashcardsData.map((flashcard) => (
+            <FlashcardInfo
+              key={flashcard._id}
+              id={flashcard._id}
+              title={flashcard.setName}
+              description={flashcard.description || ""}
+              creator={
+                flashcard.userId
+                  ? `${flashcard.userId.firstName} ${flashcard.userId.lastName}`
+                  : "Deleted User"
+              }
+              terms={Array.from(
+                { length: flashcard.flashcards.length },
+                (_, i) => ({ id: i, term: "", definition: "" })
+              )}
+              onClick={() =>
+                router.push(`/groups/${groupId}/flashcards/${flashcard._id}`)
+              }
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

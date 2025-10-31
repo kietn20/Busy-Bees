@@ -5,11 +5,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus } from "lucide-react";
 import { useState } from "react";
+import { useRouter, useParams } from "next/navigation";
+import { createFlashcardSet } from "@/services/flashcardApi";
 
 export default function CreateFlashcard() {
-  const [cards, setCards] = useState([{ id: 1, number: 1 }]);
+  const [cards, setCards] = useState([{ id: 1, number: 1, term: "", definition: "" }]);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const router = useRouter();
+  const { groupId } = useParams();
 
   const handleDeleteCard = (id: number) => {
     setCards(cards.filter((card) => card.id !== id));
@@ -18,12 +22,28 @@ export default function CreateFlashcard() {
   const addNewCard = () => {
     const newId =
       cards.length > 0 ? Math.max(...cards.map((c) => c.id)) + 1 : 1;
-    setCards([...cards, { id: newId, number: cards.length + 1 }]);
+    setCards([...cards, { id: newId, number: cards.length + 1, term: "", definition: ""  }]);
   };
 
-  const handleSave = () => {
-    // TODO: Implement save functionality
-    console.log("Saving flashcard set:", { title, description, cards });
+  const handleSave = async () => {
+    try {
+    // Prepare flashcards array for backend (remove id/number, keep term/definition)
+    const flashcards = cards.map(({ term, definition }) => ({ term, definition }));
+
+    // Call the API
+    await createFlashcardSet(
+      groupId as string,
+      title,
+      description,
+      flashcards 
+    );
+
+    // Redirect to the flashcard list page
+    router.push(`/groups/${groupId}/flashcards`);
+  } catch (error) {
+    // Handle error (show a message, etc.)
+    console.error("Failed to create flashcard set:", error);
+  }
   };
 
   return (
@@ -63,10 +83,22 @@ export default function CreateFlashcard() {
       </div>
 
       <div className="space-y-4">
-        {cards.map((card) => (
+        {cards.map((card, idx) => (
           <CreateCard
             key={card.id}
             number={card.number}
+            term={card.term}
+            definition={card.definition}
+            onTermChange={val => {
+              const updated = [...cards];
+              updated[idx].term = val;
+              setCards(updated);
+            }}
+            onDefinitionChange={val => {
+              const updated = [...cards];
+              updated[idx].definition = val;
+              setCards(updated);
+            }}
             onDelete={() => handleDeleteCard(card.id)}
           />
         ))}

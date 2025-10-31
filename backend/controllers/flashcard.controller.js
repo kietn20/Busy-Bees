@@ -4,18 +4,18 @@ const flashcard = require('../models/Flashcard.model');
 const createFlashcard = async (req, res) => {
   try {
 
-    // deconstruct front and back descriptions from request body
-    const { frontDescription, backDescription } = req.body;
+    // deconstruct term and definition from request body
+    const { term, definition } = req.body;
 
     // validate required fields
-    if (!frontDescription || !backDescription) {
-      return res.status(400).json({ message: 'Front and back descriptions are required.' });
+    if (!term || !definition) {
+      return res.status(400).json({ message: 'Term and definition are required.' });
     }
 
     // create and save flashcard to database
     const savedFlashcard = await flashcard.create({
-      frontDescription,
-      backDescription
+      term,
+      definition
     });
 
     // respond with the created flashcard
