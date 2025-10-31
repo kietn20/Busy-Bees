@@ -65,9 +65,9 @@ const createFlashcardSet = async (req, res) => {
 
 // updates the attributes of an existing flashcard set
 const updateFlashcardSet = async (req, res) => {
-  const { id } = req.params;
+  const id = req.params.setId;
   const { setName, description, flashcards } = req.body;
-
+  console.log("req.params:", req.params);
   // validation
   if (!setName && !description && !flashcards) {
     return res.status(400).json({ 
