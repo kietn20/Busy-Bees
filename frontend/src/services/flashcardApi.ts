@@ -39,6 +39,16 @@ export const getFlashcardSetsById = async (groupId: string, setId: string): Prom
     return response.data.flashcardSet;
 }
 
+export const getFlashcardById = async (
+  groupId: string,
+  flashcardId: string
+): Promise<Flashcard> => {
+  const response = await api.get<{ message: string; flashcard: Flashcard }>(
+    `/groups/${groupId}/flashcards/cards/${flashcardId}`
+  );
+  return response.data.flashcard;
+};
+
 export const createFlashcardSet = async (
   groupId: string,
   setName: string,
@@ -53,3 +63,58 @@ export const createFlashcardSet = async (
   return response.data;
 };
 
+export const createFlashcard = async (
+  groupId: string,
+  setId: string,
+  term: string,
+  definition: string
+): Promise<Flashcard> => {
+  const response = await api.post<{ message: string; flashcard: Flashcard }>(
+    `/groups/${groupId}/flashcards/cards`,
+    { setId, term, definition }
+  );
+  return response.data.flashcard;
+};
+
+// for editing set name and description
+export const editFlashcardSet = async (
+  groupId: string,
+  setId: string,
+  setName: string,
+  description?: string,
+  flashcards?: string[]
+): Promise<CreateFlashcardSetResponse> => {
+    const response = await api.put<CreateFlashcardSetResponse>(
+      `/groups/${groupId}/flashcards/sets/${setId}`,
+      { setName, description, flashcards }
+    );
+    return response.data;
+};
+
+// for editing term and definition
+export const editFlashcard = async (
+  groupId: string,
+  flashcardId: string,
+  term: string,
+  definition: string
+): Promise<Flashcard> => {
+  const response = await api.put<Flashcard>(
+    `/groups/${groupId}/flashcards/cards/${flashcardId}`,
+    { term, definition }
+  );
+  return response.data;
+};
+
+export const deleteFlashcard = async (
+  groupId: string,
+  flashcardId: string
+): Promise<void> => {
+  await api.delete(`/groups/${groupId}/flashcards/cards/${flashcardId}`);
+};
+
+export const deleteFlashcardSet = async (
+  groupId: string,
+  setId: string
+): Promise<void> => {
+  await api.delete(`/groups/${groupId}/flashcards/sets/${setId}`);
+};
