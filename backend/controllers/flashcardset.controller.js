@@ -101,10 +101,10 @@ const updateFlashcardSet = async (req, res) => {
 
 // deletes an existing flashcard set from the course group
 const deleteFlashcardSet = async (req, res) => {
-  const { id } = req.params;
+  const { setId } = req.params;
 
   try {
-    const set = await flashcardset.findById(id);
+    const set = await flashcardset.findById(setId);
     if (!set) {
       return res.status(404).json({ message: "Flashcard set not found" });
     }
@@ -113,7 +113,7 @@ const deleteFlashcardSet = async (req, res) => {
     await flashcard.deleteMany({ _id: { $in: set.flashcards } });
 
     // deletes the set 
-    const deletedFlashcardSet = await flashcardset.findByIdAndDelete(id);
+    const deletedFlashcardSet = await flashcardset.findByIdAndDelete(setId);
 
     if (!deletedFlashcardSet) {
       return res.status(404).json({ message: "Flashcard set not found" });

@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useRouter, useParams } from "next/navigation";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-
+import { deleteFlashcardSet } from "@/services/flashcardApi";
 
 const FlashcardInfo = ({
   title,
@@ -16,6 +16,7 @@ const FlashcardInfo = ({
   terms,
   id,
   onClick,
+  onDelete
 }: {
   title: string;
   description: string;
@@ -23,6 +24,7 @@ const FlashcardInfo = ({
   terms: { id: number; term: string; definition: string }[];
   id: string;
   onClick: () => void;
+  onDelete: () => void;
 }) => {
   const router = useRouter();
   const { groupId } = useParams();
@@ -47,9 +49,16 @@ const FlashcardInfo = ({
             Edit
           </DropdownMenuItem>
           <DropdownMenuItem
-            onClick={(e) => {
+            onClick={async (e) => {
               e.stopPropagation();
-              // TODO: Add delete functionality
+              if (confirm("Are you sure you want to delete this flashcard set? This will delete all associated flashcards.")) {
+                try {
+                  await deleteFlashcardSet(groupId as string, id);
+                  onDelete();
+                } catch (error) {
+                  alert("Failed to delete flashcard set.");
+                }
+              }
             }}
           >
             Delete

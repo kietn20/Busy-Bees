@@ -12,7 +12,7 @@ export default function FlashcardsList() {
   const [flashcardsData, setFlashcardsData] = useState<FlashcardSet[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false); 
-  console.log("groupId:", groupId);
+  
   useEffect(() => {
     if (!groupId) return;
 
@@ -20,11 +20,11 @@ export default function FlashcardsList() {
       setLoading(true);
       setNotFound(false); // reset on new fetch
       try {
-        console.log("Fetching flashcard sets...");
-        console.log("groupId:", groupId, typeof groupId);
+        
         const response = await getFlashcardSetsByGroup(groupId as string);
-        console.log("Fetched flashcard sets:", response.flashcardSets); 
+        
         setFlashcardsData(response.flashcardSets);
+
       } catch (error: any) {
         if (error.response && error.response.status === 404) {
           setNotFound(true);
@@ -51,7 +51,7 @@ export default function FlashcardsList() {
       </div>
       {loading ? (
         <div>Loading...</div>
-      ) : notFound ? (
+      ) : flashcardsData.length === 0 ? (
         <div className="text-gray-500 text-center py-8">
           No flashcard sets found for this group.
         </div>
@@ -75,6 +75,7 @@ export default function FlashcardsList() {
               onClick={() =>
                 router.push(`/groups/${groupId}/flashcards/${flashcard._id}`)
               }
+              onDelete={() => setFlashcardsData(prev => prev.filter(set => set._id !== flashcard._id))}
             />
           ))}
         </div>

@@ -111,3 +111,10 @@ export const deleteFlashcard = async (
 ): Promise<void> => {
   await api.delete(`/groups/${groupId}/flashcards/cards/${flashcardId}`);
 };
+
+export const deleteFlashcardSet = async (
+  groupId: string,
+  setId: string
+): Promise<void> => {
+  await api.delete(`/groups/${groupId}/flashcards/sets/${setId}`);
+};
