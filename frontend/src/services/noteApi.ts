@@ -43,3 +43,7 @@ export const updateNote = async (groupId: string, noteId: string, data: UpdateNo
   const response = await api.put<Note>(`/groups/${groupId}/notes/${noteId}`, data);
   return response.data;
 };
+
+export const deleteNote = async (groupId: string, noteId: string): Promise<void> => {
+  await api.delete(`/groups/${groupId}/notes/${noteId}`);
+};

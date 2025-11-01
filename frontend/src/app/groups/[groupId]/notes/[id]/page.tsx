@@ -2,12 +2,25 @@
 
 import Editor from "@/components/notes/editor";
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
-import { getNoteById, updateNote } from "@/services/noteApi";
+import { useParams, useRouter } from "next/navigation";
+import { deleteNote, getNoteById, updateNote } from "@/services/noteApi";
+import { getGroupById } from "@/services/groupApi";
 import { Note } from "@/services/noteApi";
+import { CourseGroup } from "@/services/groupApi";
 import { Block } from "@blocknote/core";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+	AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export default function NoteDetailPage() {
 	const [note, setNote] = useState<Note | null>(null);
@@ -19,8 +32,12 @@ export default function NoteDetailPage() {
 	const [editedContent, setEditedContent] = useState<Block[]>([]);
 	const [isSaving, setIsSaving] = useState(false);
 
+	const [group, setGroup] = useState<CourseGroup | null>(null); // <-- NEW
+	const [isDeleting, setIsDeleting] = useState(false); // <-- NEW
+
 	const { user } = useAuth();
 	const params = useParams();
+	const router = useRouter();
 	const groupId = params.groupId as string;
 	const noteId = params.id as string;
 
@@ -28,14 +45,16 @@ export default function NoteDetailPage() {
 		setIsLoading(true);
 		setError(null);
 		try {
-			const response = await getNoteById(groupId, noteId);
-			setNote(response.note);
-			setEditedTitle(response.note.title);
-			setEditedContent(parseContent(response.note.content) || []);
+			const [noteResponse, groupResponse] = await Promise.all([
+				getNoteById(groupId, noteId),
+				getGroupById(groupId),
+			]);
+			setNote(noteResponse.note);
+			setGroup(groupResponse);
+			setEditedTitle(noteResponse.note.title);
+			setEditedContent(parseContent(noteResponse.note.content) || []);
 		} catch (err) {
-			setError(
-				"Failed to load note. You may not have permission to view it."
-			);
+			setError("Failed to load note data. You may not have permission.");
 		} finally {
 			setIsLoading(false);
 		}
@@ -46,9 +65,42 @@ export default function NoteDetailPage() {
 		fetchNote();
 	}, [groupId, noteId]);
 
+	useEffect(() => {
+		if (!groupId || !noteId) return;
+
+		const fetchData = async () => {
+			setIsLoading(true);
+			setError(null);
+
+			try {
+				// fetch note and group data in parallel
+				const [noteResponse, groupResponse] = await Promise.all([
+					getNoteById(groupId, noteId),
+					getGroupById(groupId),
+				]);
+
+				setNote(noteResponse.note);
+				setGroup(groupResponse);
+
+				setEditedTitle(noteResponse.note.title);
+				setEditedContent(parseContent(noteResponse.note.content) || []);
+			} catch (err) {
+				setError(
+					"Failed to load note data. You may not have permission."
+				);
+			} finally {
+				setIsLoading(false);
+			}
+		};
+
+		fetchData();
+	}, [groupId, noteId]);
+
 	const handleSave = async () => {
 		if (!note) return;
+
 		setIsSaving(true);
+
 		try {
 			await updateNote(groupId, noteId, {
 				title: editedTitle,
@@ -72,11 +124,50 @@ export default function NoteDetailPage() {
 			return JSON.parse(content);
 		} catch (e) {
 			// If content is not valid JSON, return a single block with the raw text
-			return [{ type: "paragraph", content: content }];
+			return [
+				{
+					id: "initial-block",
+					type: "paragraph",
+					props: {
+						textColor: "default",
+						backgroundColor: "default",
+						textAlignment: "left",
+					},
+					content: [
+						{
+							type: "text",
+							text: content,
+							styles: {},
+						},
+					],
+					children: [],
+				},
+			];
+		}
+	};
+
+	const handleDelete = async () => {
+		if (!note) return;
+
+		setIsDeleting(true);
+
+		try {
+			await deleteNote(groupId, noteId);
+			router.push(`/groups/${groupId}/notes`); // redirect to main notes page after deletion
+
+			// TODO: Add a success toast notification here
+		} catch (err) {
+			console.error("Failed to delete note:", err);
+
+			// TODO: Add an error toast notification here
+		} finally {
+			setIsDeleting(false);
 		}
 	};
 
 	const isAuthor = user && note && user.id === note.userId._id;
+	const isGroupOwner = user && group && user.id === group.ownerId;
+	const canModify = isAuthor || isGroupOwner;
 
 	if (isLoading) {
 		return <div className="text-center py-12">Loading note...</div>;
@@ -100,15 +191,43 @@ export default function NoteDetailPage() {
 						value={editedTitle}
 						onChange={(e) => setEditedTitle(e.target.value)}
 						className="text-3xl font-bold w-full bg-transparent border-none outline-none"
-        />
+					/>
 				) : (
 					<h1 className="text-3xl font-bold">{note.title}</h1>
 				)}
+				<div className="flex items-center space-x-2">
+					{canModify && !isEditing && (
+						<AlertDialog>
+							<AlertDialogTrigger asChild>
+								<Button variant="destructive">Delete</Button>
+							</AlertDialogTrigger>
+							<AlertDialogContent>
+								<AlertDialogHeader>
+									<AlertDialogTitle>
+										Are you absolutely sure?
+									</AlertDialogTitle>
+									<AlertDialogDescription>
+										This action cannot be undone. This will
+										permanently delete this note.
+									</AlertDialogDescription>
+								</AlertDialogHeader>
+								<AlertDialogFooter>
+									<AlertDialogCancel>
+										Cancel
+									</AlertDialogCancel>
+									<AlertDialogAction
+										onClick={handleDelete}
+										disabled={isDeleting}
+									>
+										{isDeleting ? "Deleting..." : "Delete"}
+									</AlertDialogAction>
+								</AlertDialogFooter>
+							</AlertDialogContent>
+						</AlertDialog>
+					)}
 
-				{/* --- EDIT / SAVE / CANCEL BUTTONS --- */}
-				{isAuthor && (
-					<div className="flex space-x-2">
-						{isEditing ? (
+					{isAuthor &&
+						(isEditing ? (
 							<>
 								<Button
 									variant="ghost"
@@ -130,9 +249,8 @@ export default function NoteDetailPage() {
 							>
 								Edit
 							</Button>
-						)}
-					</div>
-				)}
+						))}
+				</div>
 			</div>
 
 			<div className="w-1/3">
