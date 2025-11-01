@@ -19,3 +19,8 @@ export const createNote = async (groupId: string, data: CreateNoteData): Promise
     const response = await api.post<Note>(`/groups/${groupId}/notes`, data);
     return response.data;
 }
+
+export const getNotesByGroup = async (groupId: string): Promise<{ notes: Note[] }> => {
+    const response = await api.get<{ notes: Note[] }>(`/groups/${groupId}/notes`);
+    return response.data;
+};
