@@ -35,7 +35,6 @@ const createFlashcard = async (req, res) => {
 };
 
 // gets a specific flashcard by ID
-// not sure if we need this but this uses mongo id to get a specific flashcard
 const getFlashcardById = async (req, res) => {
   try {
     const { id } = req.params; // mongo id
@@ -64,17 +63,17 @@ const updateFlashcard = async (req, res) => {
   try {
     // deconstruct the id from the request parameters and the front and back descriptions from the request body
     const { id } = req.params;
-    const { frontDescription, backDescription } = req.body;
+    const { term, definition } = req.body;
 
     // validate required fields
-    if (!frontDescription && !backDescription) {
-      return res.status(400).json({ message: 'Front and back descriptions are required.' });
+    if (!term && !definition) {
+      return res.status(400).json({ message: 'Term and definition are required.' });
     }
 
     // create update object with provided fields
     const updateFields = {};
-    if (frontDescription) updateFields.frontDescription = frontDescription;
-    if (backDescription) updateFields.backDescription = backDescription;
+    if (term) updateFields.term = term;
+    if (definition) updateFields.definition = definition;
 
     // find flashcard by id and update it
 
@@ -104,9 +103,9 @@ const updateFlashcard = async (req, res) => {
 // deletes a specific flashcard from a set by ID
 const deleteFlashcard = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { flashcardId } = req.params;
 
-    const deletedFlashcard = await flashcard.findByIdAndDelete(id);
+    const deletedFlashcard = await flashcard.findByIdAndDelete(flashcardId);
 
     if (!deletedFlashcard) {
       return res.status(404).json({ message: "Flashcard not found" });
@@ -114,8 +113,8 @@ const deleteFlashcard = async (req, res) => {
 
     // remove this flashcard's ID from all sets that reference it
     await flashcardset.updateMany(
-      { flashcards: id },
-      { $pull: { flashcards: id } }
+      { flashcards: flashcardId },
+      { $pull: { flashcards: flashcardId } }
     );
 
     res.status(200).json({
