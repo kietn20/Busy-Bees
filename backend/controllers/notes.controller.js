@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const Note = require("../models/Note.model");
 const CourseGroup = require("../models/CourseGroup.model");
 
@@ -17,17 +18,7 @@ const createNote = async (req, res) => {
         return res.status(400).json({ message: "Title and content are required." });
     }
 
-    // Validate group
-    const group = await CourseGroup.findById(groupId);
-    if (!group) { 
-        return res.status(404).json({ message: "Course group not found." });
-    }
-
-    // Ensure requester is a member of the group
-    const isMember = group.members.some(m => m.equals(userId));
-    if (!isMember) {
-        return res.status(403).json({ message: "You are not a member of this group." });
-    }
+    // REMOVED CHECK FOR GROUP EXISTENCE AS MIDDLEWARE VALIDATES MEMBERSHIP
 
     const newNote = await Note.create({
       userId,
@@ -147,7 +138,9 @@ const deleteNote = async (req, res) => {
 // @access  Private (Group Members)
 const getNoteById = async (req, res) => {
   try {
-    const { groupId, noteId } = req.params;
+    // noteId can come from either route structure
+    const noteId = req.params.noteId || req.params.id;
+    const userId = req.user._id;
 
     if (!mongoose.Types.ObjectId.isValid(noteId)) {
       return res.status(400).json({ message: "Invalid noteId" });
@@ -155,12 +148,18 @@ const getNoteById = async (req, res) => {
 
     const note = await Note.findById(noteId).populate("userId", "firstName lastName email");
     if (!note) {
-        return res.status(404).json({ message: "Note not found" });
+      return res.status(404).json({ message: "Note not found" });
     }
 
-    // Ensure note belongs to this group
-    if (!note.groupId.equals(groupId)) {
-      return res.status(404).json({ message: "Note not found in this group." });
+    // verify that the user requesting the note is a member of the group it belongs to
+    const group = await CourseGroup.findById(note.groupId);
+    if (!group) {
+        return res.status(404).json({ message: "The group for this note could not be found." });
+    }
+    
+    const isMember = group.members.some(member => member.userId.equals(userId));
+    if (!isMember) {
+        return res.status(403).json({ message: "Forbidden: You are not a member of this group." });
     }
 
     // Optionally ensure requester is a member of the group (protect earlier via requireGroupMember)

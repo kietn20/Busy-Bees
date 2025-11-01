@@ -19,6 +19,11 @@ interface CreateNoteData {
     content: string;
 }
 
+interface UpdateNoteData {
+  title?: string;
+  content?: string;
+}
+
 export const createNote = async (groupId: string, data: CreateNoteData): Promise<Note> => {
     const response = await api.post<Note>(`/groups/${groupId}/notes`, data);
     return response.data;
@@ -33,3 +38,8 @@ export const getNoteById = async (groupId: string, noteId: string): Promise<{ no
     const response = await api.get<{ note: Note }>(`/groups/${groupId}/notes/${noteId}`);
     return response.data;
 }
+
+export const updateNote = async (groupId: string, noteId: string, data: UpdateNoteData): Promise<Note> => {
+  const response = await api.put<Note>(`/groups/${groupId}/notes/${noteId}`, data);
+  return response.data;
+};
