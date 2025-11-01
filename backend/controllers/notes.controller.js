@@ -178,12 +178,8 @@ const getNotesByGroup = async (req, res) => {
   try {
     const { groupId } = req.params;
 
-    const group = await CourseGroup.findById(groupId);
-    if (!group) {
-      return res.status(404).json({ message: "Course group not found." });
-    }
-
-    const notes = await Note.find({ userId: { $in: group.members } })
+    const notes = await Note.find({ groupId: groupId })
+      .populate("userId", "firstName lastName")
       .sort({ createdAt: -1 });
 
     res.status(200).json({ notes });

@@ -3,7 +3,7 @@ import NoteCard from "@/components/notes/NoteCard";
 import { Plus } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import CreateNoteModal from "@/components/notes/CreateNoteModal"; 
+import CreateNoteModal from "@/components/notes/CreateNoteModal";
 import { getNotesByGroup } from "@/services/noteApi";
 import { Note } from "@/services/noteApi";
 
@@ -32,11 +32,9 @@ export default function NotesList() {
 		}
 	};
 
-
 	useEffect(() => {
 		fetchNotes();
 	}, [groupId]);
-
 
 	return (
 		<div className="container mx-auto py-12">
@@ -58,21 +56,19 @@ export default function NotesList() {
 				<p>No notes yet. Create one!</p>
 			)}
 
-
 			{notes.map((note) => (
 				<div key={note._id} className="my-4">
 					<NoteCard
 						title={note.title}
 						content={note.content}
 						date={new Date(note.createdAt).toLocaleDateString()}
-						creator={"Author Name"}
+						creator={`${note.userId.firstName} ${note.userId.lastName}`}
 						onClick={() =>
 							router.push(`/groups/${groupId}/notes/${note._id}`)
 						}
 					/>
 				</div>
 			))}
-
 
 			<CreateNoteModal
 				isOpen={isCreateModalOpen}
