@@ -24,11 +24,6 @@ export default function GroupPage() {
   const [isInviteLoading, setIsInviteLoading] = useState(false);
   const [inviteError, setInviteError] = useState<string | null>(null);
 
-  const [events, setEvents] = useState<Event[]>([]);
-  const [isEventsLoading, setIsEventsLoading] = useState(true);
-  const [eventsError, setEventsError] = useState<string | null>(null);
-
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isDetailLoading, setIsDetailLoading] = useState(false);
 
@@ -75,42 +70,6 @@ export default function GroupPage() {
     return false;
   };
 
-  const fetchEvents = async () => {
-    try {
-      setIsEventsLoading(true);
-      const fetchedEvents = await getGroupEvents(groupId);
-      setEvents(fetchedEvents);
-    } catch (err) {
-      setEventsError("Failed to load events.");
-    } finally {
-      setIsEventsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (!groupId) return;
-    fetchEvents();
-  }, [groupId]);
-
-  const handleViewEvent = async (eventId: string) => {
-    setIsDetailModalOpen(true);
-    setIsDetailLoading(true);
-    try {
-      const fetchedEvent = await getEventById(eventId);
-      setSelectedEvent(fetchedEvent);
-    } catch (err) {
-      console.error("Failed to fetch event details", err);
-      // Optionally, show an error toast here
-    } finally {
-      setIsDetailLoading(false);
-    }
-  };
-
-  const handleCloseDetailModal = () => {
-    setIsDetailModalOpen(false);
-    setSelectedEvent(null); // Clear selection on close
-  };
-
   const handleGenerateInvite = async () => {
     setIsModalOpen(true);
     if (inviteCode) return;
@@ -145,6 +104,11 @@ export default function GroupPage() {
                 Edit Group
               </Button>
             )}
+            
+            <Button variant="outline" onClick={() => router.push(`/groups/${groupId}/events`)}>
+              View Events
+            </Button>
+
             <Button
               variant="outline"
               onClick={() => setIsCreateModalOpen(true)}
@@ -181,12 +145,7 @@ export default function GroupPage() {
         </div>
 
         {/* --- PASS the fetchEvents function to the onEventCreated prop --- */}
-        <EventList
-          events={events}
-          isLoading={isEventsLoading}
-          error={eventsError}
-          onEventClick={handleViewEvent}
-        />
+
 
         <InviteModal
           isOpen={isModalOpen}
@@ -195,29 +154,6 @@ export default function GroupPage() {
           isLoading={isInviteLoading}
         />
 
-        <EventDetailModal
-          isOpen={isDetailModalOpen}
-          onClose={handleCloseDetailModal}
-          event={selectedEvent}
-          isLoading={isDetailLoading}
-          groupOwnerId={(() => {
-            const owner = (group as any)?.ownerId;
-            if (!owner) return null;
-            if (typeof owner === "string") return owner;
-            return owner._id || null;
-          })()}
-          onEventUpdated={() => {
-            handleCloseDetailModal();
-            fetchEvents();
-          }}
-        />
-
-        <CreateEventModal
-          isOpen={isCreateModalOpen}
-          onClose={() => setIsCreateModalOpen(false)}
-          groupId={groupId}
-          onEventCreated={fetchEvents} // Pass the refetch function
-        />
         <Button
           variant="outline"
           onClick={() => router.push(`/groups/${groupId}/flashcards`)}
