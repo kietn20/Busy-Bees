@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams } from "next/navigation";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import EventList from "@/components/events/EventList";
@@ -10,6 +10,8 @@ import EventDetailModal from "@/components/events/EventDetailModal";
 import CreateEventModal from "@/components/events/CreateEventModal";
 import { getGroupById, CourseGroup } from "@/services/groupApi";
 import { Button } from "@/components/ui/button";
+import EventCalendar from "@/components/events/EventCalendar";
+import { Calendar } from "@/components/ui/calendar";
 
 export default function GroupEventsPage() {
 	const [events, setEvents] = useState<Event[]>([]);
@@ -21,6 +23,9 @@ export default function GroupEventsPage() {
 	const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 	const [isDetailLoading, setIsDetailLoading] = useState(false);
 	const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+	const [selectedDate, setSelectedDate] = useState<Date | undefined>(
+		new Date()
+	);
 
 	const params = useParams();
 	const groupId = params.groupId as string;
@@ -48,6 +53,39 @@ export default function GroupEventsPage() {
 		fetchEventsAndGroup();
 	}, [groupId]);
 
+	const eventDays = useMemo(() => {
+		return events.map((event) => new Date(event.startTime));
+	}, [events]);
+
+	const modifiers = {
+		event: eventDays,
+	};
+
+	const modifiersStyles = {
+		event: {
+			backgroundColor: "#FBBF24", // Amber-400
+			color: "#1F2937",
+			borderRadius: "0.5rem",
+		},
+	};
+
+	const handleDayClick = (day: Date | undefined) => {
+		if (!day) return;
+		setSelectedDate(day);
+
+		const eventsOnDay = events.filter((event) => {
+			const eventDate = new Date(event.startTime);
+			return eventDate.toLocaleDateString() === day.toLocaleDateString();
+		});
+
+		if (eventsOnDay.length === 1) {
+			handleViewEvent(eventsOnDay[0]._id);
+		}
+		else if (eventsOnDay.length > 1) {
+			handleViewEvent(eventsOnDay[0]._id);
+		}
+	};
+
 	const handleViewEvent = async (eventId: string) => {
 		setIsDetailModalOpen(true);
 		setIsDetailLoading(true);
@@ -64,7 +102,8 @@ export default function GroupEventsPage() {
 
 	const handleCloseDetailModal = () => {
 		setIsDetailModalOpen(false);
-		setSelectedEvent(null); // Clear selection on close
+		setSelectedEvent(null);
+		setSelectedDate(undefined);
 	};
 
 	return (
@@ -82,12 +121,34 @@ export default function GroupEventsPage() {
 					</Button>
 				</div>
 
-				<EventList
-					events={events}
-					isLoading={isEventsLoading}
-					error={eventsError}
-					onEventClick={handleViewEvent}
-				/>
+				<div className="flex flex-col md:flex-row gap-8 justify-between">
+					<div className="w-2/3  flex flex-col h-[calc(100vh-220px)]">
+						<div className="overflow-y-auto pr-2 flex-grow">
+							<EventList
+								events={events}
+								isLoading={isEventsLoading}
+								error={eventsError}
+								onEventClick={handleViewEvent}
+							/>
+						</div>
+					</div>
+
+
+
+
+					<div className="w-3/5  flex justify-center items-center">
+						<div className="bg-white p-4 rounded-lg shadow-md w-full ">
+							<Calendar
+								mode="single"
+								selected={selectedDate}
+								onSelect={handleDayClick}
+								className="w-full"
+								modifiers={modifiers}
+								modifiersStyles={modifiersStyles}
+							/>
+						</div>
+					</div>
+				</div>
 
 				<EventDetailModal
 					isOpen={isDetailModalOpen}
