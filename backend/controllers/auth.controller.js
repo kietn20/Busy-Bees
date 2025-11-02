@@ -1,5 +1,5 @@
 const User = require('../models/User.model');
-const { comparePassword, hashPassword } = require('../utils/password.util'); 
+const { comparePassword, hashPassword } = require('../utils/password.util');
 const { generateToken } = require('../utils/jwt.util');
 const { validationResult } = require('express-validator');
 
@@ -29,12 +29,12 @@ const registerUser = async (req, res) => {
       email,
       password: hashedPassword,
     });
-    
+
     await newUser.save();
-    
+
     // 5. generate a JWT and send response
     const token = generateToken(newUser._id);
-    
+
     newUser.password = undefined;
 
     res.status(201).json({
@@ -101,7 +101,7 @@ const getCurrentUser = async (req, res) => {
 
 // OAuth callback handler
 const googleCallback = (req, res) => {
-  res.redirect('http://localhost:3000/dashboard'); // change this based on the frontend route
+  res.redirect('http://localhost:3000/'); // Redirect to home page after Google login
 };
 
 module.exports = {
