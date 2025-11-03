@@ -28,7 +28,6 @@ export default function CreateNoteModal({
 	groupId,
 	onNoteCreated,
 }: CreateNoteModalProps) {
-
 	const [title, setTitle] = useState("");
 	const [content, setContent] = useState<Block[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
@@ -67,12 +66,13 @@ export default function CreateNoteModal({
 		onClose();
 	};
 
-
 	return (
 		<Dialog open={isOpen} onOpenChange={handleClose}>
 			<DialogContent className="sm:max-w-3xl h-[80vh] flex flex-col !bg-white">
 				<DialogHeader className="bg-white">
-					<DialogTitle className="text-gray-900">Create a New Note</DialogTitle>
+					<DialogTitle className="text-gray-900">
+						Create a New Note
+					</DialogTitle>
 				</DialogHeader>
 				<div className="space-y-4 py-4 flex-grow flex flex-col bg-white">
 					<div className="bg-white">
