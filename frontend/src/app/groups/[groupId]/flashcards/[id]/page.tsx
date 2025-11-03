@@ -95,12 +95,12 @@ export default function FlashcardPage() {
 		);
 
 	return (
-		<div className="container mx-auto py-12 px-6">
+		<div className="container mx-auto py-12 px-6 justify-center">
 			<div className="flex items-center justify-between mb-8">
 				<h1 className="text-2xl font-semibold ">
 					{flashcardSet.setName}
 				</h1>
-				<div className="rounded-xl bg-gray-200 p-2 flex text-gray-500 ">
+				<div className="rounded-xl bg-gray-200 p-2 flex text-gray-500">
 					<DropdownMenu>
 						<DropdownMenuTrigger>
 							<Ellipsis className="w-4 h-4 cursor-pointer" />
@@ -120,7 +120,7 @@ export default function FlashcardPage() {
 				</div>
 			</div>
 
-			<div className="mb-8 flex justify-center">
+			<div className="p-28 flex justify-center flex-col items-center justify-center">
 				{hasTerms && currentCard ? (
 					<div className="w-full max-w-2xl">
 						<div
