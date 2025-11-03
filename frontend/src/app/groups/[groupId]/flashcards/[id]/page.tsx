@@ -66,9 +66,6 @@ export default function FlashcardPage() {
 
 	const flipCard = () => setIsFlipped((prev) => !prev);
 
-
-
-
 	// KEYBOARD NAVIGATION
 	useEffect(() => {
 		const handleKeyDown = (event: KeyboardEvent) => {
@@ -82,10 +79,6 @@ export default function FlashcardPage() {
 		window.addEventListener("keydown", handleKeyDown);
 		return () => window.removeEventListener("keydown", handleKeyDown);
 	}, [goToNext, goToPrev]);
-
-
-
-
 
 	if (loading)
 		return <div className="text-center py-12">Loading Study Mode...</div>;
@@ -164,8 +157,6 @@ export default function FlashcardPage() {
 							</div>
 						</div>
 
-
-
 						<div className="flex items-center justify-center gap-4 mt-6">
 							<Button
 								variant="outline"
@@ -187,6 +178,9 @@ export default function FlashcardPage() {
 								<ChevronRight className="w-4 h-4" />
 							</Button>
 						</div>
+						<p className="text-center text-gray-400 text-sm mt-4">
+							Use ← → arrow keys to navigate & Press Space to flip
+						</p>
 					</div>
 				) : (
 					<div className="text-center py-12 text-gray-500">
