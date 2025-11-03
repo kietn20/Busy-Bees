@@ -70,12 +70,12 @@ export default function CreateNoteModal({
 
 	return (
 		<Dialog open={isOpen} onOpenChange={handleClose}>
-			<DialogContent className="sm:max-w-3xl h-[80vh] flex flex-col">
-				<DialogHeader>
-					<DialogTitle>Create a New Note</DialogTitle>
+			<DialogContent className="sm:max-w-3xl h-[80vh] flex flex-col !bg-white">
+				<DialogHeader className="bg-white">
+					<DialogTitle className="text-gray-900">Create a New Note</DialogTitle>
 				</DialogHeader>
-				<div className="space-y-4 py-4 flex-grow flex flex-col">
-					<div>
+				<div className="space-y-4 py-4 flex-grow flex flex-col bg-white">
+					<div className="bg-white">
 						<Label htmlFor="title" className="sr-only">
 							Note Title
 						</Label>
@@ -85,17 +85,17 @@ export default function CreateNoteModal({
 							onChange={(e) => setTitle(e.target.value)}
 							placeholder="Note Title"
 							required
-							className="text-2xl font-bold border-none shadow-none focus-visible:ring-0"
+							className="text-2xl font-bold border-none shadow-none focus-visible:ring-0 bg-white text-gray-900"
 						/>
 					</div>
-					<div className="flex-grow min-h-0">
+					<div className="flex-grow min-h-0 bg-white">
 						<Editor onChange={setContent} />
 					</div>
 				</div>
 
 				{error && <p className="text-sm text-red-500">{error}</p>}
 
-				<DialogFooter>
+				<DialogFooter className="bg-white">
 					<Button type="button" variant="ghost" onClick={handleClose}>
 						Cancel
 					</Button>
