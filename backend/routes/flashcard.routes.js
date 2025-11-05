@@ -4,7 +4,6 @@ const { getFlashcardSetByGroup, createFlashcardSet,
       getFlashcardSetById, updateFlashcardSet, deleteFlashcardSet } = require('../controllers/flashcardset.controller');
 const { deleteFlashcard, updateFlashcard, getFlashcardById, createFlashcard } = require('../controllers/flashcard.controller');
 const { canEditFlashcardSet, canDeleteFlashcardSet, validateFlashcardSet } = require("../middleware/flashcardset.middleware");
-const { validateFlashcard } = require("../middleware/flashcard.middleware")
 
 const router = express.Router({ mergeParams: true });
 
