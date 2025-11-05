@@ -5,6 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { getGroupById, updateCourseGroup } from '@/services/groupApi';
 import GroupMembersList from './group-members-list';
+import { toast } from 'react-hot-toast';
+import { useRouter } from 'next/navigation';
 
 type InitialGroupShape = {
   id?: string;
@@ -25,6 +27,10 @@ export default function EditGroupForm({ groupId, initialGroup, onSaved }: Props)
   const [description, setDescription] = useState(initialGroup?.description || '');
   const [isSaving, setIsSaving] = useState(false);
   const [loading, setLoading] = useState<boolean>(!!groupId && !initialGroup);
+
+  const router = useRouter();
+  const ERROR_TOAST_ID = "edit-group-error";
+  const MAX_GROUP_NAME_LENGTH = 40;
 
   useEffect(() => {
     if (!groupId) return;
@@ -55,8 +61,16 @@ export default function EditGroupForm({ groupId, initialGroup, onSaved }: Props)
   };
 
   const handleSave = async () => {
+    if (!name || name.trim() === "") {
+      toast.error("Group name is required."); 
+      return;
+    }
+    if (name.length > MAX_GROUP_NAME_LENGTH) {
+      toast.error(`Group name must be ${MAX_GROUP_NAME_LENGTH} characters or fewer.`);
+      return;
+    }
     if (!groupId && !group?.id) {
-      console.warn('No group id available to save.');
+      toast.error('No group id available to save.', { id: ERROR_TOAST_ID });
       return;
     }
     setIsSaving(true);
@@ -65,13 +79,15 @@ export default function EditGroupForm({ groupId, initialGroup, onSaved }: Props)
       const res = await updateCourseGroup(idToUse, { groupName: name.trim(), description: description.trim() });
       if (res?.data?.group) {
         const updated = res.data.group;
-  setGroup({ id: updated._id, groupName: updated.groupName, description: updated.description });
+        setGroup({ id: updated._id, groupName: updated.groupName, description: updated.description });
         setName(updated.groupName || '');
         setDescription(updated.description || '');
         if (onSaved) onSaved(updated);
+        toast.success("Group updated successfully!");
+        router.refresh();
       }
     } catch (err) {
-      console.error('Error saving group:', err);
+      toast.error('Failed to save changes.', { id: ERROR_TOAST_ID });
     } finally {
       setIsSaving(false);
     }
@@ -86,7 +102,7 @@ export default function EditGroupForm({ groupId, initialGroup, onSaved }: Props)
         <div className="flex flex-col">
           <div className="space-y-2 mx-4 my-2 py-2">
             <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name</label>
-            <Input id="name" type="text" value={name} onChange={(e) => setName(e.target.value)} className="bg-white border-gray-300 focus:border-blue-500" required />
+            <Input id="name" type="text" value={name} onChange={(e) => setName(e.target.value)} maxLength={MAX_GROUP_NAME_LENGTH} className="bg-white border-gray-300 focus:border-blue-500" />
           </div>
 
           <div className="space-y-2 mx-4 my-2 py-2">

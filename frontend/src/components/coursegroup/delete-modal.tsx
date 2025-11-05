@@ -15,6 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { deleteCourseGroup } from "@/services/groupApi";
+import toast from "react-hot-toast";
 
 const DeleteModal = ({ groupId }: { groupId: string }) => {
   const router = useRouter();
@@ -27,10 +28,12 @@ const DeleteModal = ({ groupId }: { groupId: string }) => {
     try {
       await deleteCourseGroup(groupId);
       // navigate back to home page
+      toast.success("Group deleted successfully.");
       router.push('/');
     } catch (err: any) {
-      console.error('Failed to delete group', err);
-      setError(err?.response?.data?.message || 'Failed to delete group');
+      const message = err?.response?.data?.message || 'Failed to delete group';
+      setError(message);
+      toast.error(message);
     } finally {
       setIsDeleting(false);
     }
