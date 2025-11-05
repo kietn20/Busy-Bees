@@ -17,6 +17,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { signup } from "@/services/authApi";
 import { useAuth } from "@/context/AuthContext";
+import toast from "react-hot-toast";
+
+const ERROR_TOAST_ID = "login-error";
 
 const signupSchema = z.object({
 	firstName: z.string().min(2, {
@@ -74,15 +77,16 @@ const SignUpForm = () => {
 
 			// Use AuthContext to set authentication state
 			authLogin(token, user);
-
+			toast.success("Account created successfully");
 			// Redirect to the home page after signup
 			router.push("/");
 		} catch (err) {
-			if (err instanceof Error) {
-				setError(err.message);
-			} else {
-				setError("Signup failed. Please try again.");
-			}
+			const errorMsg =
+            err instanceof Error
+                ? err.message
+                : "Signup failed. Please try again.";
+			//setError(errorMsg);
+			toast.error(errorMsg, { id: ERROR_TOAST_ID});
 		} finally {
 			setIsLoading(false);
 		}
@@ -90,11 +94,7 @@ const SignUpForm = () => {
 
 	return (
 		<div>
-			{error && (
-				<div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-					{error}
-				</div>
-			)}
+			
 			<Form {...form}>
 				<form
 					onSubmit={form.handleSubmit(onSubmit)}
