@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { joinGroup } from '@/services/groupApi';
 import { AxiosError } from 'axios';
+import toast from "react-hot-toast";
 
 export default function JoinGroupPage() {
   const [inviteCode, setInviteCode] = useState('');
@@ -64,6 +65,7 @@ export default function JoinGroupPage() {
     try {
       const response = await joinGroup(inviteCode);
 
+      toast.success("Joined group successfully!");
       // on success, redirect to the group page
       const groupId = response.data.group.id;
       router.push(`/groups/${groupId}`);
@@ -72,6 +74,7 @@ export default function JoinGroupPage() {
       const axiosError = error as AxiosError<{ message: string }>;
       const message = axiosError.response?.data?.message || 'Failed to join group. Please check the code and try again.';
       setError(message);
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }
@@ -102,7 +105,6 @@ export default function JoinGroupPage() {
               />
             </div>
 
-            {error && <p className="text-sm text-red-600 text-center">{error}</p>}
 
             <div>
               <button

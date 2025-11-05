@@ -15,6 +15,7 @@ import {
 import { useRouter } from "next/navigation";
 import { leaveCourseGroup } from "@/services/groupApi";
 import { Button } from "@/components/ui/button";
+import toast from "react-hot-toast";
 
 const LeaveModal = ({
   groupId,
@@ -33,10 +34,12 @@ const LeaveModal = ({
     try {
       await leaveCourseGroup(groupId);
       // After leaving, navigate back to groups list
-      router.push("/groups");
+      toast.success("You have left the group.");
+      router.push("/");
     } catch (err: any) {
-      console.error("Failed to leave group", err);
-      setError(err?.response?.data?.message || "Failed to leave group");
+      const message = err?.response?.data?.message || "Failed to leave group";
+      setError(message);
+      toast.error(message);
     } finally {
       setIsLeaving(false);
     }

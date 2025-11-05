@@ -9,7 +9,8 @@ import TransferOwnership from '@/components/coursegroup/transfer-ownership';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { getGroupById, updateCourseGroup, CourseGroup } from '@/services/groupApi';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/context/AuthContext';import toast from "react-hot-toast";
+
 
 
 export default function EditGroupPage() {
@@ -52,7 +53,7 @@ export default function EditGroupPage() {
           router.push('/403');
         }
       } catch (error) {
-        console.error('Error checking ownership:', error);
+        
         router.push('/403');
       }
     };
@@ -69,29 +70,13 @@ export default function EditGroupPage() {
         setName(g.groupName || "");
         setDescription(g.description || "");
       } catch (err) {
-        console.error('Failed to load group for editing', err);
+        
         setError('Failed to load group.');
       }
     };
     fetch();
   }, [groupId]);
 
-  const handleSave = async () => {
-    setIsSaving(true);
-    setError(null);
-    try {
-      const res = await updateCourseGroup(groupId, { groupName: name.trim(), description: description.trim() });
-      if (res?.data?.group) {
-        // navigate back to the group page after successful update
-        router.push(`/groups/${groupId}`);
-      }
-    } catch (err) {
-      console.error('Error updating group:', err);
-      setError('Failed to save changes.');
-    } finally {
-      setIsSaving(false);
-    }
-  };
 
   if (!group) {
     return (

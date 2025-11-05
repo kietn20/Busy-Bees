@@ -87,7 +87,7 @@ export default function TransferOwnership({ groupId, currentOwnerEmail }: Transf
       // Redirect to group page since user is no longer owner
       router.push(`/groups/${groupId}`);
     } catch (err: any) {
-      console.error("Transfer failed:", err);
+      
       toast.error(err.response?.data?.message || "Failed to transfer ownership");
       setShowConfirmDialog(false);
     } finally {

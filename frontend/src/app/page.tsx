@@ -8,6 +8,8 @@ import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 import GroupDetailsModal from "@/components/coursegroup/display-details";
 import { MessageCircle, Calendar, Mail } from "lucide-react";
+import toast from "react-hot-toast";
+import { Button } from "@/components/ui/button";
 
 export default function HomePage() {
   const [groups, setGroups] = useState<CourseGroup[]>([]);
@@ -17,6 +19,7 @@ export default function HomePage() {
 
   const [selectedGroup, setSelectedGroup] = useState<any | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
+
 
   useEffect(() => {
     if (authLoading) return;
@@ -32,10 +35,9 @@ export default function HomePage() {
         setLoading(true);
         const fetched = await getUserGroups();
         setGroups(fetched || []);
-        console.log("Fetched groups:", fetched);
       } catch (err) {
-        console.error("Error fetching groups:", err);
         setError("Failed to load groups. Please try again later.");
+        toast.error("Failed to load groups. Please try again later.");
       } finally {
         setLoading(false);
       }
@@ -44,10 +46,11 @@ export default function HomePage() {
     fetchGroups();
   }, [user, authLoading]);
 
+
   const pickName = (g: any) =>
     g.groupName || g.courseName || g.name || g._id || "Untitled Group";
 
-  const pickId = (g: any) => g.courseId
+  const pickId = (g: any) => g._id
 
   const openDetails = async (group: any) => {
     try {
@@ -60,7 +63,7 @@ export default function HomePage() {
       const data = await res.json();
 
       if (!data?.group) {
-        setSelectedGroup({
+          setSelectedGroup({
           groupName: pickName(group),
           description: "No description available.",
         });
@@ -88,6 +91,14 @@ export default function HomePage() {
   const Card = ({ g }: { g: any }) => {
     const id = pickId(g);
     const name = pickName(g);
+
+  if (groups.length > 0) {
+      const ids = groups.map(g => g._id);
+      const uniqueIds = new Set(ids);
+      if (ids.length !== uniqueIds.size) {
+        console.warn("Duplicate courseId detected!", ids);
+      }
+    }
 
     return (
       <div className="w-full max-w-sm bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition-all">
@@ -136,7 +147,7 @@ export default function HomePage() {
       </div>
     );
   };
-
+ 
   return (
     <>
       <div className="w-full h-[2px] bg-gray-200 shadow-sm" />
@@ -186,7 +197,8 @@ export default function HomePage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 animate-in fade-in duration-300">
-            {groups.map((g) => (
+            {
+            groups.map((g) => (
               <Card key={pickId(g)} g={g} />
             ))}
           </div>
