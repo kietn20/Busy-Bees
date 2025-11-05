@@ -24,13 +24,13 @@ router.get('/cards/:id', getFlashcardById);
 router.post('/', validateFlashcardSet, createFlashcardSet);
 
 // POST /api/groups/:groupId/flashcards/cards - create a new flashcard in a set
-router.post('/cards', validateFlashcard, createFlashcard);
+router.post('/cards', createFlashcard);
 
 // PUT /api/groups/:groupId/flashcards/sets/:setId - update a specific flashcard set
 router.put('/sets/:setId', canEditFlashcardSet, validateFlashcardSet, updateFlashcardSet);
 
 // PUT /api/groups/:groupId/flashcards/cards/:id
-router.put('/cards/:id', validateFlashcard, updateFlashcard);
+router.put('/cards/:id',  updateFlashcard);
 
 // DELETE /api/groups/:groupId/flashcards/cards/:flashcardId
 router.delete('/cards/:flashcardId', canDeleteFlashcardSet, deleteFlashcard);
