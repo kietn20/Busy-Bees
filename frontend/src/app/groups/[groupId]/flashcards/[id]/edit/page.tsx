@@ -158,8 +158,8 @@ export default function EditFlashcard() {
   }
 
   return (
-    <div className="container mx-auto py-12">
-      <div className="flex justify-between my-4">
+    <div className="container mx-auto py-12  flex flex-col px-6 rounded-xl justify-center items-center">
+      <div className="flex justify-between my- w-full rounded-xl">
         <h1 className="text-2xl font-bold mb-4">Edit Flashcard</h1>
         <Button onClick={handleSave} className="rounded-xl cursor-pointer">
           Save Changes
@@ -193,7 +193,7 @@ export default function EditFlashcard() {
         </div>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-4 w-full">
         {cards.map((card, idx) => (
           <CreateCard
             key={card._id}
@@ -222,7 +222,7 @@ export default function EditFlashcard() {
       <Button
         onClick={addNewCard}
         variant="outline"
-        className="p-4 rounded-xl cursor-pointer flex items-center justify-center gap-2 text-sm w-full my-4"
+        className="p-4 rounded-xl cursor-pointer flex items-center justify-center gap-2 text-sm  my-4"
       >
         <Plus className="w-4 h-4" />
         Add Card
