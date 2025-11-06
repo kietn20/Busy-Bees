@@ -8,6 +8,7 @@ import {
 import { useRouter, useParams } from "next/navigation";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { deleteFlashcardSet } from "@/services/flashcardApi";
+import { toast } from "react-hot-toast";
 
 const FlashcardInfo = ({
   title,
@@ -55,8 +56,12 @@ const FlashcardInfo = ({
                 try {
                   await deleteFlashcardSet(groupId as string, id);
                   onDelete();
-                } catch (error) {
-                  alert("Failed to delete flashcard set.");
+                } catch (error: any) {
+                  if (error?.response?.status === 403) {
+                    toast.error("Failed to delete: you are not the owner of this set.");
+                  } else {
+                    toast.error("Failed to delete set.");
+                  }
                 }
               }
             }}
