@@ -10,6 +10,7 @@ import GroupDetailsModal from "@/components/coursegroup/display-details";
 import { MessageCircle, Calendar, Mail } from "lucide-react";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
+import GoogleSignInToast from "@/components/GoogleSignInToast";
 
 export default function HomePage() {
   const [groups, setGroups] = useState<CourseGroup[]>([]);
@@ -101,7 +102,9 @@ export default function HomePage() {
     }
 
     return (
+      <><GoogleSignInToast />
       <div className="w-full max-w-sm bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition-all">
+        
         <Link href={`/groups/${id}`}>
           <div className="h-44 bg-[url('/beige.jpg')] bg-cover bg-center" />
         </Link>
@@ -145,6 +148,7 @@ export default function HomePage() {
           </div>
         </div>
       </div>
+      </>
     );
   };
  

@@ -16,6 +16,7 @@ import {
   FlashcardSet,
 } from "@/services/flashcardApi";
 import { useParams, useRouter } from "next/navigation";
+import { toast } from "react-hot-toast";
 
 export default function EditFlashcard() {
   const params = useParams();
@@ -146,10 +147,13 @@ export default function EditFlashcard() {
       );
 
       router.push(`/groups/${groupId}/flashcards/${setId}`);
-      alert("Flashcard set and cards updated!");
+      toast.success("Flashcard set and cards updated!");
     } catch (error: any) {
-      console.error("Error saving flashcard set:", error?.response?.data || error);
-      alert("Failed to save changes.");
+      if (error?.response?.status === 403) {
+        toast.error("Failed to save changes: you are not the owner of this set.");
+      } else {
+        toast.error("Failed to save changes.");
+      }
     }
 };
 
@@ -175,10 +179,15 @@ export default function EditFlashcard() {
             type="text"
             value={setName}
             onChange={(e) => setSetName(e.target.value)}
+            maxLength={30}
             className="bg-white rounded-xl"
             placeholder="Enter title"
           />
+          <div className="text-xs text-gray-400 text-right">
+            {setName.length}/30
+          </div>
         </div>
+        
         <div className="w-1/2">
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Flashcard Description
@@ -187,9 +196,11 @@ export default function EditFlashcard() {
             type="text"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
+            maxLength={150}
             className="bg-white rounded-xl"
             placeholder="Enter description"
           />
+          <div className="text-xs text-gray-400 text-right">{description.length}/150</div>
         </div>
       </div>
 

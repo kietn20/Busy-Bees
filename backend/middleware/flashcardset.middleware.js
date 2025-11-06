@@ -55,37 +55,39 @@ const canDeleteFlashcardSet = async (req, res, next) => {
   }
 };
 
-// Validate flashcard set input before creating or updating
-const validateFlashcardSet = (req, res, next) => {
-  const { title, description, cards } = req.body;
+// // Validate flashcard set input before creating or updating
+// const validateFlashcardSet = (req, res, next) => {
+//   const { setName, description, flashcards } = req.body;
 
-  // Validate title
-  if (!title || typeof title !== "string" || title.trim() === "") {
-    return res.status(400).json({ message: "Title is required." });
-  }
-  if (title.length > 100) {
-    return res.status(400).json({ message: "Title cannot exceed 100 characters." });
-  }
+//   const cards = flashcards;
 
-  // Validate description
-  if (description && typeof description !== "string") {
-    return res.status(400).json({ message: "Description must be a string." });
-  }
+//   // Validate title
+//   if (!setName || typeof setName !== "string" || setName.trim() === "") {
+//     return res.status(400).json({ message: "Set name is required." });
+//   }
+//   if (setName.length > 100) {
+//     return res.status(400).json({ message: "Set name cannot exceed 100 characters." });
+//   }
 
-  for (const card of cards) {
-    if (typeof card !== "object" || !card.question || !card.answer) {
-      return res.status(400).json({ message: "Each card must have a question and an answer." });
-    }
-    if (typeof card.question !== "string" || typeof card.answer !== "string") {
-      return res.status(400).json({ message: "Question and answer must be strings." });
-    }
-  }
+//   // Validate description
+//   if (description && typeof description !== "string") {
+//     return res.status(400).json({ message: "Description must be a string." });
+//   }
 
-  next();
-};
+//   console.log("Received cards:", cards);
+//   for (const card of cards) {
+//     if (typeof card !== "object" || !card.term || !card.definition) {
+//       return res.status(400).json({ message: "Each card must have a term and a definition." });
+//     }
+//     if (typeof card.term !== "string" || typeof card.definition !== "string") {
+//       return res.status(400).json({ message: "Term and definition must be strings." });
+//     }
+//   }
+
+//   next();
+// };
 
 module.exports = {
   canEditFlashcardSet,
   canDeleteFlashcardSet,
-  validateFlashcardSet,
 };
