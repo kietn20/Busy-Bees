@@ -5,6 +5,7 @@ import { Plus } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
 import { getFlashcardSetsByGroup, FlashcardSet } from "@/services/flashcardApi";
 import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 
 export default function FlashcardsList() {
   const router = useRouter();
@@ -30,6 +31,7 @@ export default function FlashcardsList() {
           setNotFound(true);
         } else {
           console.error("Failed to fetch flashcard sets:", error);
+          toast.error("Failed to load flashcard sets.");
         }
       }
       setLoading(false);

@@ -12,6 +12,7 @@ import {
 import { useRouter, useParams } from "next/navigation";
 import { getFlashcardSetsById } from "@/services/flashcardApi";
 import { FlashcardSet, Flashcard } from "@/services/flashcardApi";
+import toast from "react-hot-toast";
 
 export default function FlashcardPage() {
 	const { groupId, id: setId } = useParams();
@@ -34,6 +35,7 @@ export default function FlashcardPage() {
 				);
 				setFlashcardSet(data);
 			} catch (error) {
+        toast.error("Failed to load flashcard set.");
 				console.error("Failed to load flashcard set:", error);
 			}
 			setLoading(false);

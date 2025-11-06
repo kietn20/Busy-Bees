@@ -29,8 +29,11 @@ export default function EditFlashcard() {
   const [cards, setCards] = useState<Flashcard[]>([]);
   const [originalCards, setOriginalCards] = useState<Flashcard[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hasTitleError, setHasTitleError] = useState(false);
 
   const isValidMongoId = (id: string) => /^[a-f\d]{24}$/i.test(id);
+
+  const TOAST_ERR_ID = "edit-flashcard-error";
 
   // Load initial data
   useEffect(() => {
@@ -65,7 +68,7 @@ export default function EditFlashcard() {
       setCards(flashcardObjs);
       setOriginalCards(flashcardObjs);
     } catch (error) {
-      alert("Failed to load flashcard set.");
+      toast.error("Failed to load flashcard set.");
     }
     setLoading(false);
   };
@@ -106,11 +109,16 @@ export default function EditFlashcard() {
     // Check for empty cards
     const hasEmpty = cards.some(card => !card.term.trim() || !card.definition.trim());
     if (hasEmpty) {
-      alert("Failed to save. Remove empty flashcards.");
+      toast.error("Failed to save. Remove empty flashcards.");
       return;
     }
+    if (!setName.trim()) {
+      toast.error("Flashcard name required", { id: TOAST_ERR_ID });
+      setHasTitleError(true);
+    return;
+    }
+    setHasTitleError(false);
     try {
-      console.log("setId:", setId, typeof setId);
       // 1. Create new cards and collect their real IDs
       const newCards = cards.filter(card => !isValidMongoId(card._id));
       const createdCards = (await Promise.all(
@@ -119,7 +127,6 @@ export default function EditFlashcard() {
           )
         )
       ).filter((c): c is Flashcard => !!c);
-      console.log("createdCards:", createdCards);
       // 2. Update changed cards
       await Promise.all(
         cards
@@ -147,7 +154,7 @@ export default function EditFlashcard() {
       );
 
       router.push(`/groups/${groupId}/flashcards/${setId}`);
-      toast.success("Flashcard set and cards updated!");
+      toast.success("Changes saved.");
     } catch (error: any) {
       if (error?.response?.status === 403) {
         toast.error("Failed to save changes: you are not the owner of this set.");
@@ -178,9 +185,11 @@ export default function EditFlashcard() {
           <Input
             type="text"
             value={setName}
-            onChange={(e) => setSetName(e.target.value)}
+            onChange={(e) => {setSetName(e.target.value);
+              setHasTitleError(false);
+            }}
             maxLength={30}
-            className="bg-white rounded-xl"
+            className={`bg-white rounded-xl ${hasTitleError ? "border-red-500 ring-2 ring-red-200" : ""}`}
             placeholder="Enter title"
           />
           <div className="text-xs text-gray-400 text-right">

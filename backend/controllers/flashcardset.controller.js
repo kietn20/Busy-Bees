@@ -67,7 +67,7 @@ const createFlashcardSet = async (req, res) => {
 const updateFlashcardSet = async (req, res) => {
   const id = req.params.setId;
   const { setName, description, flashcards } = req.body;
-  console.log("req.params:", req.params);
+  
   // validation
   if (!setName && !description && !flashcards) {
     return res.status(400).json({ 
@@ -165,7 +165,6 @@ const getFlashcardSetByGroup = async (req, res) => {
   try {
     const { groupId } = req.params;
 
-    console.log("groupId param:", groupId, "typeof:", typeof groupId, "length:", groupId.length, "isValid:", mongoose.isValidObjectId(groupId));
 
     if (!mongoose.isValidObjectId(groupId)) {
       return res.status(400).json({ message: "Invalid course group ID format" });
