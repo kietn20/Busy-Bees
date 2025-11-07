@@ -12,10 +12,6 @@ import { DoorOpen, DoorClosed } from "lucide-react";
 import { generateInvite, getGroupEvents, Event } from "@/services/groupApi";
 import { getGroupById, CourseGroup } from "@/services/groupApi";
 import { useAuth } from "@/context/AuthContext";
-import { getEventById } from "@/services/eventApi";
-import EventList from "@/components/events/EventList";
-import EventDetailModal from "@/components/events/EventDetailModal";
-import CreateEventModal from "@/components/events/CreateEventModal";
 
 export default function GroupPage() {
   const router = useRouter();
@@ -23,11 +19,6 @@ export default function GroupPage() {
   const [inviteCode, setInviteCode] = useState<string | null>(null);
   const [isInviteLoading, setIsInviteLoading] = useState(false);
   const [inviteError, setInviteError] = useState<string | null>(null);
-
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-  const [isDetailLoading, setIsDetailLoading] = useState(false);
-
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const [group, setGroup] = useState<CourseGroup | null>(null);
   const [isLeaveHover, setIsLeaveHover] = useState(false);
@@ -109,12 +100,6 @@ export default function GroupPage() {
               View Events
             </Button>
 
-            <Button
-              variant="outline"
-              onClick={() => setIsCreateModalOpen(true)}
-            >
-              Create Event
-            </Button>
             <Button onClick={handleGenerateInvite}>Invite Members</Button>
             <LeaveModal groupId={groupId}>
               <Button
@@ -143,9 +128,6 @@ export default function GroupPage() {
             </LeaveModal>
           </div>
         </div>
-
-        {/* --- PASS the fetchEvents function to the onEventCreated prop --- */}
-
 
         <InviteModal
           isOpen={isModalOpen}
