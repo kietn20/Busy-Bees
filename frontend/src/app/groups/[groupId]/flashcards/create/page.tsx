@@ -7,14 +7,18 @@ import { Plus } from "lucide-react";
 import { useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { createFlashcardSet } from "@/services/flashcardApi";
+import { toast } from "react-hot-toast";
 
 export default function CreateFlashcard() {
   const [cards, setCards] = useState([{ id: 1, term: "", definition: "" }]);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [error, setError] = useState("");
+  const [hasTitleError, setHasTitleError] = useState(false);
   const router = useRouter();
   const { groupId } = useParams();
+
+  const TOAST_ERR_ID = "create-flashcard-error";
 
   const handleDeleteCard = (id: number) => {
     setCards(cards.filter((card) => card.id !== id));
@@ -27,11 +31,14 @@ export default function CreateFlashcard() {
   };
 
   const handleSave = async () => {
-    setError("");
+    
     if (!title.trim()) {
-    setError("Flashcard name required");
+      toast.error("Flashcard name required", { id: TOAST_ERR_ID });
+      setHasTitleError(true);
     return;
   }
+    setHasTitleError(false);
+  
     try {
     // prepare flashcards array for backend (remove id/number, keep term/definition)
     // only allows non-empty term and definition
@@ -49,8 +56,9 @@ export default function CreateFlashcard() {
 
     // Redirect to the flashcard list page
     router.push(`/groups/${groupId}/flashcards`);
+    toast.success("Flashcard set created.");
   } catch (error : any) {
-    
+    toast.error("Failed to create flashcard set.", { id: TOAST_ERR_ID });
     console.error("Failed to create flashcard set:", error);
   }
   };
@@ -73,17 +81,15 @@ export default function CreateFlashcard() {
           <Input
             type="text"
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={(e) => {setTitle(e.target.value);
+              setHasTitleError(false);
+            }}
             maxLength={30}
-            className={`bg-white rounded-xl ${error ? "border-red-500 ring-2 ring-red-200" : ""}`}
+            className={`bg-white rounded-xl ${hasTitleError ? "border-red-500 ring-2 ring-red-200" : ""}`}
             placeholder="Enter title"
           />
           <div className="text-xs text-gray-400 text-right">{title.length}/30</div>
-          {error && (
-            <div className="text-red-500 text-sm mt-1">
-              {error}
-            </div>
-          )}
+          
         </div>
         <div className="w-1/2">
           <label className="block text-sm font-medium text-gray-700 mb-2">
