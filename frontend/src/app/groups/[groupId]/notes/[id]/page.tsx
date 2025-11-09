@@ -21,6 +21,7 @@ import {
 	AlertDialogTitle,
 	AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import toast from "react-hot-toast";
 
 export default function NoteDetailPage() {
 	const [note, setNote] = useState<Note | null>(null);
@@ -54,6 +55,7 @@ export default function NoteDetailPage() {
 			setEditedTitle(noteResponse.note.title);
 			setEditedContent(parseContent(noteResponse.note.content) || []);
 		} catch (err) {
+			toast.error("Failed to load note data. You may not have permission.");
 			setError("Failed to load note data. You may not have permission.");
 		} finally {
 			setIsLoading(false);
@@ -85,6 +87,7 @@ export default function NoteDetailPage() {
 				setEditedTitle(noteResponse.note.title);
 				setEditedContent(parseContent(noteResponse.note.content) || []);
 			} catch (err) {
+				toast.error("Failed to load note data. You may not have permission.");
 				setError(
 					"Failed to load note data. You may not have permission."
 				);
@@ -110,8 +113,10 @@ export default function NoteDetailPage() {
 			setIsEditing(false); // back to view mode
 			fetchNote(); // refetch the note to show the saved data
 			// TODO: Add a success toast notification here
+			toast.success("Changes saved.");
 		} catch (err) {
 			console.error("Failed to save note:", err);
+			toast.error("Failed to save note.");
 			// TODO: Add an error toast notification here
 		} finally {
 			setIsSaving(false);
@@ -154,11 +159,11 @@ export default function NoteDetailPage() {
 		try {
 			await deleteNote(groupId, noteId);
 			router.push(`/groups/${groupId}/notes`); // redirect to main notes page after deletion
-
+			toast.success("Note deleted.");
 			// TODO: Add a success toast notification here
 		} catch (err) {
 			console.error("Failed to delete note:", err);
-
+			toast.error("Failed to delete note.");
 			// TODO: Add an error toast notification here
 		} finally {
 			setIsDeleting(false);
