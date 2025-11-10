@@ -3,7 +3,7 @@
 import * as React from "react";
 import { Check, ChevronsUpDown, BookOpen } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { getUserGroups } from "@/services/groupApi";
+import { getUserGroups, type CourseGroup } from "@/services/groupApi";
 import { useAuth } from "@/context/AuthContext";
 
 import {
@@ -23,8 +23,10 @@ export function CourseSwitcher({
 }: {
   currentGroupId?: string;
 }) {
-  const [groups, setGroups] = React.useState<any[]>([]);
-  const [selectedGroup, setSelectedGroup] = React.useState<any | null>(null);
+  const [groups, setGroups] = React.useState<CourseGroup[]>([]);
+  const [selectedGroup, setSelectedGroup] = React.useState<CourseGroup | null>(
+    null
+  );
   const [loading, setLoading] = React.useState(true);
   const router = useRouter();
   const { user, isLoading: authLoading } = useAuth();
@@ -51,6 +53,7 @@ export function CourseSwitcher({
         } else {
           setSelectedGroup(userGroups[0] || null);
         }
+        console.log("Selected group:", userGroups);
       } catch (error) {
         console.error("Error fetching groups:", error);
       } finally {
@@ -61,9 +64,9 @@ export function CourseSwitcher({
     fetchGroups();
   }, [currentGroupId, user, authLoading]);
 
-  const handleGroupChange = (group: any) => {
+  const handleGroupChange = (group: CourseGroup) => {
     setSelectedGroup(group);
-    router.push(`/groups/${group.courseId}`);
+    router.push(`/groups/${group._id}`);
   };
 
   if (loading) {
@@ -151,7 +154,7 @@ export function CourseSwitcher({
                 <BookOpen className="size-4" />
               </div>
               <div className="">
-                <span className="font-medium">{selectedGroup.courseName}</span>
+                <span className="font-medium">{selectedGroup.groupName}</span>
               </div>
               <ChevronsUpDown className="ml-auto" />
             </SidebarMenuButton>
@@ -166,7 +169,7 @@ export function CourseSwitcher({
                 onSelect={() => handleGroupChange(group)}
               >
                 <div className="flex flex-col">
-                  <span className="font-medium">{group.courseName}</span>
+                  <span className="font-medium">{group.groupName}</span>
                 </div>
                 {group._id === selectedGroup._id && (
                   <Check className="ml-auto" />

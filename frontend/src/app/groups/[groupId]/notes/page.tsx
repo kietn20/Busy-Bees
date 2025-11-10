@@ -1,81 +1,215 @@
 "use client";
-import NoteCard from "@/components/notes/NoteCard";
 import { Plus } from "lucide-react";
-import { useRouter, useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useRouter, useParams, useSearchParams } from "next/navigation";
+import { useEffect, useState, useCallback } from "react";
 import CreateNoteModal from "@/components/notes/CreateNoteModal";
-import { getNotesByGroup } from "@/services/noteApi";
+import { getNotesByGroup, getNoteById } from "@/services/noteApi";
 import { Note } from "@/services/noteApi";
+import SidebarNotes from "@/components/notes/sidebar-notes";
+import Editor from "@/components/notes/editor";
+import { Block } from "@blocknote/core";
+import { Button } from "@/components/ui/button";
 
 export default function NotesList() {
-	const router = useRouter();
-	const params = useParams();
-	const groupId = params.groupId as string;
+  const router = useRouter();
+  const params = useParams();
+  const searchParams = useSearchParams();
+  const groupId = params.groupId as string;
+  const selectedNoteId = searchParams.get("noteId");
 
-	const [notes, setNotes] = useState<Note[]>([]);
-	const [isLoading, setIsLoading] = useState(true);
-	const [error, setError] = useState<string | null>(null);
-	const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [selectedNote, setSelectedNote] = useState<Note | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isNoteLoading, setIsNoteLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
-	const fetchNotes = async () => {
-		if (!groupId) return;
-		setIsLoading(true);
-		setError(null);
+  const fetchSelectedNote = useCallback(
+    async (noteId: string) => {
+      setIsNoteLoading(true);
+      try {
+        const response = await getNoteById(groupId, noteId);
+        setSelectedNote(response.note);
+      } catch (err) {
+        console.error("Failed to load selected note:", err);
+      } finally {
+        setIsNoteLoading(false);
+      }
+    },
+    [groupId]
+  );
 
-		try {
-			const response = await getNotesByGroup(groupId);
-			setNotes(response.notes);
-		} catch (err) {
-			setError("Failed to load notes.");
-		} finally {
-			setIsLoading(false);
-		}
-	};
+  const fetchNotes = useCallback(async () => {
+    if (!groupId) return;
+    setIsLoading(true);
+    setError(null);
 
-	useEffect(() => {
-		fetchNotes();
-	}, [groupId]);
+    try {
+      const response = await getNotesByGroup(groupId);
+      setNotes(response.notes);
+    } catch {
+      setError("Failed to load notes.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [groupId]);
 
-	return (
-		<div className="container mx-auto py-12">
-			<div className="flex items-center justify-between mb-4">
-				<h1 className="text-2xl font-bold">All Notes</h1>
-				<button
-					onClick={() => setIsCreateModalOpen(true)}
-					className="p-2 rounded-xl bg-gray-100 hover:bg-gray-200 cursor-pointer"
-				>
-					<Plus className="w-4 h-4 text-gray-500" />
-				</button>
-			</div>
+  const handleNoteSelect = useCallback(
+    (noteId: string) => {
+      router.push(`/groups/${groupId}/notes?noteId=${noteId}`);
+    },
+    [router, groupId]
+  );
 
-			{isLoading && <p>Loading notes...</p>}
+  useEffect(() => {
+    fetchNotes();
+  }, [groupId, fetchNotes]);
 
-			{error && <p className="text-red-500">{error}</p>}
+  useEffect(() => {
+    if (selectedNoteId && notes.length > 0) {
+      fetchSelectedNote(selectedNoteId);
+    }
+  }, [selectedNoteId, notes.length, fetchSelectedNote]);
 
-			{!isLoading && !error && notes.length === 0 && (
-				<p>No notes yet. Create one!</p>
-			)}
+  const parseContent = (content: string): Block[] | undefined => {
+    try {
+      return JSON.parse(content);
+    } catch {
+      return [
+        {
+          id: "initial-block",
+          type: "paragraph",
+          props: {
+            textColor: "default",
+            backgroundColor: "default",
+            textAlignment: "left",
+          },
+          content: [
+            {
+              type: "text",
+              text: content,
+              styles: {},
+            },
+          ],
+          children: [],
+        },
+      ];
+    }
+  };
 
-			{notes.map((note) => (
-				<div key={note._id} className="my-4">
-					<NoteCard
-						title={note.title}
-						content={note.content}
-						date={new Date(note.createdAt).toLocaleDateString()}
-						creator={`${note.userId.firstName} ${note.userId.lastName}`}
-						onClick={() =>
-							router.push(`/groups/${groupId}/notes/${note._id}`)
-						}
-					/>
-				</div>
-			))}
+  if (isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        Loading notes...
+      </div>
+    );
+  }
 
-			<CreateNoteModal
-				isOpen={isCreateModalOpen}
-				onClose={() => setIsCreateModalOpen(false)}
-				groupId={groupId}
-				onNoteCreated={fetchNotes}
-			/>
-		</div>
-	);
+  if (error) {
+    return (
+      <div className="flex h-screen items-center justify-center text-red-500">
+        {error}
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex h-screen">
+      {/* Sidebar */}
+      <div className="w-80 border-r bg-gray-50">
+        <div className="p-4 border-b h-16">
+          <div className="flex items-center justify-between">
+            <h1 className="text-xl font-semibold">All Notes</h1>
+            <button
+              onClick={() => setIsCreateModalOpen(true)}
+              className="p-2 rounded-lg bg-white hover:bg-gray-100 border cursor-pointer"
+            >
+              <Plus className="w-4 h-4 text-gray-600" />
+            </button>
+          </div>
+        </div>
+
+        {notes.length === 0 ? (
+          <div className="p-4 text-center text-gray-500">
+            No notes yet. Create one!
+          </div>
+        ) : (
+          <SidebarNotes
+            notes={notes}
+            selectedNoteId={selectedNoteId}
+            onNoteSelect={handleNoteSelect}
+          />
+        )}
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col">
+        {selectedNote ? (
+          <>
+            <div className="p-4 border-b h-16 flex justify-end">
+              <Button
+                onClick={() =>
+                  router.push(`/groups/${groupId}/notes/${selectedNote._id}`)
+                }
+                variant="outline"
+              >
+                View in Fullscreen
+              </Button>
+            </div>
+            {/* Note Header */}
+            <div className="p-6 border-b bg-white">
+              <h1 className="text-3xl font-bold mb-4">{selectedNote.title}</h1>
+              <div className="flex gap-8 text-sm text-gray-600">
+                <div>
+                  <span className="font-medium">Created by:</span>{" "}
+                  {selectedNote.userId.firstName} {selectedNote.userId.lastName}
+                </div>
+                <div>
+                  <span className="font-medium">Last modified:</span>{" "}
+                  {new Date(selectedNote.updatedAt).toDateString()}
+                </div>
+              </div>
+            </div>
+
+            {/* Note Content */}
+            <div className="flex-1 py-4 bg-white overflow-auto">
+              {isNoteLoading ? (
+                <div className="flex items-center justify-center h-32">
+                  Loading note content...
+                </div>
+              ) : (
+                <Editor
+                  initialContent={parseContent(selectedNote.content)}
+                  editable={false}
+                  onChange={() => {}}
+                />
+              )}
+            </div>
+          </>
+        ) : (
+          <div className="flex-1 flex flex-col items-center justify-center text-gray-500">
+            <div className="text-center">
+              <h2 className="text-xl font-semibold mb-2">
+                {notes.length > 0
+                  ? "Select a note to view"
+                  : "No notes available"}
+              </h2>
+              {notes.length > 0 && (
+                <p className="text-sm">
+                  Choose a note from the sidebar to start reading
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      <CreateNoteModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        groupId={groupId}
+        onNoteCreated={fetchNotes}
+      />
+    </div>
+  );
 }
