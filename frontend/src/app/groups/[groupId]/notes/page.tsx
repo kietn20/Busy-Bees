@@ -9,6 +9,7 @@ import SidebarNotes from "@/components/notes/sidebar-notes";
 import Editor from "@/components/notes/editor";
 import { Block } from "@blocknote/core";
 import { Button } from "@/components/ui/button";
+import toast from "react-hot-toast";
 
 export default function NotesList() {
   const router = useRouter();
@@ -49,6 +50,7 @@ export default function NotesList() {
       setNotes(response.notes);
     } catch {
       setError("Failed to load notes.");
+      toast.error("Failed to load notes.");
     } finally {
       setIsLoading(false);
     }
