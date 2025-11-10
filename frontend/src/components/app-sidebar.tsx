@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ChevronUp, User2 } from "lucide-react";
 import LogoutButton from "./logout-button";
+import { useAuth } from "@/context/AuthContext";
 
 // This is sample data.
 const data = {
@@ -51,21 +52,21 @@ const data = {
         },
       ],
     },
-    {
-      title: "Favorites",
-      url: "#",
-      items: [
-        {
-          title: "Notes 1",
-          url: "#",
-        },
-        {
-          title: "Notes 2",
-          url: "#",
-          isActive: true,
-        },
-      ],
-    },
+    // {
+    //   title: "Favorites",
+    //   url: "#",
+    //   items: [
+    //     {
+    //       title: "Notes 1",
+    //       url: "#",
+    //     },
+    //     {
+    //       title: "Notes 2",
+    //       url: "#",
+    //       isActive: true,
+    //     },
+    //   ],
+    // },
   ],
 };
 
@@ -74,6 +75,7 @@ export function AppSidebar({
   ...props
 }: React.ComponentProps<typeof Sidebar> & { currentGroupId?: string }) {
   const pathname = usePathname();
+  const { user } = useAuth();
 
   // Update navigation items with current group ID
   const navMainWithGroupId = data.navMain.map((section) => ({
@@ -102,7 +104,11 @@ export function AppSidebar({
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton
                       asChild
-                      isActive={pathname === item.url}
+                      isActive={
+                        pathname === item.url ||
+                        (item.title !== "Dashboard" &&
+                          pathname.startsWith(item.url + "/"))
+                      }
                       className="py-5 pl-6"
                     >
                       <a href={item.url}>{item.title}</a>
@@ -114,22 +120,20 @@ export function AppSidebar({
           </SidebarGroup>
         ))}
       </SidebarContent>
+
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <SidebarMenuButton>
-                  <User2 /> Username
+                  <User2 /> {user?.firstName} {user?.lastName}
                   <ChevronUp className="ml-auto" />
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
               <DropdownMenuContent side="top" className="w-60">
-                <DropdownMenuItem>
+                <DropdownMenuItem asChild className="cursor-pointer">
                   <a href={"/account"}>Account</a>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <a href={"#"}>Billing</a>
                 </DropdownMenuItem>
                 <DropdownMenuItem>
                   <LogoutButton />

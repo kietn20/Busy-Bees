@@ -200,27 +200,27 @@
 }
 
 /* Force all popover/dropdown backgrounds to dark */
-[data-radix-popper-content-wrapper],
+/* [data-radix-popper-content-wrapper],
 [role="dialog"],
 [role="menu"],
 [role="listbox"] {
   background: #1f2937 !important;
   border-radius: 8px !important;
   border: 1px solid #374151 !important;
-}
+} */
 
 /* Color Menu Items - Make them wider */
-[data-radix-popper-content-wrapper] > div > div,
+/* [data-radix-popper-content-wrapper] > div > div,
 [role="menu"] > div,
 [role="listbox"] > div {
   padding: 5px 10px !important;
   border-radius: 6px !important;
   min-height: 36px !important;
   background: #1f2937 !important;
-}
+} */
 
 /* Target menu items by their specific attributes */
-[role="menuitemcheckbox"],
+/* [role="menuitemcheckbox"],
 [role="menuitem"],
 [data-radix-collection-item],
 div[role="menuitemcheckbox"],
@@ -231,28 +231,28 @@ div[role="menuitem"] {
   margin: 2px 0 !important;
   background: #1f2937 !important;
   color: #e5e7eb !important;
-}
+} */
 
 /* Hover effects for menu items */
-[role="menuitemcheckbox"]:hover,
+/* [role="menuitemcheckbox"]:hover,
 [role="menuitem"]:hover,
 [data-radix-collection-item]:hover {
   background: #374151 !important;
   color: #f9fafb !important;
-}
+} */
 
 /* Ensure buttons have dark background */
-button[role="menuitemcheckbox"],
+/* button[role="menuitemcheckbox"],
 button[role="menuitem"] {
   background: #1f2937 !important;
   color: #e5e7eb !important;
-}
+} */
 
-button[role="menuitemcheckbox"]:hover,
+/* button[role="menuitemcheckbox"]:hover,
 button[role="menuitem"]:hover {
   background: #374151 !important;
   color: #f9fafb !important;
-}
+} */
 
 /* Code Block Styling - Dark Theme */
 .bn-editor pre,

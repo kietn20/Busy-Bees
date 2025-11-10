@@ -116,7 +116,7 @@ export default function NotesList() {
   return (
     <div className="flex h-screen overflow-hidden">
       {/* Sidebar */}
-      <div className="w-80 flex-shrink-0 border-r bg-gray-50">
+      <div className="w-80 flex-shrink-0 border-r">
         <div className="p-4 border-b h-16">
           <div className="flex items-center justify-between">
             <h1 className="text-xl font-semibold">All Notes</h1>

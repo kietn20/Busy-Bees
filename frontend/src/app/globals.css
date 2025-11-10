@@ -79,7 +79,7 @@
   font-display: swap;
 }
 
-body {
+* {
   font-family: var(--font-base);
   letter-spacing: 0.025em;
 }
@@ -143,7 +143,7 @@ body {
   --foreground: oklch(0.147 0.004 49.25);
   --card: var(--color-1);
   --card-foreground: oklch(0.147 0.004 49.25);
-  --popover: var(--color-1);
+  --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.147 0.004 49.25);
   --primary: var(--color-2);
   --primary-foreground: oklch(0.147 0.004 49.25);
