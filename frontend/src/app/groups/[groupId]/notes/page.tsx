@@ -114,9 +114,9 @@ export default function NotesList() {
   }
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen overflow-hidden">
       {/* Sidebar */}
-      <div className="w-80 border-r bg-gray-50">
+      <div className="w-80 flex-shrink-0 border-r bg-gray-50">
         <div className="p-4 border-b h-16">
           <div className="flex items-center justify-between">
             <h1 className="text-xl font-semibold">All Notes</h1>
@@ -143,7 +143,7 @@ export default function NotesList() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 min-w-0 flex flex-col">
         {selectedNote ? (
           <>
             <div className="p-4 border-b h-16 flex justify-end">
@@ -172,7 +172,7 @@ export default function NotesList() {
             </div>
 
             {/* Note Content */}
-            <div className="flex-1 py-4 bg-white overflow-auto">
+            <div className="flex-1 py-4 bg-white overflow-y-auto overflow-x-hidden">
               {isNoteLoading ? (
                 <div className="flex items-center justify-center h-32">
                   Loading note content...
