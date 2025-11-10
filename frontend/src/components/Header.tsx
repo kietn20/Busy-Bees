@@ -9,17 +9,16 @@ export default function Header() {
   const { user, logout } = useAuth();
   const router = useRouter();
 
-
   const handleLogout = () => {
     logout();
-    router.push('/login');
+    router.push("/login");
   };
 
   return (
-    <header className="bg-white shadow-md">
+    <header>
       <nav className="container mx-auto px-6 py-4 flex justify-between items-center">
-        <Link href="/" className="text-2xl font-bold text-gray-800">
-          Busy Bee 🐝
+        <Link href="/" className="text-2xl font-semibold text-gray-800">
+          BusyBee
         </Link>
         <div className="space-x-4 flex items-center">
           {user ? (
@@ -37,12 +36,15 @@ export default function Header() {
           ) : (
             // --- User is Logged Out ---
             <>
-              <Link href="/login" className="text-gray-600 hover:text-gray-800">
+              <Link
+                href="/login"
+                className="text-gray-600 hover:text-gray-800 font-medium"
+              >
                 Login
               </Link>
               <Link
                 href="/signup"
-                className="bg-yellow-400 hover:bg-yellow-500 text-gray-800 font-bold py-2 px-4 rounded"
+                className="bg-[var(--color-2)] text-[#fff6e6] font-medium py-2 px-5 rounded-3xl mx-2"
               >
                 Sign Up
               </Link>

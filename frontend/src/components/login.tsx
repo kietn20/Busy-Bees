@@ -74,7 +74,12 @@ const LogInForm = () => {
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input placeholder="email@abc.com" {...field} required />
+                  <Input
+                    placeholder="email@abc.com"
+                    {...field}
+                    required
+                    className="bg-white"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -92,6 +97,7 @@ const LogInForm = () => {
                     placeholder="Your password"
                     {...field}
                     required
+                    className="bg-white"
                   />
                 </FormControl>
                 <FormMessage />
@@ -100,7 +106,7 @@ const LogInForm = () => {
           />
           <Button
             type="submit"
-            className="w-full cursor-pointer my-2"
+            className="w-full cursor-pointer my-2 text-secondary"
             disabled={isLoading}
           >
             {isLoading ? "Logging in..." : "Login"}

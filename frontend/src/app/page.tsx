@@ -8,6 +8,7 @@ import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 import GroupDetailsModal from "@/components/coursegroup/display-details";
 import { MessageCircle, Calendar, Mail } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default function HomePage() {
   const [groups, setGroups] = useState<CourseGroup[]>([]);
@@ -47,7 +48,7 @@ export default function HomePage() {
   const pickName = (g: any) =>
     g.groupName || g.courseName || g.name || g._id || "Untitled Group";
 
-  const pickId = (g: any) => g.courseId
+  const pickId = (g: any) => g.courseId;
 
   const openDetails = async (group: any) => {
     try {
@@ -69,7 +70,6 @@ export default function HomePage() {
       }
 
       setDetailsOpen(true);
-
     } catch (err) {
       console.error("Failed to load group details:", err);
       setSelectedGroup({
@@ -108,8 +108,8 @@ export default function HomePage() {
               title="View Group Details"
               onClick={(e) => {
                 e.stopPropagation();
-                setSelectedGroup(g); 
-                openDetails(g); 
+                setSelectedGroup(g);
+                openDetails(g);
               }}
               className="text-gray-600 hover:text-black transition"
             >
@@ -139,9 +139,7 @@ export default function HomePage() {
 
   return (
     <>
-      <div className="w-full h-[2px] bg-gray-200 shadow-sm" />
-
-      <main className="min-h-screen px-8 md:px-16 lg:px-24 py-12 bg-white">
+      <main className="py-12 container mx-auto px-6">
         {user && (
           <div className="flex items-start justify-between mb-8 animate-in fade-in slide-in-from-top-3 duration-300">
             <div>
@@ -167,9 +165,20 @@ export default function HomePage() {
             Loading authentication...
           </p>
         ) : !user ? (
-          <div className="flex flex-col items-center justify-center py-24 text-center">
-            <h1 className="text-3xl font-bold text-gray-900">Welcome to Busy Bee!</h1>
-            <p className="mt-3 text-gray-700 text-lg">Please log in to view your courses.</p>
+          <div className="flex flex-col items-center justify-center py-24 text-center w-3/5 mx-auto">
+            <h1 className="text-6xl font-medium text-secondary tracking-wide">
+              Study Smarter. Together.
+            </h1>
+            <h3 className="mt-3 text-secondary text-lg py-4">
+              Create groups, drop notes, build flashcards, and plan your next
+              session—all in one sleek workspace.
+            </h3>
+            <Button
+              asChild
+              className="mt-6 px-6 py-6 text-lg text-[#fff6e6] font-medium rounded-3xl"
+            >
+              <Link href="/signup">Get Started</Link>
+            </Button>
           </div>
         ) : loading ? (
           <p className="text-center mt-12 animate-pulse text-gray-600">

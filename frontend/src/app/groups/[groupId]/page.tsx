@@ -16,6 +16,8 @@ import { getEventById } from "@/services/eventApi";
 import EventList from "@/components/events/EventList";
 import EventDetailModal from "@/components/events/EventDetailModal";
 import CreateEventModal from "@/components/events/CreateEventModal";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/app-sidebar";
 
 export default function GroupPage() {
   const router = useRouter();
@@ -129,108 +131,115 @@ export default function GroupPage() {
 
   return (
     <ProtectedRoute>
-      <div className="container mx-auto p-8">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">
-            {group ? group.groupName : "Course Group Details"}
-          </h1>
-          <div className="flex space-x-2">
-            {isOwner() && (
-              <Button
-                variant="outline"
-                onClick={() =>
-                  window.location.assign(`/groups/${groupId}/edit`)
-                }
-              >
-                Edit Group
-              </Button>
-            )}
+      <SidebarProvider>
+        <AppSidebar currentGroupId={groupId} />
+        <SidebarInset>
+          <div className="container mx-auto p-8">
+            <div className="flex justify-between items-center mb-8">
+              <h1 className="text-3xl font-bold">
+                {group ? group.groupName : "Course Group Details"}
+              </h1>
+              <div className="flex space-x-2">
+                {isOwner() && (
+                  <Button
+                    variant="outline"
+                    onClick={() =>
+                      window.location.assign(`/groups/${groupId}/edit`)
+                    }
+                  >
+                    Edit Group
+                  </Button>
+                )}
+                <Button
+                  variant="outline"
+                  onClick={() => setIsCreateModalOpen(true)}
+                >
+                  Create Event
+                </Button>
+                <Button onClick={handleGenerateInvite}>Invite Members</Button>
+                <LeaveModal groupId={groupId}>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    title="Leave group"
+                    onMouseEnter={() => setIsLeaveHover(true)}
+                    onMouseLeave={() => setIsLeaveHover(false)}
+                    className={`relative inline-flex items-center justify-center p-2 rounded-md shadow-xs transition-all duration-300 ease-in-out hover:bg-red-600 hover:text-white ${
+                      isLeaveHover
+                        ? "bg-red-600 text-white opacity-100"
+                        : "opacity-60"
+                    } focus:outline-none`}
+                  >
+                    <span className="flex items-center justify-center">
+                      <DoorClosed
+                        className={`w-5 h-5 transition-opacity duration-500 ease-in-out ${
+                          isLeaveHover ? "opacity-0" : "opacity-100"
+                        }`}
+                      />
+                      <DoorOpen
+                        className={`w-5 h-5 absolute transition-opacity duration-500 ease-in-out ${
+                          isLeaveHover ? "opacity-100" : "opacity-0"
+                        }`}
+                      />
+                    </span>
+                  </Button>
+                </LeaveModal>
+              </div>
+            </div>
+
+            {/* --- PASS the fetchEvents function to the onEventCreated prop --- */}
+            <EventList
+              events={events}
+              isLoading={isEventsLoading}
+              error={eventsError}
+              onEventClick={handleViewEvent}
+            />
+
+            <InviteModal
+              isOpen={isModalOpen}
+              onClose={() => setIsModalOpen(false)}
+              inviteCode={inviteCode}
+              isLoading={isInviteLoading}
+            />
+
+            <EventDetailModal
+              isOpen={isDetailModalOpen}
+              onClose={handleCloseDetailModal}
+              event={selectedEvent}
+              isLoading={isDetailLoading}
+              groupOwnerId={(() => {
+                const owner = (group as any)?.ownerId;
+                if (!owner) return null;
+                if (typeof owner === "string") return owner;
+                return owner._id || null;
+              })()}
+              onEventUpdated={() => {
+                handleCloseDetailModal();
+                fetchEvents();
+              }}
+            />
+
+            <CreateEventModal
+              isOpen={isCreateModalOpen}
+              onClose={() => setIsCreateModalOpen(false)}
+              groupId={groupId}
+              onEventCreated={fetchEvents} // Pass the refetch function
+            />
             <Button
               variant="outline"
-              onClick={() => setIsCreateModalOpen(true)}
+              onClick={() => router.push(`/groups/${groupId}/flashcards`)}
             >
-              Create Event
+              Flashcards
             </Button>
-            <Button onClick={handleGenerateInvite}>Invite Members</Button>
-            <LeaveModal groupId={groupId}>
-              <Button
-                variant="outline"
-                size="icon"
-                title="Leave group"
-                onMouseEnter={() => setIsLeaveHover(true)}
-                onMouseLeave={() => setIsLeaveHover(false)}
-                className={`relative inline-flex items-center justify-center p-2 rounded-md shadow-xs transition-all duration-300 ease-in-out hover:bg-red-600 hover:text-white ${
-                  isLeaveHover ? "bg-red-600 text-white opacity-100" : "opacity-60"
-                } focus:outline-none`}
-              >
-                <span className="flex items-center justify-center">
-                  <DoorClosed
-                    className={`w-5 h-5 transition-opacity duration-500 ease-in-out ${
-                      isLeaveHover ? "opacity-0" : "opacity-100"
-                    }`}
-                  />
-                  <DoorOpen
-                    className={`w-5 h-5 absolute transition-opacity duration-500 ease-in-out ${
-                      isLeaveHover ? "opacity-100" : "opacity-0"
-                    }`}
-                  />
-                </span>
-              </Button>
-            </LeaveModal>
+            <Button
+              variant="outline"
+              onClick={() => router.push(`/groups/${groupId}/notes`)}
+            >
+              Notes
+            </Button>
           </div>
-        </div>
-
-        {/* --- PASS the fetchEvents function to the onEventCreated prop --- */}
-        <EventList
-          events={events}
-          isLoading={isEventsLoading}
-          error={eventsError}
-          onEventClick={handleViewEvent}
-        />
-
-        <InviteModal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          inviteCode={inviteCode}
-          isLoading={isInviteLoading}
-        />
-
-        <EventDetailModal
-          isOpen={isDetailModalOpen}
-          onClose={handleCloseDetailModal}
-          event={selectedEvent}
-          isLoading={isDetailLoading}
-          groupOwnerId={(() => {
-            const owner = (group as any)?.ownerId;
-            if (!owner) return null;
-            if (typeof owner === "string") return owner;
-            return owner._id || null;
-          })()}
-          onEventUpdated={() => {
-            handleCloseDetailModal();
-            fetchEvents();
-          }}
-        />
-
-        <CreateEventModal
-          isOpen={isCreateModalOpen}
-          onClose={() => setIsCreateModalOpen(false)}
-          groupId={groupId}
-          onEventCreated={fetchEvents} // Pass the refetch function
-        />
-        <Button
-          variant="outline"
-          onClick={() => router.push(`/groups/${groupId}/flashcards`)}
-        >
-          Flashcards
-        </Button>
-        <Button
-          variant="outline"
-          onClick={() => router.push(`/groups/${groupId}/notes`)}
-        >
-          Notes
-        </Button>
-      </div>
+        </SidebarInset>
+      </SidebarProvider>
     </ProtectedRoute>
   );
 }

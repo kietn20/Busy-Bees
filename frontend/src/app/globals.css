@@ -1,6 +1,89 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* Thin (15) */
+@font-face {
+  font-family: "Neue Haas Grotesk Round";
+  src: url("../assets/fonts/neue-haas-grotesk/neuehaasgrotdispround-15xxthin-trial.otf")
+    format("opentype");
+  font-weight: 100;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Extra Light (25) */
+@font-face {
+  font-family: "Neue Haas Grotesk Round";
+  src: url("../assets/fonts/neue-haas-grotesk/neuehaasgrotdispround-25xthin-trial.otf")
+    format("opentype");
+  font-weight: 200;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Light (35, 45) */
+@font-face {
+  font-family: "Neue Haas Grotesk Round";
+  src: url("../assets/fonts/neue-haas-grotesk/neuehaasgrotdispround-35thin-trial.otf")
+    format("opentype");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Neue Haas Grotesk Round";
+  src: url("../assets/fonts/neue-haas-grotesk/neuehaasgrotdispround-45light-trial.otf")
+    format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Regular (55) */
+@font-face {
+  font-family: "Neue Haas Grotesk Round";
+  src: url("../assets/fonts/neue-haas-grotesk/neuehaasgrotdispround-55roman-trial.otf")
+    format("opentype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Medium (65) */
+@font-face {
+  font-family: "Neue Haas Grotesk Round";
+  src: url("../assets/fonts/neue-haas-grotesk/neuehaasgrotdispround-65medium-trial.otf")
+    format("opentype");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Bold (75) */
+@font-face {
+  font-family: "Neue Haas Grotesk Round";
+  src: url("../assets/fonts/neue-haas-grotesk/neuehaasgrotdispround-75bold-trial.otf")
+    format("opentype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Black (95) */
+@font-face {
+  font-family: "Neue Haas Grotesk Round";
+  src: url("../assets/fonts/neue-haas-grotesk/neuehaasgrotdispround-95black-trial.otf")
+    format("opentype");
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+body {
+  font-family: var(--font-base);
+  letter-spacing: 0.025em;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
@@ -44,38 +127,49 @@
 }
 
 :root {
+  --font-base: "Neue Haas Grotesk Round", -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, sans-serif;
   --radius: 0.625rem;
+
+  /* Custom color palette */
+  --color-1: oklch(0.9581 0.0383 80.03/30%);
+  --color-2: #6f4e37;
+  --color-3: #efdfbb;
+  --color-4: #af6e4d;
+  --color-5: #3d2b1f;
+
+  /* Color scheme with white background */
   --background: oklch(1 0 0);
   --foreground: oklch(0.147 0.004 49.25);
-  --card: oklch(1 0 0);
+  --card: var(--color-1);
   --card-foreground: oklch(0.147 0.004 49.25);
-  --popover: oklch(1 0 0);
+  --popover: var(--color-1);
   --popover-foreground: oklch(0.147 0.004 49.25);
-  --primary: oklch(0.216 0.006 56.043);
-  --primary-foreground: oklch(0.985 0.001 106.423);
-  --secondary: oklch(0.97 0.001 106.424);
-  --secondary-foreground: oklch(0.216 0.006 56.043);
-  --muted: oklch(0.97 0.001 106.424);
-  --muted-foreground: oklch(0.553 0.013 58.071);
-  --accent: oklch(0.97 0.001 106.424);
-  --accent-foreground: oklch(0.216 0.006 56.043);
+  --primary: var(--color-2);
+  --primary-foreground: oklch(0.147 0.004 49.25);
+  --secondary: var(--color-5);
+  --secondary-foreground: oklch(1 0 0);
+  --muted: var(--color-1);
+  --muted-foreground: var(--color-4);
+  --accent: var(--color-3);
+  --accent-foreground: oklch(0.147 0.004 49.25);
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.923 0.003 48.717);
   --input: oklch(0.923 0.003 48.717);
-  --ring: oklch(0.709 0.01 56.259);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
+  --ring: var(--color-2);
+  --chart-1: var(--color-2);
+  --chart-2: var(--color-3);
+  --chart-3: var(--color-4);
+  --chart-4: var(--color-5);
+  --chart-5: var(--color-1);
   --sidebar: oklch(0.985 0.001 106.423);
   --sidebar-foreground: oklch(0.147 0.004 49.25);
-  --sidebar-primary: oklch(0.216 0.006 56.043);
-  --sidebar-primary-foreground: oklch(0.985 0.001 106.423);
-  --sidebar-accent: oklch(0.97 0.001 106.424);
-  --sidebar-accent-foreground: oklch(0.216 0.006 56.043);
+  --sidebar-primary: var(--color-2);
+  --sidebar-primary-foreground: oklch(0.147 0.004 49.25);
+  --sidebar-accent: var(--color-3);
+  --sidebar-accent-foreground: oklch(0.147 0.004 49.25);
   --sidebar-border: oklch(0.923 0.003 48.717);
-  --sidebar-ring: oklch(0.709 0.01 56.259);
+  --sidebar-ring: var(--color-2);
 }
 
 .dark {
