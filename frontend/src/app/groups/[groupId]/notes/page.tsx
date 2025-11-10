@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import CreateNoteModal from "@/components/notes/CreateNoteModal";
 import { getNotesByGroup } from "@/services/noteApi";
 import { Note } from "@/services/noteApi";
+import toast from "react-hot-toast";
 
 export default function NotesList() {
 	const router = useRouter();
@@ -27,6 +28,7 @@ export default function NotesList() {
 			setNotes(response.notes);
 		} catch (err) {
 			setError("Failed to load notes.");
+			toast.error('Failed to load notes.')
 		} finally {
 			setIsLoading(false);
 		}

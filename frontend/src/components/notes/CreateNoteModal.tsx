@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import Editor from "./editor";
 import { Block } from "@blocknote/core";
 import { createNote } from "@/services/noteApi";
+import toast from "react-hot-toast";
 
 interface CreateNoteModalProps {
 	isOpen: boolean;
@@ -33,8 +34,11 @@ export default function CreateNoteModal({
 	const [isLoading, setIsLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 
+	const TOAST_ERR_ID = "create-note-error";
+	
 	const handleSubmit = async () => {
 		if (!title) {
+			toast.error("Title is required.", {id: TOAST_ERR_ID});
 			setError("Title is required.");
 			return;
 		}
@@ -52,7 +56,9 @@ export default function CreateNoteModal({
 
 			onNoteCreated();
 			handleClose();
+			toast.success("Note created successfully.")
 		} catch (err: any) {
+			toast.error("Failed to create note.")
 			setError(err.response?.data?.message || "Failed to create note.");
 		} finally {
 			setIsLoading(false);
