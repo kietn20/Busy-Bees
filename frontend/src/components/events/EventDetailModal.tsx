@@ -20,6 +20,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from '@/context/AuthContext';
 import { updateEvent, deleteEvent } from '@/services/eventApi';
 import { Event } from '@/services/groupApi';
+import toast from "react-hot-toast"
 
 interface EventDetailModalProps {
   isOpen: boolean;
@@ -77,8 +78,10 @@ export default function EventDetailModal({ isOpen, onClose, event, isLoading, gr
 
       onEventUpdated(); // tell the parent to refresh
       setIsEditing(false);
+      toast.success("Changes saved.");
       onClose();
     } catch (error) {
+      toast.error("Failed to save changes.");
       console.error("Failed to update event", error);
     } finally {
       setIsSaving(false);
@@ -92,7 +95,9 @@ export default function EventDetailModal({ isOpen, onClose, event, isLoading, gr
       await deleteEvent(event._id);
       onEventUpdated(); // refresh the parent list
       onClose();
+      toast.success("Event deleted.");
     } catch (error) {
+      toast.error("Failed to delete event.");
       console.error("Failed to delete event", error);
     } finally {
       setIsDeleting(false);

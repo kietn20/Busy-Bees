@@ -12,6 +12,7 @@ import { getGroupById, CourseGroup } from "@/services/groupApi";
 import { Button } from "@/components/ui/button";
 import EventCalendar from "@/components/events/EventCalendar";
 import { Calendar } from "@/components/ui/calendar";
+import { toast } from "react-hot-toast";
 
 export default function GroupEventsPage() {
 	const [events, setEvents] = useState<Event[]>([]);
@@ -93,6 +94,7 @@ export default function GroupEventsPage() {
 			const fetchedEvent = await getEventById(eventId);
 			setSelectedEvent(fetchedEvent);
 		} catch (err) {
+			toast.error("Failed to fetch event details.");
 			console.error("Failed to fetch event details", err);
 			// Optionally, show an error toast here
 		} finally {

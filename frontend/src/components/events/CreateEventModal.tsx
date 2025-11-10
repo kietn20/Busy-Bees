@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { createEvent } from '@/services/groupApi'; 
-
+import toast from 'react-hot-toast';
 
 interface CreateEventModalProps {
   isOpen: boolean;
@@ -25,12 +25,32 @@ export default function CreateEventModal({ isOpen, onClose, groupId, onEventCrea
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const TOAST_ERR_ID = "create-event-error";
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
 
-    // convert local datetime string to ISO 8601 format for the backend
+    if (!title.trim()) {
+      toast.error("Event title is required.", { id: TOAST_ERR_ID });
+      setIsLoading(false);
+      return;
+    }
+    
+    if (!startTime.trim()) {
+      toast.error("Event start time is required.", { id: TOAST_ERR_ID });
+      setIsLoading(false); 
+      return;
+    } 
+
+    if (isNaN(new Date(startTime).getTime())) {
+      toast.error("Please enter a valid date and time.", { id: TOAST_ERR_ID });
+      setIsLoading(false);
+      return;
+    }
+
+    // convert local datetime string to ISO 8601 format for the backend    
     const isoStartTime = new Date(startTime).toISOString();
 
     try {
@@ -42,7 +62,9 @@ export default function CreateEventModal({ isOpen, onClose, groupId, onEventCrea
 
       onEventCreated();
       handleClose(); // Use handleClose to reset state and close
+      toast.success("Event created.");
     } catch (err: any) {
+      toast.error("Failed to create event", { id: TOAST_ERR_ID });
       setError(err.response?.data?.message || 'Failed to create event.');
     } finally {
       setIsLoading(false);
@@ -64,10 +86,10 @@ export default function CreateEventModal({ isOpen, onClose, groupId, onEventCrea
         <DialogHeader>
           <DialogTitle>Create a New Event</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4 py-4">
+        <form onSubmit={handleSubmit} noValidate className="space-y-4 py-4">
           <div>
             <Label htmlFor="title">Event Title</Label>
-            <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} required />
+            <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} />
           </div>
           <div>
             <Label htmlFor="startTime">Start Time</Label>
@@ -76,7 +98,6 @@ export default function CreateEventModal({ isOpen, onClose, groupId, onEventCrea
               type="datetime-local"
               value={startTime}
               onChange={(e) => setStartTime(e.target.value)}
-              required
             />
           </div>
           <div>
@@ -89,8 +110,7 @@ export default function CreateEventModal({ isOpen, onClose, groupId, onEventCrea
             />
           </div>
 
-          {error && <p className="text-sm text-red-500">{error}</p>}
-
+          
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={handleClose}>Cancel</Button>
             <Button type="submit" disabled={isLoading}>
