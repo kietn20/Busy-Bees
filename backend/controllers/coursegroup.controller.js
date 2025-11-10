@@ -5,6 +5,9 @@ const User = require('../models/User.model');
 const Note = require('../models/Note.model');
 const Event = require('../models/Event.model');
 const { generateInviteCode } = require('../utils/invite.util');
+const { omitUndefined } = require('mongoose');
+
+const MAX_GROUP_NAME_LENGTH = 40;
 
 // @desc    Create a new course group
 // @route   POST /api/groups
@@ -19,6 +22,10 @@ const createCourseGroup = async (req, res) => {
 
     if (!groupName || groupName.trim() === "") {
       return res.status(400).json({ message: "Group name is required." });
+    }
+
+    if (groupName.length > MAX_GROUP_NAME_LENGTH) {
+      return res.status(400).json({ message: `Group name must be ${MAX_GROUP_NAME_LENGTH} characters or fewer.` });
     }
 
     // 1. Create the course group
@@ -202,9 +209,13 @@ const updateCourseGroup = async (req, res) => {
     const { groupName, description } = req.body;
     const group = req.group; // from our 'requireGroupOwner' middleware
 
+    if (groupName && groupName.length > MAX_GROUP_NAME_LENGTH) {
+      return res.status(400).json({ message: `Group name must be ${MAX_GROUP_NAME_LENGTH} characters or fewer.` });
+    }
+
     // update values (only if provided)
     if (groupName) group.groupName = groupName.trim();
-    if (description) group.description = description.trim();
+    if (description !== undefined) group.description = description.trim();
 
     await group.save();
 
@@ -374,9 +385,13 @@ const getUserGroups = async (req, res) => {
       return res.status(404).json({ message: "No registered groups found" });
     }
 
+    // Get the latest group info from CourseGroup collection
+    const groupIds = user.registeredCourses.map(rc => rc.courseId);
+    const groups = await CourseGroup.find({ _id: { $in: groupIds } }).select("_id groupName");
+    
     return res.status(200).json({
       message: "User's registered course groups retrieved successfully",
-      groups: user.registeredCourses
+      groups
     });
   } catch (error) {
     console.error("Error fetching user groups:", error);

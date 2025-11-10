@@ -12,6 +12,7 @@ import { useState } from "react";
 import { createGroup, joinGroup } from "@/services/groupApi";
 import { useRouter } from "next/navigation";
 import { AxiosError } from "axios";
+import toast from "react-hot-toast";
 
 const AddGroup = () => {
   const [isCreateMode, setIsCreateMode] = useState(true);
@@ -36,7 +37,8 @@ const AddGroup = () => {
       if (isCreateMode) {
         // Create group
         const response = await createGroup(inputValue);
-        console.log("Group created:", response.data);
+        
+        toast.success("Group created successfully!");
 
         // Close the dialog and redirect to the group page
         setIsOpen(false);
@@ -46,8 +48,9 @@ const AddGroup = () => {
       } else {
         // Join group
         const response = await joinGroup(inputValue);
-        console.log("Joined group:", response.data);
-
+        
+        toast.success("Joined group successfully!");
+        
         // Close the dialog and redirect
         setIsOpen(false);
         setInputValue("");
@@ -55,7 +58,7 @@ const AddGroup = () => {
         router.refresh();
       }
     } catch (err) {
-      console.error("Error:", err);
+      
       let errorMessage = `Failed to ${isCreateMode ? "create" : "join"} group. Please try again.`;
 
       if (err instanceof AxiosError && err.response?.data?.message) {
@@ -63,6 +66,7 @@ const AddGroup = () => {
       }
 
       setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -94,9 +98,7 @@ const AddGroup = () => {
               />
             </div>
 
-            {error && (
-              <p className="text-sm text-red-500 text-center">{error}</p>
-            )}
+          
 
             <Button
               type="submit"

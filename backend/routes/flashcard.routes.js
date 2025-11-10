@@ -3,6 +3,7 @@ const { allowJwtOrGoogle } = require('../middleware/auth.middleware');
 const { getFlashcardSetByGroup, createFlashcardSet, 
       getFlashcardSetById, updateFlashcardSet, deleteFlashcardSet } = require('../controllers/flashcardset.controller');
 const { deleteFlashcard, updateFlashcard, getFlashcardById, createFlashcard } = require('../controllers/flashcard.controller');
+const { canEditFlashcardSet, canDeleteFlashcardSet } = require("../middleware/flashcardset.middleware");
 
 const router = express.Router({ mergeParams: true });
 
@@ -25,7 +26,7 @@ router.post('/', createFlashcardSet);
 router.post('/cards', createFlashcard);
 
 // PUT /api/groups/:groupId/flashcards/sets/:setId - update a specific flashcard set
-router.put('/sets/:setId', updateFlashcardSet);
+router.put('/sets/:setId', canEditFlashcardSet, updateFlashcardSet);
 
 // PUT /api/groups/:groupId/flashcards/cards/:id
 router.put('/cards/:id', updateFlashcard);
@@ -34,6 +35,6 @@ router.put('/cards/:id', updateFlashcard);
 router.delete('/cards/:flashcardId', deleteFlashcard);
 
 // DELETE /api/groups/:groupId/flashcards/sets/:setId - delete a specific flashcard set
-router.delete('/sets/:setId', deleteFlashcardSet);
+router.delete('/sets/:setId', canDeleteFlashcardSet, deleteFlashcardSet);
 
 module.exports = router;

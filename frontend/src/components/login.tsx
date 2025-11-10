@@ -17,6 +17,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { login } from "@/services/authApi";
 import { useAuth } from "@/context/AuthContext";
+import { toast } from "react-hot-toast";
+
+const ERROR_TOAST_ID = "login-error";
 
 const loginSchema = z.object({
   email: z.email(),
@@ -48,11 +51,13 @@ const LogInForm = () => {
 
       // Use AuthContext to set authentication state
       authLogin(token, user);
+      toast.success("Logged in successfully");
 
-      // Redirect to the dashboard after
-      router.push("/dashboard");
+      // Redirect to the home page after login
+      router.push("/");
     } catch (error) {
-      setError("Login failed. Please try again.");
+      //setError("Login failed. Please try again.");
+      toast.error("Login failed. Please try again.", { id: ERROR_TOAST_ID });
     } finally {
       setIsLoading(false);
     }

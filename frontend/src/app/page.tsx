@@ -8,7 +8,9 @@ import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 import GroupDetailsModal from "@/components/coursegroup/display-details";
 import { MessageCircle, Calendar, Mail } from "lucide-react";
+import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
+import GoogleSignInToast from "@/components/GoogleSignInToast";
 
 export default function HomePage() {
   const [groups, setGroups] = useState<CourseGroup[]>([]);
@@ -33,10 +35,9 @@ export default function HomePage() {
         setLoading(true);
         const fetched = await getUserGroups();
         setGroups(fetched || []);
-        console.log("Fetched groups:", fetched);
       } catch (err) {
-        console.error("Error fetching groups:", err);
         setError("Failed to load groups. Please try again later.");
+        toast.error("Failed to load groups. Please try again later.");
       } finally {
         setLoading(false);
       }
@@ -48,7 +49,7 @@ export default function HomePage() {
   const pickName = (g: any) =>
     g.groupName || g.courseName || g.name || g._id || "Untitled Group";
 
-  const pickId = (g: any) => g.courseId;
+  const pickId = (g: any) => g._id;
 
   const openDetails = async (group: any) => {
     try {
@@ -89,51 +90,62 @@ export default function HomePage() {
     const id = pickId(g);
     const name = pickName(g);
 
-    return (
-      <div className="w-full max-w-sm bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition-all">
-        <Link href={`/groups/${id}`}>
-          <div className="h-44 bg-[url('/beige.jpg')] bg-cover bg-center" />
-        </Link>
+    if (groups.length > 0) {
+      const ids = groups.map((g) => g._id);
+      const uniqueIds = new Set(ids);
+      if (ids.length !== uniqueIds.size) {
+        console.warn("Duplicate courseId detected!", ids);
+      }
+    }
 
-        <div className="p-4">
+    return (
+      <>
+        <GoogleSignInToast />
+        <div className="w-full max-w-sm bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition-all">
           <Link href={`/groups/${id}`}>
-            <h3 className="text-base font-semibold text-gray-800 truncate hover:underline">
-              {name}
-            </h3>
+            <div className="h-44 bg-[url('/beige.jpg')] bg-cover bg-center" />
           </Link>
 
-          <div className="mt-3 flex items-center space-x-4 text-gray-600">
-            <button
-              aria-label="Group Details"
-              title="View Group Details"
-              onClick={(e) => {
-                e.stopPropagation();
-                setSelectedGroup(g);
-                openDetails(g);
-              }}
-              className="text-gray-600 hover:text-black transition"
-            >
-              <MessageCircle className="w-5 h-5" />
-            </button>
+          <div className="p-4">
+            <Link href={`/groups/${id}`}>
+              <h3 className="text-base font-semibold text-gray-800 truncate hover:underline">
+                {name}
+              </h3>
+            </Link>
 
-            <button
-              aria-label="events"
-              className="hover:text-black transition opacity-50 cursor-not-allowed"
-              title="Group Events (coming soon)"
-            >
-              <Calendar className="w-5 h-5" />
-            </button>
+            <div className="mt-3 flex items-center space-x-4 text-gray-600">
+              <button
+                aria-label="Group Details"
+                title="View Group Details"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedGroup(g);
+                  openDetails(g);
+                }}
+                className="text-gray-600 hover:text-black transition"
+              >
+                <MessageCircle className="w-5 h-5" />
+              </button>
 
-            <button
-              aria-label="mail"
-              className="hover:text-black transition opacity-50 cursor-not-allowed"
-              title="Group Messaging (coming soon)"
-            >
-              <Mail className="w-5 h-5" />
-            </button>
+              <button
+                aria-label="events"
+                className="hover:text-black transition opacity-50 cursor-not-allowed"
+                title="Group Events (coming soon)"
+              >
+                <Calendar className="w-5 h-5" />
+              </button>
+
+              <button
+                aria-label="mail"
+                className="hover:text-black transition opacity-50 cursor-not-allowed"
+                title="Group Messaging (coming soon)"
+              >
+                <Mail className="w-5 h-5" />
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      </>
     );
   };
 

@@ -6,22 +6,23 @@ const createFlashcard = async (req, res) => {
   try {
 
     // deconstruct term and definition from request body
-    const { term, definition } = req.body;
+    const { term, definition, setId } = req.body;
 
     // validate required fields
-    if (!term || !definition) {
-      return res.status(400).json({ message: 'Term and definition are required.' });
+    if (!term || !definition || !setId) {
+      return res.status(400).json({ message: 'Term, definition, and setId are required.' });
     }
 
     // create and save flashcard to database
-    const savedFlashcard = await flashcard.create({
-      term,
-      definition
-    });
+    const savedFlashcard = await flashcard.create({ term, definition });
 
-    // respond with the created flashcard
+    await flashcardset.findByIdAndUpdate(
+      setId,
+      { $push: { flashcards: savedFlashcard._id } }
+    );
+
     res.status(201).json({
-      message: "Flashcard created successfully",
+      message: "Flashcard created successfully and added to set",
       flashcard: savedFlashcard
     });
 
@@ -140,7 +141,7 @@ module.exports = {
   getFlashcardById,
   updateFlashcard,
   deleteFlashcard,
-  
+
 }
 
 

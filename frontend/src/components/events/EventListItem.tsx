@@ -22,7 +22,7 @@ export default function EventListItem({ event, onClick }: EventListItemProps) {
 
   return (
     <div
-      className="border-b border-gray-200 py-4 cursor-pointer hover:bg-gray-50 transition-colors"
+      className="border border-gray-200 p-4 cursor-pointer hover:bg-gray-50 transition-colors rounded-2xl"
       onClick={onClick}
     >
       <h3 className="font-semibold text-lg">{event.title}</h3>

@@ -4,7 +4,7 @@ export interface FlashcardSet {
     _id: string;
     setName: string;
     description?: string;
-    flashcards: string[];
+    flashcards: (string | Flashcard)[]; 
     userId: {
         _id: string;
         firstName: string;

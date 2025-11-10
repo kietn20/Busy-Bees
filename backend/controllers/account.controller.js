@@ -43,8 +43,16 @@ const updateUser = async (req, res) => {
         }
       });
     } catch (err) {
+      if (
+        err.code === 11000 ||
+        (err.message && err.message.includes("E11000"))
+      ) {
+        return res.status(400).json({ message: "Email already exists." });
+      }
       console.error("Error updating user:", err);
-      res.status(500).json({ message: "Internal server error" });
+      return res.status(500).json({ message: "Internal server error." });
+      
+      
     }
 };
 

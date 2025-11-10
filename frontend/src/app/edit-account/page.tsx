@@ -24,6 +24,8 @@ export default function EditAccount() {
 
   const isOAuthUser = !!user?.googleId;
 
+  const ERROR_TOAST_ID = "edit-account-error";
+
   useEffect(() => {
     if (user) {
       setForm({
@@ -39,46 +41,46 @@ export default function EditAccount() {
   const handleSaveProfile = async () => {
     // Validation
     if (!form.firstName.trim()) {
-      toast.error("First name is required");
+      toast.error("First name is required", { id: ERROR_TOAST_ID });
       return;
     }
     if (form.firstName.length > 50) {
-      toast.error("First name must be 50 characters or less");
+      toast.error("First name must be 50 characters or less", { id: ERROR_TOAST_ID });
       return;
     }
     if (!form.lastName.trim()) {
-      toast.error("Last name is required");
+      toast.error("Last name is required", { id: ERROR_TOAST_ID });
       return;
     }
     if (form.lastName.length > 50) {
-      toast.error("Last name must be 50 characters or less");
+      toast.error("Last name must be 50 characters or less", { id: ERROR_TOAST_ID });
       return;
     }
     
     if (!isOAuthUser) {
       if (!form.email.trim()) {
-        toast.error("Email is required");
+        toast.error("Email is required", { id: ERROR_TOAST_ID });
         return;
       }
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(form.email)) {
-        toast.error("Please enter a valid email address");
+        toast.error("Please enter a valid email address", { id: ERROR_TOAST_ID });
         return;
       }
     }
 
     if (!isOAuthUser && form.password) {
       if (form.password.length < 8) {
-        toast.error("Password must be at least 8 characters");
+        toast.error("Password must be at least 8 characters", { id: ERROR_TOAST_ID });
         return;
       }
       const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>]).{8,}$/;
       if (!strongPasswordRegex.test(form.password)) {
-        toast.error("Password must include uppercase, lowercase, number, and special character");
+        toast.error("Password must include uppercase, lowercase, number, and special character", { id: ERROR_TOAST_ID });
         return;
       }
       if (form.password !== form.confirmPassword) {
-        toast.error("Passwords do not match");
+        toast.error("Passwords do not match", { id: ERROR_TOAST_ID });
         return;
       }
     }
@@ -124,12 +126,28 @@ export default function EditAccount() {
         router.push("/account");
       }, 1000);
     } catch (error: any) {
-      const message = error.response?.data?.message || "Failed to update profile";
-      toast.error(message);
+      
+      const rawMessage =
+        error.response?.data?.message?.toLowerCase() ||
+        error.message?.toLowerCase() ||
+        "";
+
+      let message =
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to update profile";
+
+      if (
+        rawMessage.includes("e11000") ||
+        rawMessage.includes("duplicate")
+      ) {
+        message = "Email already exists. Please use a different email address.";
+      }
+      toast.error(message, { id: ERROR_TOAST_ID });
       
       if (error.response?.data?.errors) {
         error.response.data.errors.forEach((err: any) => {
-          toast.error(err.msg || err.message);
+          toast.error(err.msg || err.message, { id: ERROR_TOAST_ID });
         });
       }
     } finally {
