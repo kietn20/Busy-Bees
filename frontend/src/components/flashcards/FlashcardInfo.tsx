@@ -16,7 +16,11 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useRouter, useParams } from "next/navigation";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { deleteFlashcardSet } from "@/services/flashcardApi";
 import { toast } from "react-hot-toast";
 import { useState } from "react";
@@ -29,7 +33,7 @@ const FlashcardInfo = ({
   terms,
   id,
   onClick,
-  onDelete
+  onDelete,
 }: {
   title: string;
   description: string;
@@ -84,7 +88,7 @@ const FlashcardInfo = ({
               Edit
             </DropdownMenuItem>
             <DropdownMenuItem
-              onClick={e => {
+              onClick={(e) => {
                 e.stopPropagation();
                 setShowDeleteDialog(true);
               }}
@@ -102,7 +106,8 @@ const FlashcardInfo = ({
           <AlertDialogHeader>
             <AlertDialogTitle>Delete flashcard set</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. Are you sure you want to delete this flashcard set? All associated flashcards will be deleted.
+              This action cannot be undone. Are you sure you want to delete this
+              flashcard set? All associated flashcards will be deleted.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -128,7 +133,7 @@ const FlashcardInfo = ({
       {description.length > 124 ? (
         <Tooltip>
           <TooltipTrigger asChild>
-            <p className="text-gray-600 text-sm line-clamp-3 cursor-pointer">
+            <p className="text-gray-600 text-sm line-clamp-3 cursor-pointer ml-2">
               {description}
             </p>
           </TooltipTrigger>
@@ -137,7 +142,7 @@ const FlashcardInfo = ({
           </TooltipContent>
         </Tooltip>
       ) : (
-        <p className="text-gray-600 text-sm">{description}</p>
+        <p className="text-gray-600 text-sm ml-2">{description}</p>
       )}
 
       <div className="flex items-center gap-2">

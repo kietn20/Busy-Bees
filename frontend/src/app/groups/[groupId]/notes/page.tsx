@@ -130,7 +130,7 @@ export default function NotesList() {
         </div>
 
         {notes.length === 0 ? (
-          <div className="p-4 text-center text-gray-500">
+          <div className="py-6 text-center text-gray-500">
             No notes yet. Create one!
           </div>
         ) : (
@@ -159,14 +159,19 @@ export default function NotesList() {
             {/* Note Header */}
             <div className="p-6 border-b bg-white">
               <h1 className="text-3xl font-bold mb-4">{selectedNote.title}</h1>
-              <div className="flex gap-8 text-sm text-gray-600">
-                <div>
-                  <span className="font-medium">Created by:</span>{" "}
-                  {selectedNote.userId.firstName} {selectedNote.userId.lastName}
+              <div className="w-64">
+                <div className="grid grid-cols-2 mb-2">
+                  <h4 className="text-gray-500">Created by:</h4>
+                  <span>
+                    {selectedNote.userId.firstName}{" "}
+                    {selectedNote.userId.lastName}
+                  </span>
                 </div>
-                <div>
-                  <span className="font-medium">Last modified:</span>{" "}
-                  {new Date(selectedNote.updatedAt).toDateString()}
+                <div className="grid grid-cols-2 mb-2">
+                  <h4 className="text-gray-500">Last modified:</h4>
+                  <span>
+                    {new Date(selectedNote.updatedAt).toLocaleDateString()}
+                  </span>
                 </div>
               </div>
             </div>
