@@ -1,4 +1,7 @@
+"use client";
+
 import * as React from "react";
+import { usePathname } from "next/navigation";
 
 import { CourseSwitcher } from "@/components/course-switcher";
 import {
@@ -31,6 +34,10 @@ const data = {
       url: "#",
       items: [
         {
+          title: "Dashboard",
+          url: "/groups/[groupId]",
+        },
+        {
           title: "Notes",
           url: "/groups/[groupId]/notes",
         },
@@ -62,15 +69,22 @@ const data = {
   ],
 };
 
-export function AppSidebar({ currentGroupId, ...props }: React.ComponentProps<typeof Sidebar> & { currentGroupId?: string }) {
+export function AppSidebar({
+  currentGroupId,
+  ...props
+}: React.ComponentProps<typeof Sidebar> & { currentGroupId?: string }) {
+  const pathname = usePathname();
+
   // Update navigation items with current group ID
-  const navMainWithGroupId = data.navMain.map(section => ({
+  const navMainWithGroupId = data.navMain.map((section) => ({
     ...section,
-    items: section.items.map(item => ({
+    items: section.items.map((item) => ({
       ...item,
-      url: currentGroupId ? item.url.replace('[groupId]', currentGroupId) : item.url
-    }))
-  }))
+      url: currentGroupId
+        ? item.url.replace("[groupId]", currentGroupId)
+        : item.url,
+    })),
+  }));
 
   return (
     <Sidebar {...props}>
@@ -86,7 +100,11 @@ export function AppSidebar({ currentGroupId, ...props }: React.ComponentProps<ty
               <SidebarMenu>
                 {item.items.map((item) => (
                   <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={pathname === item.url}
+                      className="py-5 pl-6"
+                    >
                       <a href={item.url}>{item.title}</a>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

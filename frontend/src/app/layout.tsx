@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 
 import "./globals.css";
 
-import Header from "@/components/Header";
 import { AuthProvider } from "@/context/AuthContext";
 import { Toaster } from "react-hot-toast";
+import ConditionalHeader from "@/components/ConditionalHeader";
 
 export const metadata: Metadata = {
   title: "Busy Bee",
@@ -20,7 +20,7 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <AuthProvider>
-          <Header />
+          <ConditionalHeader />
           <main>{children}</main>
           <Toaster />
         </AuthProvider>

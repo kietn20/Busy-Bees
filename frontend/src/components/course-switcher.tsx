@@ -32,33 +32,26 @@ export function CourseSwitcher({
   React.useEffect(() => {
     const fetchGroups = async () => {
       if (authLoading) {
-        console.log("CourseSwitcher: Auth still loading...");
         return;
       }
 
       if (!user) {
-        console.log("CourseSwitcher: No user found");
         setLoading(false);
         return;
       }
 
-      console.log("CourseSwitcher: Fetching groups for user:", user.email);
-
       try {
         const userGroups = await getUserGroups();
-        console.log("CourseSwitcher: Fetched groups:", userGroups);
         setGroups(userGroups);
 
         // Set selected group based on currentGroupId or default to first group
         if (currentGroupId) {
           const currentGroup = userGroups.find((g) => g._id === currentGroupId);
-          console.log("CourseSwitcher: Current group found:", currentGroup);
           setSelectedGroup(currentGroup || userGroups[0] || null);
         } else {
           setSelectedGroup(userGroups[0] || null);
         }
       } catch (error) {
-        console.error("CourseSwitcher: Failed to fetch groups:", error);
       } finally {
         setLoading(false);
       }
@@ -156,11 +149,8 @@ export function CourseSwitcher({
               <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
                 <BookOpen className="size-4" />
               </div>
-              <div className="flex flex-col gap-0.5 leading-none">
+              <div className="">
                 <span className="font-medium">{selectedGroup.courseName}</span>
-                <span className="text-xs text-muted-foreground">
-                  {groups.length} groups
-                </span>
               </div>
               <ChevronsUpDown className="ml-auto" />
             </SidebarMenuButton>
