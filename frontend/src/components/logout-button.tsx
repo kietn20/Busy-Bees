@@ -1,5 +1,4 @@
 import React from "react";
-import { Button } from "./ui/button";
 import { logout } from "@/services/authApi";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
@@ -25,11 +24,9 @@ const LogoutButton = () => {
     }
   };
   return (
-    <>
-      <Button variant="destructive" className="cursor-pointer" onClick={handleLogout} disabled={isLoading}>
-        {isLoading ? "Logging Out..." : "Log Out"}
-      </Button>
-    </>
+    <span className="cursor-pointer w-full text-left" onClick={handleLogout}>
+      {isLoading ? "Logging Out..." : "Log Out"}
+    </span>
   );
 };
 

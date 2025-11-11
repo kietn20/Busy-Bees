@@ -21,7 +21,6 @@ export default function HomePage() {
   const [selectedGroup, setSelectedGroup] = useState<any | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
 
-
   useEffect(() => {
     if (authLoading) return;
 
@@ -47,11 +46,10 @@ export default function HomePage() {
     fetchGroups();
   }, [user, authLoading]);
 
-
   const pickName = (g: any) =>
     g.groupName || g.courseName || g.name || g._id || "Untitled Group";
 
-  const pickId = (g: any) => g._id
+  const pickId = (g: any) => g._id;
 
   const openDetails = async (group: any) => {
     try {
@@ -64,7 +62,7 @@ export default function HomePage() {
       const data = await res.json();
 
       if (!data?.group) {
-          setSelectedGroup({
+        setSelectedGroup({
           groupName: pickName(group),
           description: "No description available.",
         });
@@ -73,7 +71,6 @@ export default function HomePage() {
       }
 
       setDetailsOpen(true);
-
     } catch (err) {
       console.error("Failed to load group details:", err);
       setSelectedGroup({
@@ -93,8 +90,8 @@ export default function HomePage() {
     const id = pickId(g);
     const name = pickName(g);
 
-  if (groups.length > 0) {
-      const ids = groups.map(g => g._id);
+    if (groups.length > 0) {
+      const ids = groups.map((g) => g._id);
       const uniqueIds = new Set(ids);
       if (ids.length !== uniqueIds.size) {
         console.warn("Duplicate courseId detected!", ids);
@@ -102,61 +99,59 @@ export default function HomePage() {
     }
 
     return (
-      <><GoogleSignInToast />
-      <div className="w-full max-w-sm bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition-all">
-        
-        <Link href={`/groups/${id}`}>
-          <div className="h-44 bg-[url('/beige.jpg')] bg-cover bg-center" />
-        </Link>
-
-        <div className="p-4">
+      <>
+        <GoogleSignInToast />
+        <div className="w-full max-w-sm bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition-all">
           <Link href={`/groups/${id}`}>
-            <h3 className="text-base font-semibold text-gray-800 truncate hover:underline">
-              {name}
-            </h3>
+            <div className="h-44 bg-[url('/beige.jpg')] bg-cover bg-center" />
           </Link>
 
-          <div className="mt-3 flex items-center space-x-4 text-gray-600">
-            <button
-              aria-label="Group Details"
-              title="View Group Details"
-              onClick={(e) => {
-                e.stopPropagation();
-                setSelectedGroup(g); 
-                openDetails(g); 
-              }}
-              className="text-gray-600 hover:text-black transition"
-            >
-              <MessageCircle className="w-5 h-5" />
-            </button>
+          <div className="p-4">
+            <Link href={`/groups/${id}`}>
+              <h3 className="text-base font-semibold text-gray-800 truncate hover:underline">
+                {name}
+              </h3>
+            </Link>
 
-            <button
-              aria-label="events"
-              className="hover:text-black transition opacity-50 cursor-not-allowed"
-              title="Group Events (coming soon)"
-            >
-              <Calendar className="w-5 h-5" />
-            </button>
+            <div className="mt-3 flex items-center space-x-4 text-gray-600">
+              <button
+                aria-label="Group Details"
+                title="View Group Details"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedGroup(g);
+                  openDetails(g);
+                }}
+                className="text-gray-600 hover:text-black transition"
+              >
+                <MessageCircle className="w-5 h-5" />
+              </button>
 
-            <button
-              aria-label="mail"
-              className="hover:text-black transition opacity-50 cursor-not-allowed"
-              title="Group Messaging (coming soon)"
-            >
-              <Mail className="w-5 h-5" />
-            </button>
+              <button
+                aria-label="events"
+                className="hover:text-black transition opacity-50 cursor-not-allowed"
+                title="Group Events (coming soon)"
+              >
+                <Calendar className="w-5 h-5" />
+              </button>
+
+              <button
+                aria-label="mail"
+                className="hover:text-black transition opacity-50 cursor-not-allowed"
+                title="Group Messaging (coming soon)"
+              >
+                <Mail className="w-5 h-5" />
+              </button>
+            </div>
           </div>
         </div>
-      </div>
       </>
     );
   };
- 
+
   return (
     <>
-      <div className="w-full h-[2px] bg-gray-200 shadow-sm" />
-
-      <main className="min-h-screen px-8 md:px-16 lg:px-24 py-12 bg-white">
+      <main className="py-12 container mx-auto px-6">
         {user && (
           <div className="flex items-start justify-between mb-8 animate-in fade-in slide-in-from-top-3 duration-300">
             <div>
@@ -182,9 +177,20 @@ export default function HomePage() {
             Loading authentication...
           </p>
         ) : !user ? (
-          <div className="flex flex-col items-center justify-center py-24 text-center">
-            <h1 className="text-3xl font-bold text-gray-900">Welcome to Busy Bee!</h1>
-            <p className="mt-3 text-gray-700 text-lg">Please log in to view your courses.</p>
+          <div className="flex flex-col items-center justify-center py-24 text-center w-3/5 mx-auto">
+            <h1 className="text-6xl font-medium  tracking-wide">
+              Study Smarter. Together.
+            </h1>
+            <h3 className="mt-3  text-lg py-4">
+              Create groups, drop notes, build flashcards, and plan your next
+              session—all in one sleek workspace.
+            </h3>
+            <Button
+              asChild
+              className="mt-6 px-6 py-6 text-lg text-[#fff6e6] font-medium rounded-3xl"
+            >
+              <Link href="/signup">Get Started</Link>
+            </Button>
           </div>
         ) : loading ? (
           <p className="text-center mt-12 animate-pulse text-gray-600">
@@ -201,8 +207,7 @@ export default function HomePage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 animate-in fade-in duration-300">
-            {
-            groups.map((g) => (
+            {groups.map((g) => (
               <Card key={pickId(g)} g={g} />
             ))}
           </div>

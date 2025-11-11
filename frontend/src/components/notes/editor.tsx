@@ -19,7 +19,7 @@ const Editor = ({ onChange, initialContent, editable = true }: EditorProps) => {
 	});
 
 	return (
-		<div>
+		<div className="blocknote-editor w-full max-w-full overflow-hidden">
 			<BlockNoteView
 				editor={editor}
 				editable={editable}

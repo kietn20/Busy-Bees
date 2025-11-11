@@ -12,8 +12,8 @@ export default function FlashcardsList() {
   const { groupId } = useParams();
   const [flashcardsData, setFlashcardsData] = useState<FlashcardSet[]>([]);
   const [loading, setLoading] = useState(true);
-  const [notFound, setNotFound] = useState(false); 
-  
+  const [notFound, setNotFound] = useState(false);
+
   useEffect(() => {
     if (!groupId) return;
 
@@ -21,11 +21,9 @@ export default function FlashcardsList() {
       setLoading(true);
       setNotFound(false); // reset on new fetch
       try {
-        
         const response = await getFlashcardSetsByGroup(groupId as string);
-        
-        setFlashcardsData(response.flashcardSets);
 
+        setFlashcardsData(response.flashcardSets);
       } catch (error: any) {
         if (error.response && error.response.status === 404) {
           setNotFound(true);
@@ -37,12 +35,11 @@ export default function FlashcardsList() {
       setLoading(false);
     };
     fetchSets();
-    
   }, [groupId]);
 
   return (
-    <div className="container mx-auto py-12">
-      <div className="flex items-center justify-between mb-4 items-centers">
+    <div className="container mx-auto p-8">
+      <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-bold mb-4">All Flashcards</h1>
         <button
           className="p-2 rounded-xl bg-gray-100 hover:bg-gray-200 cursor-pointer"
@@ -77,7 +74,11 @@ export default function FlashcardsList() {
               onClick={() =>
                 router.push(`/groups/${groupId}/flashcards/${flashcard._id}`)
               }
-              onDelete={() => setFlashcardsData(prev => prev.filter(set => set._id !== flashcard._id))}
+              onDelete={() =>
+                setFlashcardsData((prev) =>
+                  prev.filter((set) => set._id !== flashcard._id)
+                )
+              }
             />
           ))}
         </div>

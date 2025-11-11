@@ -6,54 +6,52 @@ import { useRouter } from "next/navigation";
 import LogoutButton from "./logout-button";
 
 export default function Header() {
-	const { user, logout } = useAuth();
-	const router = useRouter();
+  const { user, logout } = useAuth();
+  const router = useRouter();
 
-	const handleLogout = () => {
-		logout();
-		router.push("/login");
-	};
+  const handleLogout = () => {
+    logout();
+    router.push("/login");
+  };
 
-	return (
-		<header className="bg-white shadow-md">
-			<nav className="container mx-auto px-6 py-4 flex justify-between items-center">
-				<Link href="/" className="text-2xl font-bold text-gray-800">
-					Busy Bee 🐝
-				</Link>
-				<div className="space-x-4 flex items-center">
-					{user ? (
-						// --- User is Logged In ---
-						<>
-							<span className="text-gray-800">
-								Welcome, {user.firstName}!
-							</span>
-							<Link
-								href="/"
-								className="text-gray-600 hover:text-gray-800"
-							>
-								Dashboard
-							</Link>
-							<LogoutButton />
-						</>
-					) : (
-						// --- User is Logged Out ---
-						<>
-							<Link
-								href="/login"
-								className="text-gray-600 hover:text-gray-800"
-							>
-								Login
-							</Link>
-							<Link
-								href="/signup"
-								className="bg-yellow-400 hover:bg-yellow-500 text-gray-800 font-bold py-2 px-4 rounded"
-							>
-								Sign Up
-							</Link>
-						</>
-					)}
-				</div>
-			</nav>
-		</header>
-	);
+  return (
+    <header>
+      <nav className="container mx-auto px-6 py-4 flex justify-between items-center">
+        <Link href="/" className="text-2xl font-semibold text-gray-800">
+          BusyBee
+        </Link>
+        <div className="space-x-4 flex items-center">
+          {user ? (
+            // --- User is Logged In ---
+            <>
+              <span className="text-gray-800">Welcome, {user.firstName}!</span>
+              <Link
+                href="/dashboard"
+                className="text-gray-600 hover:text-gray-800"
+              >
+                Dashboard
+              </Link>
+              <LogoutButton />
+            </>
+          ) : (
+            // --- User is Logged Out ---
+            <>
+              <Link
+                href="/login"
+                className="text-gray-600 hover:text-gray-800 border border-gray-600 font-medium py-2 px-5 rounded-3xl mx-2"
+              >
+                Login
+              </Link>
+              <Link
+                href="/signup"
+                className="text-gray-600 hover:text-gray-100 border border-gray-600 bg-gray-600 text-white font-medium py-2 px-5 rounded-3xl mx-2"
+              >
+                Sign Up
+              </Link>
+            </>
+          )}
+        </div>
+      </nav>
+    </header>
+  );
 }

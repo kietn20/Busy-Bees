@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 import {
-	Dialog,
-	DialogContent,
-	DialogHeader,
-	DialogTitle,
-	DialogFooter,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,99 +17,99 @@ import { createNote } from "@/services/noteApi";
 import toast from "react-hot-toast";
 
 interface CreateNoteModalProps {
-	isOpen: boolean;
-	onClose: () => void;
-	groupId: string;
-	onNoteCreated: () => void; // to refresh the list after creation
+  isOpen: boolean;
+  onClose: () => void;
+  groupId: string;
+  onNoteCreated: () => void; // to refresh the list after creation
 }
 
 export default function CreateNoteModal({
-	isOpen,
-	onClose,
-	groupId,
-	onNoteCreated,
+  isOpen,
+  onClose,
+  groupId,
+  onNoteCreated,
 }: CreateNoteModalProps) {
-	const [title, setTitle] = useState("");
-	const [content, setContent] = useState<Block[]>([]);
-	const [isLoading, setIsLoading] = useState(false);
-	const [error, setError] = useState<string | null>(null);
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState<Block[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-	const TOAST_ERR_ID = "create-note-error";
-	
-	const handleSubmit = async () => {
-		if (!title) {
-			toast.error("Title is required.", {id: TOAST_ERR_ID});
-			setError("Title is required.");
-			return;
-		}
-		setIsLoading(true);
-		setError(null);
+  const TOAST_ERR_ID = "create-note-error";
 
-		try {
-			// Blocknote's content is a JSON object so stringify it to store in the DB
-			const contentAsString = JSON.stringify(content);
+  const handleSubmit = async () => {
+    if (!title) {
+      toast.error("Title is required.", { id: TOAST_ERR_ID });
+      setError("Title is required.");
+      return;
+    }
+    setIsLoading(true);
+    setError(null);
 
-			await createNote(groupId, {
-				title,
-				content: contentAsString,
-			});
+    try {
+      // Blocknote's content is a JSON object so stringify it to store in the DB
+      const contentAsString = JSON.stringify(content);
 
-			onNoteCreated();
-			handleClose();
-			toast.success("Note created successfully.")
-		} catch (err: any) {
-			toast.error("Failed to create note.")
-			setError(err.response?.data?.message || "Failed to create note.");
-		} finally {
-			setIsLoading(false);
-		}
-	};
+      await createNote(groupId, {
+        title,
+        content: contentAsString,
+      });
 
-	const handleClose = () => {
-		setTitle("");
-		setContent([]);
-		setError(null);
-		onClose();
-	};
+      onNoteCreated();
+      handleClose();
+      toast.success("Note created successfully.");
+    } catch (err) {
+      toast.error("Failed to create note.");
+      setError(
+        (err as any).response?.data?.message || "Failed to create note."
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-	return (
-		<Dialog open={isOpen} onOpenChange={handleClose}>
-			<DialogContent className="sm:max-w-3xl h-[80vh] flex flex-col !bg-white">
-				<DialogHeader className="bg-white">
-					<DialogTitle className="text-gray-900">
-						Create a New Note
-					</DialogTitle>
-				</DialogHeader>
-				<div className="space-y-4 py-4 flex-grow flex flex-col bg-white">
-					<div className="bg-white">
-						<Label htmlFor="title" className="sr-only">
-							Note Title
-						</Label>
-						<Input
-							id="title"
-							value={title}
-							onChange={(e) => setTitle(e.target.value)}
-							placeholder="Note Title"
-							required
-							className="text-2xl font-bold border-none shadow-none focus-visible:ring-0 bg-white text-gray-900"
-						/>
-					</div>
-					<div className="flex-grow min-h-0 bg-white">
-						<Editor onChange={setContent} />
-					</div>
-				</div>
+  const handleClose = () => {
+    setTitle("");
+    setContent([]);
+    setError(null);
+    onClose();
+  };
 
-				{error && <p className="text-sm text-red-500">{error}</p>}
+  return (
+    <Dialog open={isOpen} onOpenChange={handleClose}>
+      <DialogContent className="sm:max-w-3xl h-[80vh] flex flex-col !bg-white overflow-scroll max-w-[90vw]">
+        <DialogHeader className="bg-white">
+          <DialogTitle className="text-gray-900">Create a New Note</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 py-4 flex-grow flex flex-col bg-white">
+          <div className="bg-white">
+            <Label htmlFor="title" className="sr-only">
+              Note Title
+            </Label>
+            <Input
+              id="title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Note Title"
+              required
+              className="text-2xl font-bold border-none shadow-none focus-visible:ring-0 bg-white text-gray-900 w-full max-w-full"
+            />
+          </div>
+          <div className="flex-grow min-h-0 bg-white overflow-hidden">
+            <Editor onChange={setContent} />
+          </div>
+        </div>
 
-				<DialogFooter className="bg-white">
-					<Button type="button" variant="ghost" onClick={handleClose}>
-						Cancel
-					</Button>
-					<Button onClick={handleSubmit} disabled={isLoading}>
-						{isLoading ? "Saving..." : "Save Note"}
-					</Button>
-				</DialogFooter>
-			</DialogContent>
-		</Dialog>
-	);
+        {error && <p className="text-sm text-red-500">{error}</p>}
+
+        <DialogFooter className="bg-white">
+          <Button type="button" variant="ghost" onClick={handleClose}>
+            Cancel
+          </Button>
+          <Button onClick={handleSubmit} disabled={isLoading}>
+            {isLoading ? "Saving..." : "Save Note"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
 }

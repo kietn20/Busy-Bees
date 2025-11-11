@@ -63,10 +63,7 @@ const CreateCard = ({
                     <button className="btn btn-outline">Cancel</button>
                   </AlertDialogCancel>
                   <AlertDialogAction asChild>
-                    <button
-                      className="btn btn-destructive"
-                      onClick={onDelete}
-                    >
+                    <button className="btn btn-destructive" onClick={onDelete}>
                       Delete
                     </button>
                   </AlertDialogAction>
@@ -87,7 +84,9 @@ const CreateCard = ({
                   onChange={(e) => onTermChange(e.target.value)}
                   maxLength={100}
                 />
-                <div className="text-xs text-gray-400 text-right">{term.length}/100</div>
+                <div className="text-xs text-gray-400 text-right">
+                  {term.length}/100
+                </div>
               </div>
               <div className="w-1/2">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -100,7 +99,9 @@ const CreateCard = ({
                   onChange={(e) => onDefinitionChange(e.target.value)}
                   maxLength={300}
                 />
-                <div className="text-xs text-gray-400 text-right">{definition.length}/300</div>
+                <div className="text-xs text-gray-400 text-right">
+                  {definition.length}/300
+                </div>
               </div>
             </div>
           </AccordionContent>
