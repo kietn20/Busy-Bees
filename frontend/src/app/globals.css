@@ -262,3 +262,15 @@
 .rdp-day_selected {
   color: hsl(var(--primary-foreground)) !important;
 }
+.embla {
+  overflow: hidden;
+}
+
+.embla__container {
+  display: flex;
+}
+
+.embla__slide {
+  flex: 0 0 calc(100% / 3); /* ➜ 4 full + sliver */
+  min-width: 0;
+}
