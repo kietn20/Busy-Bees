@@ -52,21 +52,21 @@ const data = {
         },
       ],
     },
-    // {
-    //   title: "Favorites",
-    //   url: "#",
-    //   items: [
-    //     {
-    //       title: "Notes 1",
-    //       url: "#",
-    //     },
-    //     {
-    //       title: "Notes 2",
-    //       url: "#",
-    //       isActive: true,
-    //     },
-    //   ],
-    // },
+    {
+      title: "Favorites",
+      url: "#",
+      items: [
+        {
+          title: "Notes 1",
+          url: "#",
+        },
+        {
+          title: "Notes 2",
+          url: "#",
+          isActive: true,
+        },
+      ],
+    },
   ],
 };
 

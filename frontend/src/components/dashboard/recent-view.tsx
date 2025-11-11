@@ -12,6 +12,7 @@ const RecentView = () => {
 
   const [prevEnabled, setPrevEnabled] = useState(false);
   const [nextEnabled, setNextEnabled] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
 
   const onSelect = useCallback(() => {
     if (!emblaApi) return;
@@ -30,7 +31,11 @@ const RecentView = () => {
   }, [emblaApi, onSelect]);
 
   return (
-    <div className="relative mx-auto p-4">
+    <div
+      className="relative mx-auto p-4"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
       <div className="embla overflow-hidden select-none" ref={emblaRef}>
         <div className="embla__container flex">
           {[...Array(9)].map((_, i) => (
@@ -60,7 +65,9 @@ const RecentView = () => {
       <button
         onClick={scrollPrev}
         className={`absolute left-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-black/60 text-white flex items-center justify-center transition-opacity ${
-          prevEnabled ? "opacity-100" : "opacity-0 pointer-events-none"
+          prevEnabled && isHovered
+            ? "opacity-100"
+            : "opacity-0 pointer-events-none"
         }`}
       >
         ‹
@@ -70,7 +77,9 @@ const RecentView = () => {
       <button
         onClick={scrollNext}
         className={`absolute right-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-black/60 text-white flex items-center justify-center transition-opacity ${
-          nextEnabled ? "opacity-100" : "opacity-0 pointer-events-none"
+          nextEnabled && isHovered
+            ? "opacity-100"
+            : "opacity-0 pointer-events-none"
         }`}
       >
         ›
