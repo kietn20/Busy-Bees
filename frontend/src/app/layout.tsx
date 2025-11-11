@@ -22,7 +22,7 @@ export default function RootLayout({
         <AuthProvider>
           <ConditionalHeader />
           <main>{children}</main>
-          <Toaster />
+          <Toaster position="bottom-right"/>
         </AuthProvider>
       </body>
     </html>
