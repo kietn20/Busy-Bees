@@ -111,7 +111,7 @@ const LogInForm = () => {
           />
           <Button
             type="submit"
-            className="w-full cursor-pointer my-2 text-secondary"
+            className="w-full cursor-pointer my-2 "
             disabled={isLoading}
           >
             {isLoading ? "Logging in..." : "Login"}

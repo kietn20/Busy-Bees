@@ -38,13 +38,13 @@ export default function Header() {
             <>
               <Link
                 href="/login"
-                className="text-gray-600 hover:text-gray-800 font-medium"
+                className="text-gray-600 hover:text-gray-800 border border-gray-600 font-medium py-2 px-5 rounded-3xl mx-2"
               >
                 Login
               </Link>
               <Link
                 href="/signup"
-                className="bg-[var(--color-2)] text-[#fff6e6] font-medium py-2 px-5 rounded-3xl mx-2"
+                className="text-gray-600 hover:text-gray-100 border border-gray-600 bg-gray-600 text-white font-medium py-2 px-5 rounded-3xl mx-2"
               >
                 Sign Up
               </Link>

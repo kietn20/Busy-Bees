@@ -11,10 +11,8 @@ export default function SignUpPage() {
     >
       <div className="w-full max-w-xl p-12 space-y-6 border border-muted-foreground  rounded-xl">
         <div className="mb-8 space-y-1">
-          <h1 className="text-2xl font-semibold text-secondary">
-            Get Started Now
-          </h1>
-          <h3 className="text-md text-secondary">
+          <h1 className="text-2xl font-semibold ">Get Started Now</h1>
+          <h3 className="text-md">
             Enter your details below to create your account and get started!
           </h3>
         </div>

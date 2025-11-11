@@ -9,10 +9,8 @@ export default function LoginPage() {
     >
       <div className="w-full max-w-xl p-12 space-y-6 border border-muted-foreground rounded-xl">
         <div className="mb-8 space-y-1">
-          <h1 className="text-2xl font-semibold text-secondary">
-            Welcome back!
-          </h1>
-          <h3 className="text-md text-secondary">
+          <h1 className="text-2xl font-semibold ">Welcome back!</h1>
+          <h3 className="text-md">
             Glad to see you again! Please enter your details below to log in to
             your account.
           </h3>

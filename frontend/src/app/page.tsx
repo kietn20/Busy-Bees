@@ -178,10 +178,10 @@ export default function HomePage() {
           </p>
         ) : !user ? (
           <div className="flex flex-col items-center justify-center py-24 text-center w-3/5 mx-auto">
-            <h1 className="text-6xl font-medium text-secondary tracking-wide">
+            <h1 className="text-6xl font-medium  tracking-wide">
               Study Smarter. Together.
             </h1>
-            <h3 className="mt-3 text-secondary text-lg py-4">
+            <h3 className="mt-3  text-lg py-4">
               Create groups, drop notes, build flashcards, and plan your next
               session—all in one sleek workspace.
             </h3>
