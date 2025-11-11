@@ -3,9 +3,13 @@ const CourseGroup = require('../models/CourseGroup.model');
 const Invite = require('../models/Invite.model');
 const User = require('../models/User.model');
 const Note = require('../models/Note.model');
+const NoteComment = require('../models/NoteComment.model');
+const FlashcardSet = require('../models/FlashcardSet.model')
+const Flashcard = require('../models/Flashcard.model')
 const Event = require('../models/Event.model');
 const { generateInviteCode } = require('../utils/invite.util');
 const { omitUndefined } = require('mongoose');
+const mongoose = require('mongoose')
 
 const MAX_GROUP_NAME_LENGTH = 40;
 
@@ -77,7 +81,7 @@ const getCourseGroupById = async (req, res) => {
     const validMembers = group.members.filter(m => m.userId != null);
     
     if (validMembers.length !== group.members.length) {
-      console.log(`⚠️ Cleaned ${group.members.length - validMembers.length} orphaned members from group ${id}`);
+      console.log(` Cleaned ${group.members.length - validMembers.length} orphaned members from group ${id}`);
       group.members = validMembers;
       await group.save();
     }
@@ -233,31 +237,77 @@ const updateCourseGroup = async (req, res) => {
 // @route   DELETE /api/groups/:groupId
 // @access  Private
 const deleteCourseGroup = async (req, res) => {
+  const session = await mongoose.startSession();
+
   try {
-    const group = req.group; // from requireGroupOwner
+    const group = req.group; // from requireGroupOwner middleware
 
-    // 1) Delete all invites for this group
-    await Invite.deleteMany({ courseGroup: group._id });
+    await session.withTransaction(async () => {
+      // 1) Delete invites
+      if (Invite) {
+        await Invite.deleteMany({ courseGroup: group._id }, { session });
+      }
 
-    // 2) Delete all notes for this group
-    await Note.deleteMany({ groupId: group._id });
+      // 2) Delete notes and related comments
+      if (Note) {
+        const noteIds = await Note.find(
+          { groupId: group._id },
+          { _id: 1 },
+          { session }
+        ).then(notes => notes.map(n => n._id));
 
-    // 3) Remove this group from every user's registeredCourses
-    await User.updateMany(
-      { "registeredCourses.courseId": group._id },
-      { $pull: { registeredCourses: { courseId: group._id } } }
-    );
+        if (noteIds.length > 0) {
+          if (NoteComment) {
+            await NoteComment.deleteMany({ noteId: { $in: noteIds } }, { session });
+          }
+          await Note.deleteMany({ _id: { $in: noteIds } }, { session });
+        }
+      }
 
-    // 4) Delete all events related to this group
-    await Event.deleteMany({ groupId: group._id });
+      // 3) Delete flashcard sets and related flashcards
+      if (FlashcardSet) {
+        const sets = await FlashcardSet.find(
+          { courseGroupId: group._id },
+          { _id: 1, flashcards: 1 },
+          { session }
+        ).then(sets => sets.map(s => s._id));
 
-    // 5) Delete the group itself
-    await CourseGroup.findByIdAndDelete(group._id);
+        const setIds = sets.map(s => s._id);
+        const flashcardIds = sets.flatMap(s => s.flashcards);
 
-    res.status(200).json({ message: "Course group and related data deleted successfully." });
+        if (flashcardIds.length > 0 && Flashcard) {
+          await Flashcard.deleteMany({ _id: { $in: flashcardIds } }, { session });
+        }
+
+        if (setIds.length > 0) {
+          await FlashcardSet.deleteMany({ _id: { $in: setIds } }, { session });
+        }
+      }
+
+      // 4) Delete events related to this group
+      if (Event) {
+        await Event.deleteMany({ courseGroup: group._id }, { session });
+      }
+
+      // 5) Remove group reference from every user's registeredCourses
+      await User.updateMany(
+        { "registeredCourses.courseId": String(group._id) },
+        { $pull: { registeredCourses: { courseId: String(group._id) } } },
+        { session }
+      );
+
+      // 6) Delete the group itself
+      await CourseGroup.findByIdAndDelete(group._id, { session });
+    });
+
+    res.status(200).json({
+      message: "Course group and all related data deleted successfully.",
+    });
   } catch (error) {
     console.error("Error deleting course group:", error);
     res.status(500).json({ message: "Server error", error: error.message });
+  } finally {
+    session.endSession();
   }
 };
 
@@ -265,47 +315,97 @@ const deleteCourseGroup = async (req, res) => {
 // @route   POST /api/groups/:groupId/leave
 // @access  Private
 const leaveGroup = async (req, res) => {
+  const session = await mongoose.startSession();
+
   try {
     const { groupId } = req.params;
     const userId = req.user._id;
-    const group = req.group; // from requireGroup middleware
+    const group = req.group;           // from requireGroup middleware
     const memberRecord = req.memberRecord; // from requireGroup middleware
 
-    // Prevent owner from leaving
-    if (memberRecord.role === "owner") {
+    // 1) Prevent owner from leaving
+    if (memberRecord?.role === "owner") {
       return res.status(403).json({
         message: "Group owners cannot leave their own group. Transfer ownership first.",
       });
     }
 
-    // Check if they're already not a member
-    const isMember = group.members.some((member) =>
-      member.userId.toString() === userId.toString()
-    );
+    // 2) Ensure user is currently a member
+    const isMember = group.members.some(m => m.userId.toString() === userId.toString());
     if (!isMember) {
-      return res.status(409).json({
-        message: "You are not a member of this group.",
-      });
+      return res.status(409).json({ message: "You are not a member of this group." });
     }
 
-    // Remove from group's member list
-    group.members = group.members.filter(
-      (member) => !member.userId.equals(userId)
-    );
-    await group.save();
+    await session.withTransaction(async () => {
+      // 3) Remove user from group's members
+      group.members = group.members.filter(m => !m.userId.equals(userId));
+      await group.save({ session });
 
-    // Remove from user's registeredCourses
-    await User.findByIdAndUpdate(userId, {
-      $pull: { registeredCourses: { courseId: groupId } },
+      // 4) Remove group from user's registeredCourses
+      await User.findByIdAndUpdate(
+        userId,
+        { $pull: { registeredCourses: { courseId: String(groupId) } } },
+        { session }
+      );
+
+      // 5) Delete all notes by the user in this group + their comments
+      if (Note) {
+        const noteIds = await Note.find(
+          { groupId: groupId, userId: userId },
+          { _id: 1 },
+          { session }
+        ).then(rows => rows.map(n => n._id));
+
+        if (noteIds.length > 0) {
+          if (NoteComment) {
+            await NoteComment.deleteMany({ noteId: { $in: noteIds } }, { session });
+          }
+          await Note.deleteMany({ _id: { $in: noteIds } }, { session });
+        }
+      }
+
+      // 6) Delete all flashcard sets by the user in this group + their flashcards
+      if (FlashcardSet) {
+        const sets = await FlashcardSet.find(
+          { courseGroupId: groupId, userId: userId },
+          { _id: 1, flashcards: 1 },
+          { session }
+        );
+
+        const setIds = sets.map(s => s._id);
+        const flashcardIds = sets.flatMap(s => s.flashcards);
+
+        if (flashcardIds.length > 0 && Flashcard) {
+          await Flashcard.deleteMany({ _id: { $in: flashcardIds } }, { session });
+        }
+
+        if (setIds.length > 0) {
+          await FlashcardSet.deleteMany({ _id: { $in: setIds } }, { session });
+        }
+      }
+
+      // 7) Delete all events created by this user in the group
+      if (Event) {
+        await Event.deleteMany({ courseGroup: groupId, createdBy: userId }, { session });
+
+        // And remove the user from attendees of any remaining events in the group
+        await Event.updateMany(
+          { courseGroup: groupId },
+          { $pull: { attendees: userId } },
+          { session }
+        );
+      }
     });
 
     res.status(200).json({
-      message: "Successfully left the group.",
+      message: "Successfully left the group and removed your related content.",
       groupId: group._id,
     });
   } catch (error) {
     console.error("Error leaving group:", error);
     res.status(500).json({ message: "Server error", error: error.message });
+  } finally {
+    session.endSession();
   }
 };
 
