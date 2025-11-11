@@ -59,19 +59,13 @@ export default function GroupPage() {
             </div>
           </div>
         </div>
-        <div className="w-1/3 max-h-[800px] overflow-y-auto border rounded-3xl py-6">
+        <div className="w-1/3 max-h-[750px] overflow-y-auto border rounded-3xl py-6">
           <h2 className="text-xl font-semibold text-gray-900 px-4">
             Group Activity
           </h2>
           <GroupActivity />
         </div>
       </div>
-
-      {/* <div className="py-4">
-        <h2 className="text-xl font-semibold text-gray-900 px-4">
-          Recently Viewed
-        </h2>
-      </div> */}
     </div>
   );
 }
