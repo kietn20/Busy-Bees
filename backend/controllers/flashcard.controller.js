@@ -1,5 +1,6 @@
 const flashcard = require('../models/Flashcard.model');
 const flashcardset = require('../models/FlashcardSet.model');
+const { generateFlashcardsFromAI } = require('../services/aiService');
 
 // creates a new flashcard in a flashcard set 
 const createFlashcard = async (req, res) => {
@@ -138,14 +139,23 @@ const deleteFlashcard = async (req, res) => {
 
 // generate flashcards from note content
 const generateFromNote = async (req, res) => {
-  const { noteContent } = req.body;
+  const { noteContent, numFlashcards } = req.body;
   if (!noteContent) {
-    return res.status(400).json({ message: 'Note content is required.' });
+    return res.status(400).json({ error: "noteContent is required" });
   }
   try {
-    // Placeholder: In a real implementation, integrate with an AI service here
+    const flashcards = await generateFlashcardsFromAI(noteContent, numFlashcards);
+    if (!flashcards.length) {
+      // If no flashcards, send a 500 with a helpful message
+      return res.status(500).json({ error: "Failed to generate flashcards", details: "No flashcards returned. Check AI service or prompt." });
+    }
+    res.json({ flashcards });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to generate flashcards.' });
+    // Send error details in the response
+    res.status(500).json({
+      error: "Failed to generate flashcards",
+      details: error.message || error.toString()
+    });
   }
 }
 module.exports = {
