@@ -136,12 +136,24 @@ const deleteFlashcard = async (req, res) => {
 // 
 // };
 
+// generate flashcards from note content
+const generateFromNote = async (req, res) => {
+  const { noteContent } = req.body;
+  if (!noteContent) {
+    return res.status(400).json({ message: 'Note content is required.' });
+  }
+  try {
+    // Placeholder: In a real implementation, integrate with an AI service here
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to generate flashcards.' });
+  }
+}
 module.exports = {
   createFlashcard,
   getFlashcardById,
   updateFlashcard,
   deleteFlashcard,
-
+  generateFromNote
 }
 
 
