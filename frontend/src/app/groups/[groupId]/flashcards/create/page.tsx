@@ -5,12 +5,23 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus } from "lucide-react";
 import { useState } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { createFlashcardSet } from "@/services/flashcardApi";
 import { toast } from "react-hot-toast";
 
 export default function CreateFlashcard() {
-  const [cards, setCards] = useState([{ id: 1, term: "", definition: "" }]);
+
+  type Flashcard = {
+    term: string;
+    definition: string;
+  };
+
+  type Card = {
+    id: number;
+    term: string;
+    definition: string;
+  };
+
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [error, setError] = useState("");
@@ -19,6 +30,19 @@ export default function CreateFlashcard() {
   const { groupId } = useParams();
 
   const TOAST_ERR_ID = "create-flashcard-error";
+
+  const searchParams = useSearchParams();
+  const generated = searchParams.get("generated");
+  const generatedFlashcards: Flashcard[] = generated ? JSON.parse(generated) : [];
+  const [cards, setCards] = useState<Card[]>(
+    generatedFlashcards.length > 0
+    ? generatedFlashcards.map((card, idx) => ({
+        id: idx + 1,
+        term: card.term,
+        definition: card.definition,
+      }))
+    : [{ id: 1, term: "", definition: "" }]
+  );
 
   const handleDeleteCard = (id: number) => {
     setCards(cards.filter((card) => card.id !== id));
