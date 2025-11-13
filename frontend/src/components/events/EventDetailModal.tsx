@@ -118,9 +118,12 @@ export default function EventDetailModal({ isOpen, onClose, event, isLoading, gr
         {isEditing ? (
           // --- EDIT MODE ---
           <div className="space-y-4 py-4">
-            <div><Label htmlFor="edit-title">Title</Label><Input id="edit-title" value={title} onChange={e => setTitle(e.target.value)} /></div>
-            <div><Label htmlFor="edit-startTime">Start Time</Label><Input id="edit-startTime" type="datetime-local" value={startTime} onChange={e => setStartTime(e.target.value)} /></div>
-            <div><Label htmlFor="edit-description">Description</Label><Textarea id="edit-description" value={description} onChange={e => setDescription(e.target.value)} /></div>
+            <div><Label htmlFor="edit-title">Title</Label><Input id="edit-title" value={title} onChange={e => setTitle(e.target.value)} maxLength={50} /></div>
+            <div><Label htmlFor="edit-startTime">Start Time</Label>
+                <Input id="edit-startTime" type="datetime-local" min="1900-01-01T00:00"
+                  max="2099-12-31T23:59" value={startTime} onChange={e => setStartTime(e.target.value)} />
+                </div>
+            <div><Label htmlFor="edit-description">Description</Label><Textarea id="edit-description" value={description} onChange={e => setDescription(e.target.value)} maxLength={150} className="w-[460px]"/></div>
           </div>
         ) : (
           // --- VIEW MODE ---

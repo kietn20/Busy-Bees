@@ -89,15 +89,26 @@ export default function CreateEventModal({ isOpen, onClose, groupId, onEventCrea
         <form onSubmit={handleSubmit} noValidate className="space-y-4 py-4">
           <div>
             <Label htmlFor="title">Event Title</Label>
-            <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} />
+            <Input 
+              id="title" value={title} 
+              onChange={(e) => setTitle(e.target.value)} 
+              maxLength={50}
+              //style={{ height: "40px" }} 
+              />
+              <div className="text-xs text-gray-400 text-right">
+                {title.length} / 50
+              </div>
           </div>
           <div>
             <Label htmlFor="startTime">Start Time</Label>
             <Input
               id="startTime"
               type="datetime-local"
+              min="1900-01-01T00:00"
+              max="2099-12-31T23:59"
               value={startTime}
               onChange={(e) => setStartTime(e.target.value)}
+              //style={{ height: "40px" }}
             />
           </div>
           <div>
@@ -106,8 +117,14 @@ export default function CreateEventModal({ isOpen, onClose, groupId, onEventCrea
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
+              maxLength={150}
               placeholder="E.g., Discuss chapters 4-6"
+              className="w-[460px]"
+              //style={{ height: "70px", overflowY: "auto", resize: "vertical", overflowX: "hidden" }}
             />
+            <div className="text-xs text-gray-400 text-right">
+              {description.length} / 150
+            </div>
           </div>
 
           
