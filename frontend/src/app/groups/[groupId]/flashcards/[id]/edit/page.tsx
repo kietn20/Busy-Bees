@@ -113,7 +113,7 @@ export default function EditFlashcard() {
       return;
     }
     if (!setName.trim()) {
-      toast.error("Flashcard name required", { id: TOAST_ERR_ID });
+      toast.error("Flashcard name required.", { id: TOAST_ERR_ID });
       setHasTitleError(true);
     return;
     }
