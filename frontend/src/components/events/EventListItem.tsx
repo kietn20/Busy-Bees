@@ -36,7 +36,7 @@ export default function EventListItem({ event, onClick }: EventListItemProps) {
           <span>Hosted by {event.createdBy.firstName}</span>
         </div>
       </div>
-      {event.description && <p className="mt-2 text-gray-600">{event.description}</p>}
+      {event.description && <p className="mt-2 text-gray-600 break-words whitespace-pre-line w-full">{event.description}</p>}
     </div>
   );
 }
