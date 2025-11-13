@@ -82,7 +82,7 @@ export function CourseSwitcher({
         }
       } catch (error) {
         console.error("Error fetching groups:", error);
-        toast.error("Failed to load groups");
+        toast.error("Failed to load groups.");
       } finally {
         setLoading(false);
       }
@@ -96,12 +96,12 @@ export function CourseSwitcher({
 
     setSelectedGroup(group);
     router.push(`/groups/${group._id}`);
-    toast.success(`Switched to ${group.groupName}`);
+    toast.success(`Switched to ${group.groupName}.`);
   };
 
   const handleGenerateInvite = async () => {
     if (!selectedGroup) {
-      toast.error("No group selected");
+      toast.error("No group selected.");
       return;
     }
 
@@ -112,10 +112,10 @@ export function CourseSwitcher({
     try {
       const response = await generateInvite(selectedGroup._id);
       setInviteCode(response.data.inviteCode);
-      toast.success("Invite code generated!");
+      toast.success("Invite code generated.");
     } catch (err) {
       console.error("Failed to generate invite code:", err);
-      toast.error("Failed to generate invite code");
+      toast.error("Failed to generate invite code.");
       setIsModalOpen(false); // Close modal on error
     } finally {
       setIsInviteLoading(false);

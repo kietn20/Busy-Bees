@@ -83,7 +83,7 @@ export default function EditGroupForm({ groupId, initialGroup, onSaved }: Props)
         setName(updated.groupName || '');
         setDescription(updated.description || '');
         if (onSaved) onSaved(updated);
-        toast.success("Group updated successfully!");
+        toast.success("Group updated successfully.");
         router.refresh();
       }
     } catch (err) {

@@ -27,7 +27,7 @@ const DeleteAccountButton = () => {
     setDeleting(true);
     try {
       await deleteAccount();
-      toast.success("Account deleted successfully");
+      toast.success("Account deleted successfully.");
       await logout();
       router.push("/login");
     } catch (error: any) {
@@ -43,7 +43,7 @@ const DeleteAccountButton = () => {
           { duration: 8000 }
         );
       } else {
-        toast.error(error.message || "Failed to delete account");
+        toast.error(error.message || "Failed to delete account.");
       }
     } finally {
       setDeleting(false);

@@ -37,7 +37,7 @@ const LeaveModal = ({
       toast.success("You have left the group.");
       router.push("/");
     } catch (err: any) {
-      const message = err?.response?.data?.message || "Failed to leave group";
+      const message = err?.response?.data?.message || "Failed to leave group.";
       setError(message);
       toast.error(message);
     } finally {

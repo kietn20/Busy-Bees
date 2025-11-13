@@ -77,7 +77,7 @@ const SignUpForm = () => {
 
 			// Use AuthContext to set authentication state
 			authLogin(token, user);
-			toast.success("Account created successfully");
+			toast.success("Account created successfully.");
 			// Redirect to the home page after signup
 			router.push("/");
 		} catch (err) {

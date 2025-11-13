@@ -64,7 +64,7 @@ export default function CreateEventModal({ isOpen, onClose, groupId, onEventCrea
       handleClose(); // Use handleClose to reset state and close
       toast.success("Event created.");
     } catch (err: any) {
-      toast.error("Failed to create event", { id: TOAST_ERR_ID });
+      toast.error("Failed to create event.", { id: TOAST_ERR_ID });
       setError(err.response?.data?.message || 'Failed to create event.');
     } finally {
       setIsLoading(false);

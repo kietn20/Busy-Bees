@@ -8,7 +8,7 @@ export default function GoogleSignInToast() {
 
   useEffect(() => {
     if (user && localStorage.getItem("googleSignIn") === "true") {
-      toast.success("Logged in successfully");
+      toast.success("Logged in successfully.");
       localStorage.removeItem("googleSignIn");
     }
   }, [user]);

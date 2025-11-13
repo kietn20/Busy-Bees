@@ -38,7 +38,7 @@ const AddGroup = () => {
         // Create group
         const response = await createGroup(inputValue);
         
-        toast.success("Group created successfully!");
+        toast.success("Group created successfully.");
 
         // Close the dialog and redirect to the group page
         setIsOpen(false);
@@ -49,7 +49,7 @@ const AddGroup = () => {
         // Join group
         const response = await joinGroup(inputValue);
         
-        toast.success("Joined group successfully!");
+        toast.success("Joined group successfully.");
         
         // Close the dialog and redirect
         setIsOpen(false);
