@@ -186,7 +186,8 @@ export default function NoteDetailPage() {
 		setShowGenerateDialog(false);
 		setIsGenerating(false);
 		if (!response.flashcards || response.flashcards.length === 0) {
-			toast.error("No flashcards could be generated from this note.");
+			toast.dismiss();
+			toast.error("Generation failed. Add more notes or reduce number of flashcards.");
 			return;
 		}
 		toast.success("Flashcards generated.");
@@ -195,7 +196,8 @@ export default function NoteDetailPage() {
 		);
 		} catch (err: any) {
 			setIsGenerating(false);
-			toast.error("Failed to generate flashcards.");
+			toast.dismiss();
+			toast.error("Generation failed. Add more notes or reduce number of flashcards.");
 		}
 	};
 
