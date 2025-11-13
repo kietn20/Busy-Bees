@@ -5,7 +5,7 @@ const openai = new OpenAI({
 });
 
 const generateFlashcardsFromAI = async (noteContent, numFlashcards) => {
-  const prompt = `Look through the following note content. Extract exactly ${numFlashcards}. For each important keyword or concept, extract it as the "term" (maximum 100 characters) and find its definition from the note (maximum 300 characters). Return your response as a JSON array, with each item in the format: { "term": "...", "definition": "..." }. Do not include any extra text, explanations, or formatting—just the raw JSON array.
+  const prompt = `From the following note content, extract no more than ${numFlashcards} important terms or concepts that are explicitly mentioned in the notes. For each term, provide a concise definition or explanation. If you cannot find enough terms, just return as many as you can. Stop when you run out of terms. Return your response as a JSON array in the format: [{ "term": "...", "definition": "..." }]. Do not include any extra text, explanations, or formatting—just the raw JSON array.
 
         Note content:
         """
