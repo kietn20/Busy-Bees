@@ -118,3 +118,15 @@ export const deleteFlashcardSet = async (
 ): Promise<void> => {
   await api.delete(`/groups/${groupId}/flashcards/sets/${setId}`);
 };
+
+export const generateFlashcardsFromNote = async (
+  groupId: string,
+  noteContent: string,
+  numFlashcards: number
+): Promise<{ flashcards: { term: string; definition: string }[] }> => {
+  const response = await api.post(
+    `/groups/${groupId}/flashcards/generate-from-note`,
+    { noteContent, numFlashcards }
+  );
+  return response.data;
+};

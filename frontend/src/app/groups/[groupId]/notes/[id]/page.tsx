@@ -22,6 +22,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import toast from "react-hot-toast";
+import { generateFlashcardsFromNote } from "@/services/flashcardApi";
 
 export default function NoteDetailPage() {
   const [note, setNote] = useState<Note | null>(null);
@@ -35,6 +36,10 @@ export default function NoteDetailPage() {
 
   const [group, setGroup] = useState<CourseGroup | null>(null); // <-- NEW
   const [isDeleting, setIsDeleting] = useState(false); // <-- NEW
+
+  const [showGenerateDialog, setShowGenerateDialog] = useState(false);
+  const [numFlashcards, setNumFlashcards] = useState(3);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const { user } = useAuth();
   const params = useParams();
@@ -168,6 +173,32 @@ export default function NoteDetailPage() {
     }
   };
 
+  const handleGenerate = async () => {
+	setIsGenerating(true);
+	toast.loading("Generating flashcards...");
+	try {
+		const response = await generateFlashcardsFromNote(
+			groupId,
+			note.content,
+			numFlashcards
+		);
+		toast.dismiss();
+		setShowGenerateDialog(false);
+		setIsGenerating(false);
+		if (!response.flashcards || response.flashcards.length === 0) {
+			toast.error("No flashcards could be generated from this note.");
+			return;
+		}
+		toast.success("Flashcards generated.");
+		router.push(
+  			`/groups/${groupId}/flashcards/create?generated=${encodeURIComponent(JSON.stringify(response.flashcards))}`
+		);
+		} catch (err: any) {
+			setIsGenerating(false);
+			toast.error("Failed to generate flashcards.");
+		}
+	};
+
   const isAuthor = user && note && user.id === note.userId._id;
   const isGroupOwner = user && group && user.id === group.ownerId;
   const canModify = isAuthor || isGroupOwner;
@@ -224,6 +255,61 @@ export default function NoteDetailPage() {
               </AlertDialogContent>
             </AlertDialog>
           )}
+
+			{/* --- Generate Flashcards Button and Dialog --- */}
+			<AlertDialog open={showGenerateDialog} onOpenChange={setShowGenerateDialog}>
+				<AlertDialogTrigger asChild>
+				<Button variant="default" onClick={() => setShowGenerateDialog(true)}>
+					Generate Flashcards
+				</Button>
+				</AlertDialogTrigger>
+				<AlertDialogContent>
+				<AlertDialogHeader>
+					<AlertDialogTitle>Generate Flashcards</AlertDialogTitle>
+					<AlertDialogDescription>
+					How many flashcards would you like to generate?
+					</AlertDialogDescription>
+				</AlertDialogHeader>
+				<input
+					type="number"
+					min={1}
+					max={20}
+					value={numFlashcards}
+					onChange={e => setNumFlashcards(Number(e.target.value))}
+					className="border rounded px-2 py-1 w-20"
+				/>
+				<AlertDialogFooter>
+					<AlertDialogCancel disabled={isGenerating}>Cancel</AlertDialogCancel>
+					<AlertDialogAction
+					disabled={isGenerating}
+					onClick={handleGenerate}
+					>
+					{isGenerating ? "Generating..." : "Generate"}
+					</AlertDialogAction>
+				</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
           {isAuthor &&
             (isEditing ? (
