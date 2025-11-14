@@ -49,7 +49,7 @@ const userSchema = new mongoose.Schema(
           {
             kind: {
               type: String,
-              enum: ["note", "flashcard"],
+              enum: ["note", "flashcardSet"],
               required: true,
             },
             itemId: {

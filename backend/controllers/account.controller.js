@@ -1,7 +1,6 @@
 const User = require("../models/User.model");
 const CourseGroup = require("../models/CourseGroup.model");
 const Note = require("../models/Note.model");
-const Flashcard = require("../models/Flashcard.model");
 const FlashcardSet = require("../models/FlashcardSet.model");
 const mongoose = require("mongoose");
 const { validationResult } = require("express-validator");
@@ -150,8 +149,8 @@ const addFavorite = async (req, res) => {
     if (!courseId || !kind || !itemId) {
       return res.status(400).json({ message: 'courseId, kind and itemId are required.' });
     }
-    if (!['note', 'flashcard'].includes(kind)) {
-      return res.status(400).json({ message: 'kind must be "note" or "flashcard"' });
+    if (!['note', 'flashcardSet'].includes(kind)) {
+      return res.status(400).json({ message: 'kind must be "note" or "flashcardSet"' });
     }
 
     // load user
@@ -170,13 +169,11 @@ const addFavorite = async (req, res) => {
       if (String(note.groupId) !== String(courseId)) return res.status(400).json({ message: 'Note does not belong to course' });
       titleSnapshot = note.title;
     } else {
-      // flashcard: ensure it belongs to a set that belongs to the course
-      const set = await FlashcardSet.findOne({ flashcards: mongoose.Types.ObjectId(itemId) });
-      if (!set) return res.status(404).json({ message: 'Flashcard not found in any set' });
-      if (String(set.courseGroupId) !== String(courseId)) return res.status(400).json({ message: 'Flashcard does not belong to course' });
-      // try to pull the flashcard term for snapshot
-      const flash = await Flashcard.findById(itemId);
-      titleSnapshot = flash ? flash.term : '';
+      // flashcardSet: ensure the set exists and belongs to the course
+      const set = await FlashcardSet.findById(itemId);
+      if (!set) return res.status(404).json({ message: 'FlashcardSet not found' });
+      if (String(set.courseGroupId) !== String(courseId)) return res.status(400).json({ message: 'FlashcardSet does not belong to course' });
+      titleSnapshot = set.setName || '';
     }
 
     // ensure favorites array exists
