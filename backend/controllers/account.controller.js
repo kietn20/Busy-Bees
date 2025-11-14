@@ -143,8 +143,8 @@ const deleteAccount = async (req, res) => {
 // Add a favorite for the authenticated user under a registered course
 const addFavorite = async (req, res) => {
   try {
-    const userId = req.user._id;
-    const { courseId, kind, itemId } = req.body;
+  const userId = req.user._id;
+  const { courseId, kind, itemId } = req.body;
 
     if (!courseId || !kind || !itemId) {
       return res.status(400).json({ message: 'courseId, kind and itemId are required.' });
@@ -153,13 +153,12 @@ const addFavorite = async (req, res) => {
       return res.status(400).json({ message: 'kind must be "note" or "flashcardSet"' });
     }
 
-    // load user
-    const user = await User.findById(userId);
-    if (!user) return res.status(404).json({ message: 'User not found' });
+  // try to use middleware-loaded user and registeredCourse when available
+  const user = req.userDoc || await User.findById(userId);
+  if (!user) return res.status(404).json({ message: 'User not found' });
 
-    // ensure user is registered in the course
-    const reg = user.registeredCourses.find(rc => String(rc.courseId) === String(courseId));
-    if (!reg) return res.status(403).json({ message: 'User not registered in course' });
+  const reg = req.registeredCourse || user.registeredCourses.find(rc => String(rc.courseId) === String(courseId));
+  if (!reg) return res.status(403).json({ message: 'User not registered in course' });
 
     // validate item exists and belongs to course
     let titleSnapshot = '';
@@ -233,17 +232,21 @@ const getFavorites = async (req, res) => {
 
     if (!courseId) return res.status(400).json({ message: 'courseId query param is required' });
 
-    // Project only the matching registeredCourses element to keep payload small
-    const user = await User.findOne(
-      { _id: userId, 'registeredCourses.courseId': courseId },
-      { 'registeredCourses.$': 1 }
-    );
+    // Try to use middleware-provided user/registeredCourse when present
+    let user = req.userDoc;
+    if (!user) {
+      // Project only the matching registeredCourses element to keep payload small
+      user = await User.findOne(
+        { _id: userId, 'registeredCourses.courseId': courseId },
+        { 'registeredCourses.$': 1 }
+      );
+    }
 
     if (!user || !Array.isArray(user.registeredCourses) || user.registeredCourses.length === 0) {
       return res.json({ courseId, kind: kind || null, favorites: [] });
     }
 
-    const reg = user.registeredCourses[0];
+  const reg = req.registeredCourse || user.registeredCourses[0];
     const favorites = Array.isArray(reg.favorites) ? reg.favorites : [];
 
     const filtered = kind ? favorites.filter(f => f.kind === kind) : favorites;
@@ -272,11 +275,15 @@ const checkFavorites = async (req, res) => {
       return res.status(400).json({ message: 'kind must be "note" or "flashcardSet"' });
     }
 
-    // Project only the matching registeredCourses element to keep payload small
-    const user = await User.findOne(
-      { _id: userId, 'registeredCourses.courseId': courseId },
-      { 'registeredCourses.$': 1 }
-    );
+    // Try to use middleware-provided user/registeredCourse when present
+    let user = req.userDoc;
+    if (!user) {
+      // Project only the matching registeredCourses element to keep payload small
+      user = await User.findOne(
+        { _id: userId, 'registeredCourses.courseId': courseId },
+        { 'registeredCourses.$': 1 }
+      );
+    }
 
     if (!user || !Array.isArray(user.registeredCourses) || user.registeredCourses.length === 0) {
       // none favorited
@@ -285,8 +292,8 @@ const checkFavorites = async (req, res) => {
       return res.json({ courseId, kind, results: emptyResults });
     }
 
-    const reg = user.registeredCourses[0];
-    const favorites = Array.isArray(reg.favorites) ? reg.favorites : [];
+  const reg = req.registeredCourse || user.registeredCourses[0];
+  const favorites = Array.isArray(reg.favorites) ? reg.favorites : [];
     const favSet = new Set(favorites.filter(f => f.kind === kind).map(f => String(f.itemId)));
 
     const results = {};
