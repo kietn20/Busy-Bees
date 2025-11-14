@@ -7,56 +7,56 @@ const { validationResult } = require("express-validator");
 const { hashPassword } = require('../utils/password.util');
 
 const updateUser = async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  try {
+    const { firstName, lastName, email, password } = req.body;
+    const updates = {};
+
+    if (firstName) updates.firstName = firstName;
+    if (lastName) updates.lastName = lastName;
+
+    // email and password updates are blocked for OAuth users by middleware
+    // only non-OAuth users can reach this point
+    if (email) updates.email = email;
+    if (password) {
+      updates.password = await hashPassword(password);
     }
 
-    try {
-      const { firstName, lastName, email, password } = req.body;
-      const updates = {};
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user._id,
+      updates,
+      { new: true, runValidators: true }
+    ).select("-password");
 
-      if (firstName) updates.firstName = firstName;
-      if (lastName) updates.lastName = lastName;
-
-      // email and password updates are blocked for OAuth users by middleware
-      // only non-OAuth users can reach this point
-      if (email) updates.email = email;
-      if (password) {
-        updates.password = await hashPassword(password);
-      }
-
-      const updatedUser = await User.findByIdAndUpdate(
-        req.user._id,
-        updates,
-        { new: true, runValidators: true }
-      ).select("-password");
-
-      if (!updatedUser) {
-        return res.status(404).json({ message: "User not found" });
-      }
-
-      res.json({ 
-        message: "User updated successfully", 
-        user: {
-          id: updatedUser._id,
-          firstName: updatedUser.firstName,
-          lastName: updatedUser.lastName,
-          email: updatedUser.email
-        }
-      });
-    } catch (err) {
-      if (
-        err.code === 11000 ||
-        (err.message && err.message.includes("E11000"))
-      ) {
-        return res.status(400).json({ message: "Email already exists." });
-      }
-      console.error("Error updating user:", err);
-      return res.status(500).json({ message: "Internal server error." });
-      
-      
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" });
     }
+
+    res.json({
+      message: "User updated successfully",
+      user: {
+        id: updatedUser._id,
+        firstName: updatedUser.firstName,
+        lastName: updatedUser.lastName,
+        email: updatedUser.email
+      }
+    });
+  } catch (err) {
+    if (
+      err.code === 11000 ||
+      (err.message && err.message.includes("E11000"))
+    ) {
+      return res.status(400).json({ message: "Email already exists." });
+    }
+    console.error("Error updating user:", err);
+    return res.status(500).json({ message: "Internal server error." });
+
+
+  }
 };
 
 // NEW: Helper function to clear session for logoutUser and deleteAccount
@@ -79,7 +79,7 @@ const clearSession = (req, res, callback) => {
   }
 };
 const logoutUser = (req, res) => {
-    clearSession(req, res, () => {
+  clearSession(req, res, () => {
     return res.status(200).json({ message: 'Logged out' });
   });
 };
@@ -107,7 +107,7 @@ const deleteAccount = async (req, res) => {
     const ownedGroupsCount = await CourseGroup.countDocuments({ ownerId: userId });
 
     if (ownedGroupsCount > 0) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         message: `You must transfer ownership of your ${ownedGroupsCount} group(s) before deleting your account. Go to each group's settings to transfer ownership.`,
         ownedGroupsCount
       });
@@ -129,8 +129,8 @@ const deleteAccount = async (req, res) => {
 
     // clear the session (for OAuth users)
     clearSession(req, res, () => {
-      return res.status(200).json({ 
-        message: 'Account and all associated data deleted successfully' 
+      return res.status(200).json({
+        message: 'Account and all associated data deleted successfully'
       });
     });
 
@@ -143,8 +143,8 @@ const deleteAccount = async (req, res) => {
 // Add a favorite for the authenticated user under a registered course
 const addFavorite = async (req, res) => {
   try {
-  const userId = req.user._id;
-  const { courseId, kind, itemId } = req.body;
+    const userId = req.user._id;
+    const { courseId, kind, itemId } = req.body;
 
     if (!courseId || !kind || !itemId) {
       return res.status(400).json({ message: 'courseId, kind and itemId are required.' });
@@ -153,12 +153,12 @@ const addFavorite = async (req, res) => {
       return res.status(400).json({ message: 'kind must be "note" or "flashcardSet"' });
     }
 
-  // try to use middleware-loaded user and registeredCourse when available
-  const user = req.userDoc || await User.findById(userId);
-  if (!user) return res.status(404).json({ message: 'User not found' });
+    // try to use middleware-loaded user and registeredCourse when available
+    const user = req.userDoc || await User.findById(userId);
+    if (!user) return res.status(404).json({ message: 'User not found' });
 
-  const reg = req.registeredCourse || user.registeredCourses.find(rc => String(rc.courseId) === String(courseId));
-  if (!reg) return res.status(403).json({ message: 'User not registered in course' });
+    const reg = req.registeredCourse || user.registeredCourses.find(rc => String(rc.courseId) === String(courseId));
+    if (!reg) return res.status(403).json({ message: 'User not registered in course' });
 
     // validate item exists and belongs to course
     let titleSnapshot = '';
@@ -246,7 +246,7 @@ const getFavorites = async (req, res) => {
       return res.json({ courseId, kind: kind || null, favorites: [] });
     }
 
-  const reg = req.registeredCourse || user.registeredCourses[0];
+    const reg = req.registeredCourse || user.registeredCourses[0];
     const favorites = Array.isArray(reg.favorites) ? reg.favorites : [];
 
     const filtered = kind ? favorites.filter(f => f.kind === kind) : favorites;
@@ -292,8 +292,8 @@ const checkFavorites = async (req, res) => {
       return res.json({ courseId, kind, results: emptyResults });
     }
 
-  const reg = req.registeredCourse || user.registeredCourses[0];
-  const favorites = Array.isArray(reg.favorites) ? reg.favorites : [];
+    const reg = req.registeredCourse || user.registeredCourses[0];
+    const favorites = Array.isArray(reg.favorites) ? reg.favorites : [];
     const favSet = new Set(favorites.filter(f => f.kind === kind).map(f => String(f.itemId)));
 
     const results = {};
