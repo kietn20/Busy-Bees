@@ -33,7 +33,7 @@ export default function EventList({
 	}
 
 	return (
-		<div className="mt-8">
+		<div className="w-full max-w-xl mx-auto">
 			<div className="bg-white p-6 rounded-lg divide-y divide-gray-200 flex flex-col gap-2">
 				{events.map((event) => (
 					<EventListItem

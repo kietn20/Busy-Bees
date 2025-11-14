@@ -27,6 +27,7 @@ export default function GroupEventsPage() {
 	const [selectedDate, setSelectedDate] = useState<Date | undefined>(
 		new Date()
 	);
+	const [filteredEvents, setFilteredEvents] = useState<Event[] | null>(null);
 
 	const params = useParams();
 	const groupId = params.groupId as string;
@@ -43,6 +44,10 @@ export default function GroupEventsPage() {
 			]);
 			setEvents(fetchedEvents);
 			setGroup(fetchedGroup);
+
+			if (selectedDate) {
+				setFilteredEvents(filterEventsByDate(fetchedEvents, selectedDate));
+			}
 		} catch (err) {
 			setEventsError("Failed to load events.");
 		} finally {
@@ -72,6 +77,7 @@ export default function GroupEventsPage() {
 
 	const handleDayClick = (day: Date | undefined) => {
 		if (!day) return;
+
 		setSelectedDate(day);
 
 		const eventsOnDay = events.filter((event) => {
@@ -79,12 +85,7 @@ export default function GroupEventsPage() {
 			return eventDate.toLocaleDateString() === day.toLocaleDateString();
 		});
 
-		if (eventsOnDay.length === 1) {
-			handleViewEvent(eventsOnDay[0]._id);
-		}
-		else if (eventsOnDay.length > 1) {
-			handleViewEvent(eventsOnDay[0]._id);
-		}
+		setFilteredEvents(eventsOnDay);
 	};
 
 	const handleViewEvent = async (eventId: string) => {
@@ -108,6 +109,14 @@ export default function GroupEventsPage() {
 		setSelectedDate(undefined);
 	};
 
+	function filterEventsByDate(events: Event[], date: Date | undefined) {
+		if (!date) return events;
+		return events.filter(event => {
+			const eventDate = new Date(event.startTime);
+			return eventDate.toLocaleDateString() === date.toLocaleDateString();
+		});
+	}
+
 	return (
 		<ProtectedRoute>
 			<div className="container mx-auto p-8">
@@ -115,19 +124,31 @@ export default function GroupEventsPage() {
 					<h1 className="text-3xl font-bold">
 						{group ? `${group.groupName}: Events` : "Events"}
 					</h1>
-					<Button
+					<div className="flex flex-col items-start gap-2">
+						<Button
 						variant="outline"
 						onClick={() => setIsCreateModalOpen(true)}
-					>
+						>
 						Create Event
-					</Button>
+						</Button>
+						<Button
+						variant="outline"
+						onClick={() => {
+							setSelectedDate(undefined);
+							setFilteredEvents(null);
+						}}
+						>
+						Show All Events
+						</Button>
+					</div>
+									
 				</div>
 
 				<div className="flex flex-col md:flex-row gap-8 justify-between">
-					<div className="w-2/3  flex flex-col h-[calc(100vh-220px)]">
+					<div className="md:w-2/3 w-full flex flex-col h-[calc(100vh-220px)]">
 						<div className="overflow-y-auto pr-2 flex-grow">
 							<EventList
-								events={events}
+								events={filteredEvents !== null ? filteredEvents : events}
 								isLoading={isEventsLoading}
 								error={eventsError}
 								onEventClick={handleViewEvent}
@@ -135,10 +156,8 @@ export default function GroupEventsPage() {
 						</div>
 					</div>
 
-
-
-
-					<div className="w-3/5  flex justify-center items-center">
+					<div className="md:w-1/3 w-full flex justify-center items-start flex-shrink-0">
+			
 						<div className="bg-white p-4 rounded-lg shadow-md w-full ">
 							<Calendar
 								mode="single"
