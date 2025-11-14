@@ -106,7 +106,7 @@ export default function GroupEventsPage() {
 	const handleCloseDetailModal = () => {
 		setIsDetailModalOpen(false);
 		setSelectedEvent(null);
-		setSelectedDate(undefined);
+		//setSelectedDate(undefined);
 	};
 
 	function filterEventsByDate(events: Event[], date: Date | undefined) {

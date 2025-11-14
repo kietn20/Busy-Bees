@@ -92,11 +92,11 @@ export default function CreateEventModal({ isOpen, onClose, groupId, onEventCrea
             <Input 
               id="title" value={title} 
               onChange={(e) => setTitle(e.target.value)} 
-              maxLength={50}
+              maxLength={45}
               //style={{ height: "40px" }} 
               />
               <div className="text-xs text-gray-400 text-right">
-                {title.length} / 50
+                {title.length} / 45
               </div>
           </div>
           <div>
