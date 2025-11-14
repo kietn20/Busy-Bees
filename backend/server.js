@@ -18,8 +18,7 @@ const courseGroupRoutes = require("./routes/coursegroup.routes");
 const { nestedEventRouter, eventRouter } = require("./routes/event.routes"); 
 const { nestedNotesRouter, noteRouter } = require('./routes/notes.routes');
 const flashcardRoutes = require('./routes/flashcard.routes');
-// Register model hooks (favorites snapshot updates / cleanup)
-require('./hooks/favorites.hooks');
+require('./hooks/favorites.hooks'); // hooks for favorites snapshots
 
 const app = express();
 const PORT = process.env.PORT || 8080;
