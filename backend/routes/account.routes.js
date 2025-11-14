@@ -1,6 +1,6 @@
 const express = require('express');
 const { allowJwtOrGoogle } = require('../middleware/auth.middleware');
-const { getAccount, updateUser, logoutUser, deleteAccount, addFavorite, removeFavorite, getFavorites } = require('../controllers/account.controller');
+const { getAccount, updateUser, logoutUser, deleteAccount, addFavorite, removeFavorite, getFavorites, checkFavorites } = require('../controllers/account.controller');
 const { updateValidation, preventOAuthEmailPasswordChange } = require('../middleware/account.middleware');
 
 const router = express.Router();
@@ -45,6 +45,13 @@ router.get(
   "/favorites",
   allowJwtOrGoogle,
   getFavorites
+);
+
+// POST /api/account/favorites/check - bulk-check favorites for a list of itemIds
+router.post(
+  "/favorites/check",
+  allowJwtOrGoogle,
+  checkFavorites
 );
 
 // DELETE /api/account - Delete only users authenticated by OAuth/session

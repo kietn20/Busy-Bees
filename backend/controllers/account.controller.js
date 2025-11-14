@@ -258,6 +258,49 @@ const getFavorites = async (req, res) => {
   }
 };
 
+// Bulk-check: given a list of itemIds, return which ones are favorited by the user for a course/kind
+// Projected use: favorite buttons (the hearts or stars) on a list of notes/flashcard sets
+const checkFavorites = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { courseId, kind, itemIds } = req.body;
+
+    if (!courseId || !kind || !Array.isArray(itemIds)) {
+      return res.status(400).json({ message: 'courseId, kind and itemIds(array) are required in body' });
+    }
+    if (!['note', 'flashcardSet'].includes(kind)) {
+      return res.status(400).json({ message: 'kind must be "note" or "flashcardSet"' });
+    }
+
+    // Project only the matching registeredCourses element to keep payload small
+    const user = await User.findOne(
+      { _id: userId, 'registeredCourses.courseId': courseId },
+      { 'registeredCourses.$': 1 }
+    );
+
+    if (!user || !Array.isArray(user.registeredCourses) || user.registeredCourses.length === 0) {
+      // none favorited
+      const emptyResults = {};
+      itemIds.forEach(id => (emptyResults[id] = false));
+      return res.json({ courseId, kind, results: emptyResults });
+    }
+
+    const reg = user.registeredCourses[0];
+    const favorites = Array.isArray(reg.favorites) ? reg.favorites : [];
+    const favSet = new Set(favorites.filter(f => f.kind === kind).map(f => String(f.itemId)));
+
+    const results = {};
+    itemIds.forEach(id => {
+      results[id] = favSet.has(String(id));
+    });
+
+    return res.json({ courseId, kind, results });
+  } catch (err) {
+    console.error('Error in checkFavorites:', err);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
 module.exports = {
   updateUser,
   logoutUser,
@@ -265,5 +308,6 @@ module.exports = {
   deleteAccount,
   addFavorite,
   removeFavorite,
-  getFavorites
+  getFavorites,
+  checkFavorites
 }
