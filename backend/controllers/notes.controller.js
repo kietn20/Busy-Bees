@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const Note = require("../models/Note.model");
 const CourseGroup = require("../models/CourseGroup.model");
+const User = require("../models/User.model");
 
 // @desc    Create a new note in a group
 // @route   POST /api/groups/:groupId/notes
@@ -162,8 +163,26 @@ const getNoteById = async (req, res) => {
         return res.status(403).json({ message: "Forbidden: You are not a member of this group." });
     }
 
+    // Compute isFavorited for authenticated users
+    let isFavorited = false;
+    try {
+      if (req.user && req.user._id) {
+        const user = await User.findOne(
+          { _id: req.user._id, 'registeredCourses.courseId': String(note.groupId) },
+          { 'registeredCourses.$': 1 }
+        );
+        if (user && Array.isArray(user.registeredCourses) && user.registeredCourses.length > 0) {
+          const reg = user.registeredCourses[0];
+          const favorites = Array.isArray(reg.favorites) ? reg.favorites : [];
+          isFavorited = favorites.some(f => f.kind === 'note' && String(f.itemId) === String(note._id));
+        }
+      }
+    } catch (e) {
+      console.error('Error computing isFavorited for note:', e);
+    }
+
     // Optionally ensure requester is a member of the group (protect earlier via requireGroupMember)
-    return res.status(200).json({ note });
+    return res.status(200).json({ note, isFavorited });
   } catch (err) {
     console.error("getNoteById error:", err);
     return res.status(500).json({ message: "Server error", error: err.message });
