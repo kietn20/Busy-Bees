@@ -158,6 +158,7 @@ export default function GroupEventsPage() {
 								isLoading={isEventsLoading}
 								error={eventsError}
 								onEventClick={handleViewEvent}
+								selectedDate={selectedDate}
 							/>
 						</div>
 					</div>
