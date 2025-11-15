@@ -24,9 +24,7 @@ export default function GroupEventsPage() {
 	const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 	const [isDetailLoading, setIsDetailLoading] = useState(false);
 	const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-	const [selectedDate, setSelectedDate] = useState<Date | undefined>(
-		new Date()
-	);
+	const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
 	const [filteredEvents, setFilteredEvents] = useState<Event[] | null>(null);
 
 	const params = useParams();
@@ -47,7 +45,9 @@ export default function GroupEventsPage() {
 
 			if (selectedDate) {
 				setFilteredEvents(filterEventsByDate(fetchedEvents, selectedDate));
-			}
+			} else {
+      			setFilteredEvents(null); // Show all events
+    		}
 		} catch (err) {
 			setEventsError("Failed to load events.");
 		} finally {
@@ -76,16 +76,19 @@ export default function GroupEventsPage() {
 	};
 
 	const handleDayClick = (day: Date | undefined) => {
+
 		if (!day) return;
 
 		setSelectedDate(day);
 
+	
 		const eventsOnDay = events.filter((event) => {
 			const eventDate = new Date(event.startTime);
 			return eventDate.toLocaleDateString() === day.toLocaleDateString();
 		});
 
 		setFilteredEvents(eventsOnDay);
+		
 	};
 
 	const handleViewEvent = async (eventId: string) => {
@@ -124,22 +127,25 @@ export default function GroupEventsPage() {
 					<h1 className="text-3xl font-bold">
 						{group ? `${group.groupName}: Events` : "Events"}
 					</h1>
-					<div className="flex flex-col items-start gap-2">
+					<div className="flex flex-row items-start gap-2">
 						<Button
 						variant="outline"
 						onClick={() => setIsCreateModalOpen(true)}
 						>
 						Create Event
 						</Button>
-						<Button
-						variant="outline"
-						onClick={() => {
-							setSelectedDate(undefined);
-							setFilteredEvents(null);
-						}}
-						>
-						Show All Events
-						</Button>
+
+						{selectedDate && (
+							<Button
+							variant="outline"
+							onClick={() => {
+								setSelectedDate(undefined);
+								setFilteredEvents(null);
+							}}
+							>
+							Show All Events
+							</Button>
+						)}
 					</div>
 									
 				</div>
