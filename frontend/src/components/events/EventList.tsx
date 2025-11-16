@@ -8,6 +8,7 @@ interface EventListProps {
 	isLoading: boolean;
 	error: string | null;
 	onEventClick: (eventId: string) => void;
+	selectedDate?: Date;
 }
 
 export default function EventList({
@@ -15,6 +16,7 @@ export default function EventList({
 	isLoading,
 	error,
 	onEventClick,
+	selectedDate
 }: EventListProps) {
 	if (isLoading) {
 		return <p className="text-center text-gray-500">Loading events...</p>;
@@ -25,15 +27,22 @@ export default function EventList({
 	}
 
 	if (events.length === 0) {
+		if (selectedDate) {
+			return (
+				<p className="text-center text-gray-500">
+					No events for this day.
+				</p>
+			);
+		}
 		return (
-			<p className="text-center text-gray-500">
-				No upcoming events for this group.
-			</p>
-		);
+      	<p className="text-center text-gray-500">
+        	No upcoming events for this group.
+      	</p>
+    	);
 	}
 
 	return (
-		<div className="mt-8">
+		<div className="w-full max-w-xl mx-auto">
 			<div className="bg-white p-6 rounded-lg divide-y divide-gray-200 flex flex-col gap-2">
 				{events.map((event) => (
 					<EventListItem

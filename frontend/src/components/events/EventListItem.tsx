@@ -22,7 +22,7 @@ export default function EventListItem({ event, onClick }: EventListItemProps) {
 
   return (
     <div
-      className="border border-gray-200 p-4 cursor-pointer hover:bg-gray-50 transition-colors rounded-2xl"
+      className="border border-gray-200 p-4 cursor-pointer hover:bg-gray-50 transition-colors rounded-2xl flex flex-col justify-between"
       onClick={onClick}
     >
       <h3 className="font-semibold text-lg">{event.title}</h3>
