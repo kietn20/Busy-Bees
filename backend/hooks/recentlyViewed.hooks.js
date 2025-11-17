@@ -3,51 +3,39 @@ const User = require('../models/User.model');
 const Note = require('../models/Note.model');
 const FlashcardSet = require('../models/FlashcardSet.model');
 
-// Helper to update snapshots for a given itemId and newTitle
-async function updateSnapshotsForItem(itemId, newTitle) {
+// helper to update recently viewed
+async function updateRecentlyViewedSnapshotsForItem(itemId, newTitle) {
   try {
     await User.updateMany(
-      { 'registeredCourses.favorites.itemId': itemId },
-      { $set: { 'registeredCourses.$[].favorites.$[f].titleSnapshot': newTitle } },
-      { arrayFilters: [{ 'f.itemId': itemId }] }
+      { 'registeredCourses.recentlyViewed.itemId': itemId },
+      { $set: { 'registeredCourses.$[].recentlyViewed.$[r].titleSnapshot': newTitle } },
+      { arrayFilters: [{ 'r.itemId': itemId }] }
     );
   } catch (err) {
     console.error('Error updating favorites snapshots for item', itemId, err);
   }
 }
 
-// Helper to remove favorites referencing an itemId
-async function removeFavoritesForItem(itemId) {
+// helper to delete recently viewed
+async function removeRecentlyViewedForItem(itemId) {
   try {
     await User.updateMany(
-      { 'registeredCourses.favorites.itemId': itemId },
-      { $pull: { 'registeredCourses.$[].favorites': { itemId: itemId } } }
+      { 'registeredCourses.recentlyViewed.itemId': itemId },
+      { $pull: { 'registeredCourses.$[].recentlyViewed': { itemId: itemId } } }
     );
   } catch (err) {
-    console.error('Error removing favorites for item', itemId, err);
+    console.error('Error removing recently viewed for item', itemId, err);
   }
 }
 
 
-// NOTE hooks
-// pre-save: mark if title changed
-Note.schema.pre('save', function (next) {
-  try {
-    this._favoritesSnapshotNeedsUpdate = this.isModified('title');
-  } catch (e) {
-    this._favoritesSnapshotNeedsUpdate = false;
-  }
-  next();
-});
-
+// NOTE hooks for recently viewed
 Note.schema.post('save', function (doc) {
-  // doc is the saved document
-  if (doc._favoritesSnapshotNeedsUpdate) {
-    updateSnapshotsForItem(doc._id, doc.title);
-  }
+    if (doc._favoritesSnapshotNeedsUpdate) {
+      updateRecentlyViewedSnapshotsForItem(doc._id, doc.title);
+    }
 });
 
-// findOneAndUpdate: attempt to detect title change from update object
 Note.schema.post('findOneAndUpdate', async function (res) {
   try {
     const update = this.getUpdate && this.getUpdate();
@@ -63,33 +51,23 @@ Note.schema.post('findOneAndUpdate', async function (res) {
     // determine item id: try res._id else query
     const itemId = (res && res._id) ? res._id : (this.getQuery && this.getQuery()._id);
     if (!itemId) return;
-    await updateSnapshotsForItem(itemId, newTitle);
+    await updateRecentlyViewedSnapshotsForItem(itemId, newTitle);
   } catch (err) {
     console.error('Error in Note.findOneAndUpdate post hook', err);
   }
 });
 
-// findOneAndDelete: remove favorites
 Note.schema.post('findOneAndDelete', function (doc) {
   if (doc && doc._id) {
-    removeFavoritesForItem(doc._id);
+    removeRecentlyViewedForItem(doc._id);
   }
 });
 
-// FlashcardSet hooks 
-FlashcardSet.schema.pre('save', function (next) {
-  try {
-    this._favoritesSnapshotNeedsUpdate = this.isModified('setName');
-  } catch (e) {
-    this._favoritesSnapshotNeedsUpdate = false;
-  }
-  next();
-});
-
+// FLASHCARD hooks for recently viewed
 FlashcardSet.schema.post('save', function (doc) {
-  if (doc._favoritesSnapshotNeedsUpdate) {
-    updateSnapshotsForItem(doc._id, doc.setName);
-  }
+    if (doc._favoritesSnapshotNeedsUpdate) {
+      updateRecentlyViewedSnapshotsForItem(doc._id, doc.setName);
+    }
 });
 
 FlashcardSet.schema.post('findOneAndUpdate', async function (res) {
@@ -106,7 +84,7 @@ FlashcardSet.schema.post('findOneAndUpdate', async function (res) {
     if (!newName) return;
     const itemId = (res && res._id) ? res._id : (this.getQuery && this.getQuery()._id);
     if (!itemId) return;
-    await updateSnapshotsForItem(itemId, newName);
+    await updateRecentlyViewedSnapshotsForItem(itemId, newName);
   } catch (err) {
     console.error('Error in FlashcardSet.findOneAndUpdate post hook', err);
   }
@@ -114,11 +92,11 @@ FlashcardSet.schema.post('findOneAndUpdate', async function (res) {
 
 FlashcardSet.schema.post('findOneAndDelete', function (doc) {
   if (doc && doc._id) {
-    removeFavoritesForItem(doc._id);
+    removeRecentlyViewedForItem(doc._id);
   }
 });
 
 module.exports = {
-  updateSnapshotsForItem,
-  removeFavoritesForItem,
-};
+    updateRecentlyViewedSnapshotsForItem,
+    removeRecentlyViewedForItem
+}
