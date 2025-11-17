@@ -308,6 +308,184 @@ const checkFavorites = async (req, res) => {
   }
 };
 
+const MAX_RECENT = 7;
+
+// recently viewed controller functions
+const addRecentlyViewed = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { courseId, kind, itemId } = req.body;
+
+    // validate input
+    if (!courseId || !kind || !itemId) {
+      return res.status(400).json({ message: 'courseId, kind and itemId are required.' });
+    }
+    if (!['note', 'flashcardSet'].includes(kind)) {
+      return res.status(400).json({ message: 'kind must be "note" or "flashcardSet"' });
+    }
+
+    // Find user and registered course
+    const user = req.userDoc || await User.findById(userId);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    const reg = req.registeredCourse || user.registeredCourses.find(rc => String(rc.courseId) === String(courseId));
+    if (!reg) return res.status(403).json({ message: 'User not registered in course' });
+
+    // validate item exists and get titleSnapshot
+    let titleSnapshot = '';
+    if (kind === 'note') {
+      const note = await Note.findById(itemId);
+      if (!note) return res.status(404).json({ message: 'Note not found' });
+      titleSnapshot = note.title;
+    } else {
+      const set = await FlashcardSet.findById(itemId);
+      if (!set) return res.status(404).json({ message: 'FlashcardSet not found' });
+      titleSnapshot = set.setName || '';
+    }
+
+    // Remove if already exists
+    await User.findByIdAndUpdate(userId, {
+      $pull: { recentlyViewed: { kind, itemId } }
+    });
+
+    // Add to front of array
+    await User.findByIdAndUpdate(userId, {
+      $push: {
+        recentlyViewed: {
+          $each: [{ kind, itemId, titleSnapshot, viewedAt: new Date() }],
+          $position: 0
+        }
+      }
+    });
+
+    // Trim array to MAX_RECENT
+    await User.findByIdAndUpdate(userId, {
+      $push: {
+        recentlyViewed: {
+          $each: [],
+          $slice: MAX_RECENT
+        }
+      }
+    });
+
+    return res.json({ success: true });
+  } catch (err) {
+    console.error('Error adding recently viewed:', err);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+}
+
+const removeRecentlyViewed = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { courseId, kind, itemId } = req.body;
+
+    if (!courseId || !kind || !itemId) {
+      return res.status(400).json({ message: 'courseId, kind and itemId are required.' });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    const reg = user.registeredCourses.find(rc => String(rc.courseId) === String(courseId));
+    if (!reg) return res.status(403).json({ message: 'User not registered in course' });
+
+    if (!Array.isArray(reg.recentlyViewed)) reg.recentlyViewed = [];
+
+    const beforeLen = reg.recentlyViewed.length;
+    reg.recentlyViewed = reg.recentlyViewed.filter(rv => !(String(rv.itemId) === String(itemId) && rv.kind === kind));
+
+    if (reg.recentlyViewed.length === beforeLen) return res.json({ success: false });
+
+    await user.save();
+    return res.json({ success: true });
+  } catch (err) {
+    console.error('Error removing recently viewed:', err);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+}
+const getRecentlyViewed = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { courseId, kind } = req.query;
+
+    if (!courseId) return res.status(400).json({ message: 'courseId query param is required' });
+
+    // Try to use middleware-provided user/registeredCourse when present
+    let user = req.userDoc;
+    if (!user) {
+      user = await User.findOne(
+        { _id: userId, 'registeredCourses.courseId': courseId },
+        { 'registeredCourses.$': 1 }
+      );
+    }
+
+    if (!user || !Array.isArray(user.registeredCourses) || user.registeredCourses.length === 0) {
+      return res.json({ courseId, kind: kind || null, recentlyViewed: [] });
+    }
+
+    const reg = req.registeredCourse || user.registeredCourses[0];
+    const recentlyViewed = Array.isArray(reg.recentlyViewed) ? reg.recentlyViewed : [];
+
+    const filtered = kind ? recentlyViewed.filter(rv => rv.kind === kind) : recentlyViewed;
+
+    // return minimal shape
+    const result = filtered.map(rv => ({
+      itemId: String(rv.itemId),
+      kind: rv.kind,
+      titleSnapshot: rv.titleSnapshot || '',
+      viewedAt: rv.viewedAt
+    }));
+
+    return res.json({ courseId, kind: kind || null, recentlyViewed: result });
+  } catch (err) {
+    console.error('Error fetching recently viewed:', err);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+}
+const checkRecentlyViewed = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { courseId, kind, itemIds } = req.body;
+
+    if (!courseId || !kind || !Array.isArray(itemIds)) {
+      return res.status(400).json({ message: 'courseId, kind and itemIds(array) are required in body' });
+    }
+    if (!['note', 'flashcardSet'].includes(kind)) {
+      return res.status(400).json({ message: 'kind must be "note" or "flashcardSet"' });
+    }
+
+    // Try to use middleware-provided user/registeredCourse when present
+    let user = req.userDoc;
+    if (!user) {
+      user = await User.findOne(
+        { _id: userId, 'registeredCourses.courseId': courseId },
+        { 'registeredCourses.$': 1 }
+      );
+    }
+
+    if (!user || !Array.isArray(user.registeredCourses) || user.registeredCourses.length === 0) {
+      // none recently viewed
+      const emptyResults = {};
+      itemIds.forEach(id => (emptyResults[id] = false));
+      return res.json({ courseId, kind, results: emptyResults });
+    }
+
+    const reg = req.registeredCourse || user.registeredCourses[0];
+    const recentlyViewed = Array.isArray(reg.recentlyViewed) ? reg.recentlyViewed : [];
+    const viewedSet = new Set(recentlyViewed.filter(rv => rv.kind === kind).map(rv => String(rv.itemId)));
+
+    const results = {};
+    itemIds.forEach(id => {
+      results[id] = viewedSet.has(String(id));
+    });
+
+    return res.json({ courseId, kind, results });
+  } catch (err) {
+    console.error('Error in checkRecentlyViewed:', err);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+}
 module.exports = {
   updateUser,
   logoutUser,
@@ -316,5 +494,9 @@ module.exports = {
   addFavorite,
   removeFavorite,
   getFavorites,
-  checkFavorites
+  checkFavorites,
+  addRecentlyViewed,
+  removeRecentlyViewed,
+  getRecentlyViewed,
+  checkRecentlyViewed
 }
