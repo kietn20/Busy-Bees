@@ -2,8 +2,9 @@
 import useEmblaCarousel from "embla-carousel-react";
 import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
-import { getRecentlyViewed } from "@/services/recentlyviewedApi";
+import { addRecentlyViewed, getRecentlyViewed } from "@/services/recentlyviewedApi";
 import { formatDistanceToNow } from "date-fns";
+import { useRouter } from "next/navigation";
 
 interface RecentlyViewedItem {
   itemId: string;
@@ -13,6 +14,7 @@ interface RecentlyViewedItem {
 }
 
 const RecentView = ({ courseId }: { courseId: string }) => {
+  const router = useRouter();
   const [emblaRef, emblaApi] = useEmblaCarousel({
     align: "start",
     dragFree: true,
@@ -54,6 +56,18 @@ const RecentView = ({ courseId }: { courseId: string }) => {
     fetchRecentlyViewed();
   }, [courseId]);
 
+  const handleItemClick = async (item: RecentlyViewedItem) => {
+    await addRecentlyViewed({
+      courseId,
+      kind: item.kind,
+      itemId: item.itemId,
+    });
+    if (item.kind === "flashcardSet") {
+      router.push(`/groups/${courseId}/flashcards/${item.itemId}`);
+    } else {
+      router.push(`/groups/${courseId}/notes/${item.itemId}`);
+    }
+  };
   
   return (
     <div
@@ -81,8 +95,10 @@ const RecentView = ({ courseId }: { courseId: string }) => {
                     />
                   </div>
                   <div className="p-4 flex flex-col gap-2">
-                    <a href={`/${item.kind}/${item.itemId}`} className="text-sm font-medium">
-                      {item.titleSnapshot}
+                    <a className="text-sm font-medium cursor-pointer"
+                        onClick={() => handleItemClick(item)}
+                    >
+                        {item.titleSnapshot}
                     </a>
                     <span className="text-xs text-gray-500">
                       {formatDistanceToNow(new Date(item.viewedAt), { addSuffix: true })}
