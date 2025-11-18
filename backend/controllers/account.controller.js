@@ -308,9 +308,9 @@ const checkFavorites = async (req, res) => {
   }
 };
 
+// recently viewed controller functions
 const MAX_RECENT = 7;
 
-// recently viewed controller functions
 const addRecentlyViewed = async (req, res) => {
   try {
     const userId = req.user._id;
@@ -343,30 +343,19 @@ const addRecentlyViewed = async (req, res) => {
       titleSnapshot = set.setName || '';
     }
 
+    // Ensure recentlyViewed array exists
+    if (!Array.isArray(reg.recentlyViewed)) reg.recentlyViewed = [];
+
     // Remove if already exists
-    await User.findByIdAndUpdate(userId, {
-      $pull: { recentlyViewed: { kind, itemId } }
-    });
+    reg.recentlyViewed = reg.recentlyViewed.filter(rv => !(String(rv.itemId) === String(itemId) && rv.kind === kind));
 
     // Add to front of array
-    await User.findByIdAndUpdate(userId, {
-      $push: {
-        recentlyViewed: {
-          $each: [{ kind, itemId, titleSnapshot, viewedAt: new Date() }],
-          $position: 0
-        }
-      }
-    });
+    reg.recentlyViewed.unshift({ kind, itemId: new mongoose.Types.ObjectId(itemId), titleSnapshot, viewedAt: new Date() });
 
     // Trim array to MAX_RECENT
-    await User.findByIdAndUpdate(userId, {
-      $push: {
-        recentlyViewed: {
-          $each: [],
-          $slice: MAX_RECENT
-        }
-      }
-    });
+    reg.recentlyViewed = reg.recentlyViewed.slice(0, MAX_RECENT);
+
+    await user.save();
 
     return res.json({ success: true });
   } catch (err) {
