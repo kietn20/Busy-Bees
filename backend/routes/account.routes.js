@@ -3,9 +3,10 @@ const { allowJwtOrGoogle } = require('../middleware/auth.middleware');
 const { getAccount, updateUser, logoutUser, deleteAccount, addFavorite, removeFavorite, getFavorites, checkFavorites,
         addRecentlyViewed, removeRecentlyViewed, getRecentlyViewed, checkRecentlyViewed
       } = require('../controllers/account.controller');
-const { requireFavoriteBody, requireCourseQuery, ensureRegisteredCourse } = require('../middleware/favorites.middleware');
-const { updateValidation, preventOAuthEmailPasswordChange } = require('../middleware/account.middleware');
+const { requireFavoriteBody } = require('../middleware/favorites.middleware');
+const { updateValidation, preventOAuthEmailPasswordChange,  } = require('../middleware/account.middleware');
 const { requireRecentlyViewedBody } = require('../middleware/recentlyviewed.middleware');
+const { requireCourseQuery, ensureRegisteredCourse } = require('../middleware/coursegroup.middleware');
 
 const router = express.Router();
 
