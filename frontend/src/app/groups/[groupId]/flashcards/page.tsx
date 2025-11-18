@@ -6,6 +6,7 @@ import { useRouter, useParams } from "next/navigation";
 import { getFlashcardSetsByGroup, FlashcardSet } from "@/services/flashcardApi";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import { addRecentlyViewed } from "@/services/recentlyviewedApi";
 
 export default function FlashcardsList() {
   const router = useRouter();
@@ -13,6 +14,18 @@ export default function FlashcardsList() {
   const [flashcardsData, setFlashcardsData] = useState<FlashcardSet[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+
+  // Handler for clicking a flashcard set
+  const handleFlashcardSetClick = async (flashcardId: string) => {
+    // Add to recently viewed
+    await addRecentlyViewed({
+      courseId: groupId as string,
+      kind: "flashcardSet",
+      itemId: flashcardId,
+    });
+    // Navigate to the flashcard set page
+    router.push(`/groups/${groupId}/flashcards/${flashcardId}`);
+  };
 
   useEffect(() => {
     if (!groupId) return;
@@ -71,9 +84,7 @@ export default function FlashcardsList() {
                 { length: flashcard.flashcards.length },
                 (_, i) => ({ id: i, term: "", definition: "" })
               )}
-              onClick={() =>
-                router.push(`/groups/${groupId}/flashcards/${flashcard._id}`)
-              }
+              onClick={() => handleFlashcardSetClick(flashcard._id)}
               onDelete={() =>
                 setFlashcardsData((prev) =>
                   prev.filter((set) => set._id !== flashcard._id)

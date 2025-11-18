@@ -33,6 +33,7 @@ export default function GroupPage() {
     fetchEvents();
   }, [groupId]);
 
+  
   return (
     <div className="container mx-auto p-8">
       <h1 className="text-2xl font-bold">Dashboard</h1>
@@ -42,7 +43,7 @@ export default function GroupPage() {
             <h2 className="text-xl font-semibold text-gray-900 px-4">
               Recently Viewed
             </h2>
-            <RecentView />
+            <RecentView courseId={groupId}/>
           </div>
 
           <div className="w-full overflow-y-auto pb-6">

@@ -10,6 +10,7 @@ import Editor from "@/components/notes/editor";
 import { Block } from "@blocknote/core";
 import { Button } from "@/components/ui/button";
 import toast from "react-hot-toast";
+import { addRecentlyViewed } from "@/services/recentlyviewedApi";
 
 export default function NotesList() {
   const router = useRouter();
@@ -57,7 +58,9 @@ export default function NotesList() {
   }, [groupId]);
 
   const handleNoteSelect = useCallback(
-    (noteId: string) => {
+    async (noteId: string) => {
+      await addRecentlyViewed({ courseId: groupId, kind: "note", itemId: noteId });
+
       router.push(`/groups/${groupId}/notes?noteId=${noteId}`);
     },
     [router, groupId]
