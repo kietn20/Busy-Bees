@@ -3,6 +3,7 @@ const Note = require("../models/Note.model");
 const CourseGroup = require("../models/CourseGroup.model");
 const User = require("../models/User.model");
 
+
 // @desc    Create a new note in a group
 // @route   POST /api/groups/:groupId/notes
 // @access  Private (Group Members)
@@ -46,35 +47,33 @@ const updateNote = async (req, res) => {
     const userId = req.user._id; // from JWT or Google session
     const { title, content, images } = req.body;
 
-    // 1. Find the note
-    const note = await Note.findById(noteId);
+
+     // Find and update the note in one step
+    const update = {};
+    if (title) update.title = title;
+    if (content) update.content = content;
+    if (images) update.images = images;
+
+    const note = await Note.findOneAndUpdate(
+      { _id: noteId, groupId, userId },
+      { $set: update },
+      { new: true }
+    );
 
     if (!note) {
       return res.status(404).json({ message: "Note not found" });
     }
 
-    // 2. Ensure note actually belongs to this group
+    // Ensure note actually belongs to this group
     if (note.groupId.toString() !== groupId) {
       return res.status(403).json({ message: "This note does not belong to this group" });
     }
 
-    // 3. Ensure only the **author** can edit it
+    // Ensure only the **author** can edit it
     if (note.userId.toString() !== userId.toString()) {
       return res.status(403).json({ message: "You are not the author of this note" });
     }
 
-    // 4. Apply updates
-    if (title) {
-        note.title = title;
-    }
-    if (content) {
-        note.content = content;
-    }
-    if (images) {
-        note.images = images;
-    }
-
-    await note.save();
 
     res.status(200).json({
       message: "Note updated successfully",
