@@ -232,7 +232,9 @@ export default function NoteDetailPage() {
           <h1 className="text-3xl font-bold">{note.title}</h1>
         )}
         <div className="flex items-center space-x-2">
-          {canModify && !isEditing && (
+          {!isEditing && (
+            <>
+            {canModify && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button variant="destructive">Delete</Button>
@@ -256,78 +258,58 @@ export default function NoteDetailPage() {
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
-          )}
+            )}
 
-			{/* --- Generate Flashcards Button and Dialog --- */}
-			<AlertDialog open={showGenerateDialog} onOpenChange={setShowGenerateDialog}>
-				<AlertDialogTrigger asChild>
-				<Button variant="default" onClick={() => setShowGenerateDialog(true)}>
-					Generate Flashcards
-				</Button>
-				</AlertDialogTrigger>
-				<AlertDialogContent>
-				<AlertDialogHeader>
-					<AlertDialogTitle>Generate Flashcards</AlertDialogTitle>
-					<AlertDialogDescription>
-					How many flashcards would you like to generate?
-					</AlertDialogDescription>
-				</AlertDialogHeader>
-				<input
-					type="number"
-					min={1}
-					max={20}
-					value={numFlashcards}
-					onChange={e => setNumFlashcards(Number(e.target.value))}
-					className="border rounded px-2 py-1 w-20"
-				/>
-				<AlertDialogFooter>
-					<AlertDialogCancel disabled={isGenerating}>Cancel</AlertDialogCancel>
-					<AlertDialogAction
-					disabled={isGenerating}
-					onClick={handleGenerate}
-					>
-					{isGenerating ? "Generating..." : "Generate"}
-					</AlertDialogAction>
-				</AlertDialogFooter>
-				</AlertDialogContent>
-			</AlertDialog>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-          {isAuthor &&
-            (isEditing ? (
-              <>
-                <Button variant="ghost" onClick={() => setIsEditing(false)}>
-                  Cancel
+              {/* --- Generate Flashcards Button and Dialog --- */}
+              <AlertDialog open={showGenerateDialog} onOpenChange={setShowGenerateDialog}>
+                <AlertDialogTrigger asChild>
+                <Button variant="default" onClick={() => setShowGenerateDialog(true)}>
+                  Generate Flashcards
                 </Button>
-                <Button onClick={handleSave} disabled={isSaving}>
-                  {isSaving ? "Saving..." : "Save"}
-                </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Generate Flashcards</AlertDialogTitle>
+                  <AlertDialogDescription>
+                  How many flashcards would you like to generate?
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <input
+                  type="number"
+                  min={1}
+                  max={20}
+                  value={numFlashcards}
+                  onChange={e => setNumFlashcards(Number(e.target.value))}
+                  className="border rounded px-2 py-1 w-20"
+                />
+                <AlertDialogFooter>
+                  <AlertDialogCancel disabled={isGenerating}>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                  disabled={isGenerating}
+                  onClick={handleGenerate}
+                  >
+                  {isGenerating ? "Generating..." : "Generate"}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
               </>
-            ) : (
-              <Button variant="outline" onClick={() => setIsEditing(true)}>
-                Edit
-              </Button>
-            ))}
+            )}
+              {isAuthor &&
+                (isEditing ? (
+                  <>
+                    <Button variant="ghost" onClick={() => setIsEditing(false)}>
+                      Cancel
+                    </Button>
+                    <Button onClick={handleSave} disabled={isSaving}>
+                      {isSaving ? "Saving..." : "Save"}
+                    </Button>
+                  </>
+                ) : (
+                  <Button variant="outline" onClick={() => setIsEditing(true)}>
+                    Edit
+                  </Button>
+                ))}
         </div>
       </div>
 
