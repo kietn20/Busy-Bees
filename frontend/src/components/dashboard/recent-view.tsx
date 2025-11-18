@@ -95,11 +95,11 @@ const RecentView = ({ courseId }: { courseId: string }) => {
                     />
                   </div>
                   <div className="p-4 flex flex-col gap-2">
-                    <a className="text-sm font-medium cursor-pointer"
+                    <button type="button" className="text-sm font-medium cursor-pointer bg-transparent border-none p-0 text-left"
                         onClick={() => handleItemClick(item)}
                     >
                         {item.titleSnapshot}
-                    </a>
+                    </button>
                     <span className="text-xs text-gray-500">
                       {formatDistanceToNow(new Date(item.viewedAt), { addSuffix: true })}
                     </span>
