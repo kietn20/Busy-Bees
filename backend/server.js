@@ -19,6 +19,7 @@ const { nestedEventRouter, eventRouter } = require("./routes/event.routes");
 const { nestedNotesRouter, noteRouter } = require('./routes/notes.routes');
 const flashcardRoutes = require('./routes/flashcard.routes');
 require('./hooks/favorites.hooks'); // hooks for favorites snapshots
+require('./hooks/recentlyViewed.hooks'); // hooks for recently viewed snapshots
 
 const app = express();
 const PORT = process.env.PORT || 8080;

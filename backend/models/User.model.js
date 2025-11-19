@@ -62,6 +62,27 @@ const userSchema = new mongoose.Schema(
             },
           },
         ],
+        recentlyViewed: [
+          {
+            kind: {
+              type: String,
+              enum: ["note", "flashcardSet"],
+              required: true,
+            },
+            itemId: {
+              type: mongoose.Schema.Types.ObjectId,
+              required: true,
+            },
+            titleSnapshot: {
+              type: String,
+              required: false,
+            },
+            viewedAt: {
+              type: Date,
+              default: Date.now,
+            },
+          },
+        ],
       },
     ],
   },
