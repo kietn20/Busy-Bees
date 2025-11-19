@@ -95,7 +95,7 @@ const RecentView = ({ courseId }: { courseId: string }) => {
                     />
                   </div>
                   <div className="p-4 flex flex-col gap-2">
-                    <button type="button" className="text-sm font-medium cursor-pointer bg-transparent border-none p-0 text-left"
+                    <button type="button" className="text-sm font-medium cursor-pointer bg-transparent border-none p-0 text-left truncate w-full overflow-hidden whitespace-nowrap"
                         onClick={() => handleItemClick(item)}
                     >
                         {item.titleSnapshot}
