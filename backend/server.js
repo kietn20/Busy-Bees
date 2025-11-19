@@ -17,6 +17,7 @@ const accountRoutes = require("./routes/account.routes");
 const courseGroupRoutes = require("./routes/coursegroup.routes");
 const { nestedEventRouter, eventRouter } = require("./routes/event.routes"); 
 const { nestedNotesRouter, noteRouter } = require('./routes/notes.routes');
+const noteCommentRoutes = require("./routes/notecomment.routes");
 const flashcardRoutes = require('./routes/flashcard.routes');
 require('./hooks/favorites.hooks'); // hooks for favorites snapshots
 
@@ -53,6 +54,7 @@ app.use('/api/groups/:groupId/events', nestedEventRouter); // nested routes for 
 app.use('/api/events', eventRouter); // top-level event routes
 app.use('/api/groups/:groupId/notes', nestedNotesRouter);
 app.use('/api/notes', noteRouter);
+app.use("/api/groups/:groupId/notes/:noteId/comments", noteCommentRoutes);
 
 
 
