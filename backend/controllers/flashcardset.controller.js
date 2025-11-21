@@ -77,8 +77,8 @@ const updateFlashcardSet = async (req, res) => {
   }
 
   try {
-    const updatedFlashcardSet = await flashcardset.findByIdAndUpdate(
-      id,
+    const updatedFlashcardSet = await flashcardset.findOneAndUpdate(
+      { _id: id },
       { setName, description, flashcards },
       { new: true }
     );

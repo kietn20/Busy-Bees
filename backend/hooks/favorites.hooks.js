@@ -28,6 +28,7 @@ async function removeFavoritesForItem(itemId) {
   }
 }
 
+
 // NOTE hooks
 // pre-save: mark if title changed
 Note.schema.pre('save', function (next) {
