@@ -249,6 +249,50 @@ const getNotesByUser = async (req, res) => {
   }
 };
 
+// @desc    Update the list of collaborators for a note
+// @route   PUT /api/groups/:groupId/notes/:noteId/collaborators
+// @access  Private (Author Only)
+const updateCollaborators = async (req, res) => {
+  try {
+    const { noteId } = req.params;
+    const { collaborators } = req.body;
+    const userId = req.user._id;
+
+    if (!Array.isArray(collaborators)) {
+      return res.status(400).json({ message: "Collaborators must be an array of user IDs." });
+    }
+
+    const note = await Note.findById(noteId);
+    if (!note) {
+      return res.status(404).json({ message: "Note not found" });
+    }
+
+    // only the author can manage collaborators
+    if (!note.userId.equals(userId)) {
+      return res.status(403).json({ message: "Access denied: Only the author can manage collaborators." });
+    }
+
+    note.collaborators = collaborators;
+    await note.save();
+
+    // return the updated note with populated collaborators
+    await note.populate('collaborators', 'firstName lastName email');
+
+    res.status(200).json({
+      message: "Collaborators updated successfully",
+      note,
+    });
+
+  } catch (error) {
+    console.error("Error updating collaborators:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+
+
+
+
 // export functions here when finished
 module.exports = {
   createNote,
@@ -256,5 +300,6 @@ module.exports = {
   getNoteById,
   getNotesByUser,
   updateNote,
-  deleteNote
+  deleteNote,
+  updateCollaborators,
 };
