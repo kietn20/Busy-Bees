@@ -15,3 +15,6 @@
 
 # IDE and OS files
 .DS_Store
+
+# Tesseract OCR data
+*.traineddata

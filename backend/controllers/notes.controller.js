@@ -14,10 +14,10 @@ const createNote = async (req, res) => {
     const userId = req.user && req.user._id;
 
     if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
+      return res.status(401).json({ message: "Unauthorized" });
     }
     if (!title || !content) {
-        return res.status(400).json({ message: "Title and content are required." });
+      return res.status(400).json({ message: "Title and content are required." });
     }
 
     // REMOVED CHECK FOR GROUP EXISTENCE AS MIDDLEWARE VALIDATES MEMBERSHIP
@@ -39,26 +39,16 @@ const createNote = async (req, res) => {
 
 
 // @desc    Update an existing note
-// @route   PUT /api/groups/:groupId/notes
-// @access  Private (Author)
+// @route   PUT /api/groups/:groupId/notes/:noteId
+// @access  Private (Author or Collaborator)
 const updateNote = async (req, res) => {
   try {
     const { groupId, noteId } = req.params;
     const userId = req.user._id; // from JWT or Google session
     const { title, content, images } = req.body;
 
-
-     // Find and update the note in one step
-    const update = {};
-    if (title) update.title = title;
-    if (content) update.content = content;
-    if (images) update.images = images;
-
-    const note = await Note.findOneAndUpdate(
-      { _id: noteId, groupId, userId },
-      { $set: update },
-      { new: true }
-    );
+    // First, find the note to check permissions
+    const note = await Note.findById(noteId);
 
     if (!note) {
       return res.status(404).json({ message: "Note not found" });
@@ -69,15 +59,33 @@ const updateNote = async (req, res) => {
       return res.status(403).json({ message: "This note does not belong to this group" });
     }
 
-    // Ensure only the **author** can edit it
-    if (note.userId.toString() !== userId.toString()) {
-      return res.status(403).json({ message: "You are not the author of this note" });
+    // Check if user is the author
+    const isAuthor = note.userId.equals(userId);
+
+    // Check if user is a collaborator
+    const isCollaborator = note.collaborators?.some(collabId => collabId.equals(userId));
+
+    // Only author or collaborator can edit
+    if (!isAuthor && !isCollaborator) {
+      return res.status(403).json({ message: "Access denied: You do not have permission to edit this note." });
     }
 
+    // Build update object
+    const update = {};
+    if (title !== undefined) update.title = title;
+    if (content !== undefined) update.content = content;
+    if (images !== undefined) update.images = images;
+
+    // Update the note
+    const updatedNote = await Note.findByIdAndUpdate(
+      noteId,
+      { $set: update },
+      { new: true }
+    ).populate("userId", "firstName lastName email");
 
     res.status(200).json({
       message: "Note updated successfully",
-      note,
+      note: updatedNote,
     });
 
   } catch (error) {
@@ -146,7 +154,9 @@ const getNoteById = async (req, res) => {
       return res.status(400).json({ message: "Invalid noteId" });
     }
 
-    const note = await Note.findById(noteId).populate("userId", "firstName lastName email");
+    const note = await Note.findById(noteId)
+      .populate("userId", "firstName lastName email")
+      .populate("collaborators", "firstName lastName email");
     if (!note) {
       return res.status(404).json({ message: "Note not found" });
     }
@@ -154,12 +164,12 @@ const getNoteById = async (req, res) => {
     // verify that the user requesting the note is a member of the group it belongs to
     const group = await CourseGroup.findById(note.groupId);
     if (!group) {
-        return res.status(404).json({ message: "The group for this note could not be found." });
+      return res.status(404).json({ message: "The group for this note could not be found." });
     }
-    
+
     const isMember = group.members.some(member => member.userId.equals(userId));
     if (!isMember) {
-        return res.status(403).json({ message: "Forbidden: You are not a member of this group." });
+      return res.status(403).json({ message: "Forbidden: You are not a member of this group." });
     }
 
     // Compute isFavorited for authenticated users
@@ -210,7 +220,7 @@ const getNotesByGroup = async (req, res) => {
 // @route   GET /api/groups/:groupId/users/:userId/notes
 // @access  Private (Group Members)
 const getNotesByUser = async (req, res) => {
-    try {
+  try {
     const { groupId, userId } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(userId)) {
@@ -219,7 +229,7 @@ const getNotesByUser = async (req, res) => {
 
     const group = await CourseGroup.findById(groupId);
     if (!group) {
-        return res.status(404).json({ message: "Course group not found." });
+      return res.status(404).json({ message: "Course group not found." });
     }
 
     // Only allow if both the requester and the target user are members of the group
@@ -228,10 +238,10 @@ const getNotesByUser = async (req, res) => {
     const targetIsMember = group.members.some(m => m.equals(userId));
 
     if (!requesterIsMember) {
-        return res.status(403).json({ message: "You are not a member of this group." });
+      return res.status(403).json({ message: "You are not a member of this group." });
     }
     if (!targetIsMember) {
-        return res.status(404).json({ message: "Target user is not a member of this group." });
+      return res.status(404).json({ message: "Target user is not a member of this group." });
     }
 
     const notes = await Note.find({ groupId, userId })
@@ -249,6 +259,53 @@ const getNotesByUser = async (req, res) => {
   }
 };
 
+// @desc    Update the list of collaborators for a note
+// @route   PUT /api/groups/:groupId/notes/:noteId/collaborators
+// @access  Private (Author Only)
+const updateCollaborators = async (req, res) => {
+  try {
+    const { noteId } = req.params;
+    const { collaborators } = req.body;
+    const userId = req.user._id;
+
+    if (!Array.isArray(collaborators)) {
+      return res.status(400).json({ message: "Collaborators must be an array of user IDs." });
+    }
+
+    const note = await Note.findById(noteId);
+    if (!note) {
+      return res.status(404).json({ message: "Note not found" });
+    }
+
+    // only the author can manage collaborators
+    if (!note.userId.equals(userId)) {
+      return res.status(403).json({ message: "Access denied: Only the author can manage collaborators." });
+    }
+
+    note.collaborators = collaborators;
+    await note.save();
+
+    // return the updated note with populated collaborators and userId
+    await note.populate([
+      { path: 'collaborators', select: 'firstName lastName email' },
+      { path: 'userId', select: 'firstName lastName email' }
+    ]);
+
+    res.status(200).json({
+      message: "Collaborators updated successfully",
+      note,
+    });
+
+  } catch (error) {
+    console.error("Error updating collaborators:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+
+
+
+
 // export functions here when finished
 module.exports = {
   createNote,
@@ -256,5 +313,6 @@ module.exports = {
   getNoteById,
   getNotesByUser,
   updateNote,
-  deleteNote
+  deleteNote,
+  updateCollaborators,
 };

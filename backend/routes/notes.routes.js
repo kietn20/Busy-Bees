@@ -1,7 +1,7 @@
 const express = require("express");
 const { allowJwtOrGoogle } = require("../middleware/auth.middleware");
 const { requireGroupMember } = require("../middleware/coursegroup.middleware");
-const { createNote, getNotesByGroup, getNotesByUser, getNoteById, updateNote, deleteNote } = require("../controllers/notes.controller");
+const { createNote, getNotesByGroup, getNotesByUser, getNoteById, updateNote, deleteNote, updateCollaborators } = require("../controllers/notes.controller");
 const { canEditNote, canDeleteNote, validateNote } = require("../middleware/note.middleware");
 
 
@@ -36,6 +36,9 @@ noteRouter.use(allowJwtOrGoogle); // must be logged in
 
 // GET /api/notes/:noteId → validate user belongs to THAT note’s group
 noteRouter.get("/:noteId", getNoteById); // same controller, but controller MUST verify group access
+
+// Update collaborators (Author only - logic handled in controller)
+nestedNotesRouter.put("/:noteId/collaborators", updateCollaborators);
 
 module.exports = {
   nestedNotesRouter,

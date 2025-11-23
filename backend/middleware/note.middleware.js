@@ -1,7 +1,7 @@
 const Note = require("../models/Note.model");
 const CourseGroup = require("../models/CourseGroup.model");
 
-// Only the author of the note can edit
+// allow Author OR Collaborator to edit
 const canEditNote = async (req, res, next) => {
   try {
     const { noteId } = req.params;
@@ -12,11 +12,21 @@ const canEditNote = async (req, res, next) => {
       return res.status(404).json({ message: "Note not found" });
     }
 
-    if (note.userId.toString() !== userId.toString()) {
-      return res.status(403).json({ message: "You are not the author of this note" });
+    // check if user is the author
+    const isAuthor = note.userId.equals(userId);
+
+    // AND check if user is in the collaborators list
+    const isCollaborator = note.collaborators?.some(collabId => collabId.equals(userId));
+
+    // if neither, deny access
+    if (!isAuthor && !isCollaborator) {
+      return res.status(403).json({ message: "Access denied: You do not have permission to edit this note." });
     }
 
+    // Attach note to request for convenience (optional, but good practice)
+    req.note = note;
     next();
+
   } catch (error) {
     console.error("Error in canEditNote middleware:", error);
     res.status(500).json({ message: "Server error", error: error.message });

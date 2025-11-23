@@ -28,6 +28,12 @@ const noteSchema = new mongoose.Schema(
             type: [String], // Array of image URLs or base64 strings
             required: false,
         },
+        collaborators: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "User",
+            }
+        ],
     },
     {timestamps: true} // automates createdAt and updatedAt fields
 )
