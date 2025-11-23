@@ -442,6 +442,20 @@ export default function NoteDetailPage() {
 					<h4 className="text-gray-500">Last modified:</h4>
 					<span>{new Date(note.updatedAt).toLocaleDateString()}</span>
 				</div>
+
+				{/* Display Collaborators */}
+				{note.collaborators && note.collaborators.length > 0 && (
+					<div className="grid grid-cols-2 mb-2">
+						<h4 className="text-gray-500">Collaborators:</h4>
+						<div className="flex flex-col">
+							{note.collaborators.map((collab) => (
+								<span key={collab._id} className="text-sm">
+									{collab.firstName} {collab.lastName}
+								</span>
+							))}
+						</div>
+					</div>
+				)}
 			</div>
 
 			<div className="min-h-screen pt-6 border-t border-gray-200">
