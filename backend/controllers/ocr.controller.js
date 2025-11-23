@@ -11,19 +11,19 @@ const extractTextFromImage = async (req, res) => {
       return res.status(400).json({ message: "No image data provided." });
     }
 
-    // basic validation to ensure it looks like a base64 string
-    if (!imageData.startsWith('data:image')) {
+    if (typeof imageData !== 'string' || !imageData.startsWith('data:image')) {
       return res.status(400).json({ message: "Invalid image format. Expected base64 data URL." });
     }
 
-    // perform OCR with Tesseract.recognize takes the image data (URL, buffer, or base64)
-    const { data: { text } } = await Tesseract.recognize(
+    // perform OCR with Tesseract.recognize() can take a base64 string directly.
+    const result = await Tesseract.recognize(
       imageData,
       'eng',
       { 
-        logger: m => console.log(m)
+        // logger: m => console.log(m)
       }
     );
+    const text = result.data.text;
 
     if (!text || text.trim().length === 0) {
         return res.status(200).json({ text: "", message: "No text could be detected in the image." });
@@ -32,7 +32,7 @@ const extractTextFromImage = async (req, res) => {
     res.status(200).json({ text });
 
   } catch (error) {
-    console.error("OCR Error:", error);
+    console.error("OCR Controller Error:", error);
     res.status(500).json({ message: "Failed to process image.", error: error.message });
   }
 };

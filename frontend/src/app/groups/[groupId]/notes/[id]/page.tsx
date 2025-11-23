@@ -12,6 +12,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Users } from "lucide-react";
 import CollaboratorModal from "@/components/notes/CollaboratorModal";
+import OCRButton from "@/components/notes/OCRButton";
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -43,6 +44,7 @@ export default function NoteDetailPage() {
 	const [numFlashcards, setNumFlashcards] = useState(3);
 	const [isGenerating, setIsGenerating] = useState(false);
 	const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+	const [editorKey, setEditorKey] = useState(0);
 
 	const { user } = useAuth();
 	const params = useParams();
@@ -218,6 +220,30 @@ export default function NoteDetailPage() {
 		}
 	};
 
+	// Handler for OCR result
+	const handleOCRResult = (text: string) => {
+		// 1. Parse the raw text into BlockNote blocks
+		// We split by newlines to preserve some structure
+		const newBlocks = text.split('\n').filter(line => line.trim() !== '').map(line => ({
+			id: Date.now().toString() + Math.random().toString(), // Temp ID
+			type: "paragraph",
+			props: {
+				textColor: "default",
+				backgroundColor: "default",
+				textAlignment: "left",
+			},
+			content: [{ type: "text", text: line, styles: {} }],
+			children: [],
+		}));
+
+		// 2. Append new blocks to existing content
+		// We need to cast to any because BlockNote types can be strict about partial objects
+		setEditedContent(prev => [...prev, ...newBlocks] as any[]);
+		
+		// 3. Force Editor to re-render with new content
+		setEditorKey(prev => prev + 1);
+	};
+
 	// Logic to check if current user is a collaborator
 	const isCollaborator = note?.collaborators?.some(
 		(collab) => collab._id === user?.id
@@ -376,6 +402,9 @@ export default function NoteDetailPage() {
 					{canEdit &&
 						(isEditing ? (
 							<>
+								{/* OCR Button for extracting text from images */}
+								<OCRButton onTextExtracted={handleOCRResult} />
+								
 								<Button
 									variant="ghost"
 									onClick={() => setIsEditing(false)}
@@ -417,8 +446,9 @@ export default function NoteDetailPage() {
 
 			<div className="min-h-screen pt-6 border-t border-gray-200">
 				<Editor
+					key={editorKey}
 					onChange={setEditedContent}
-					initialContent={parseContent(note.content)}
+					initialContent={isEditing ? editedContent : parseContent(note.content)}
 					editable={isEditing}
 				/>
 			</div>
