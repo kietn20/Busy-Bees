@@ -126,15 +126,23 @@ export default function NoteDetailPage() {
 
 			setIsEditing(false); // back to view mode
 			fetchNote(); // refetch the note to show the saved data
-			// TODO: Add a success toast notification here
 			toast.success("Changes saved.");
 		} catch (err) {
 			console.error("Failed to save note:", err);
 			toast.error("Failed to save note.");
-			// TODO: Add an error toast notification here
 		} finally {
 			setIsSaving(false);
 		}
+	};
+
+	const handleCancel = () => {
+		if (!note) return;
+		
+		// reset to original note content
+		setEditedTitle(note.title);
+		setEditedContent(parseContent(note.content) || []);
+		setEditorKey(prev => prev + 1); // force editor to re-render with original content
+		setIsEditing(false);
 	};
 
 	// Helper to parse the content string
@@ -407,7 +415,7 @@ export default function NoteDetailPage() {
 								
 								<Button
 									variant="ghost"
-									onClick={() => setIsEditing(false)}
+									onClick={handleCancel}
 								>
 									Cancel
 								</Button>
