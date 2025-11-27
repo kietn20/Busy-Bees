@@ -5,6 +5,7 @@ const session = require("express-session");
 const passport = require("passport");
 const mongoose = require("mongoose");
 const User = require("./models/User.model");
+const ocrRoutes = require('./routes/ocr.routes');
 
 dotenv.config();
 
@@ -30,7 +31,8 @@ app.use(cors({
   credentials: true
 }));
 
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 // Express session
 app.use(session({
@@ -57,7 +59,8 @@ app.use('/api/groups/:groupId/notes', nestedNotesRouter);
 app.use('/api/notes', noteRouter);
 app.use("/api/groups/:groupId/notes/:noteId/comments", noteCommentRoutes);
 
-
+// OCR route
+app.use('/api/ocr', ocrRoutes);
 
 // Health Check Endpoint
 app.get('/api/health', (req, res) => {
