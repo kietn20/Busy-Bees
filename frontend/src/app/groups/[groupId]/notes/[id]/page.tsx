@@ -300,20 +300,18 @@ export default function NoteDetailPage() {
 					<h1 className="text-3xl font-bold">{note.title}</h1>
 				)}
 				<div className="flex items-center space-x-2">
-					{!isEditing && (
-						<>
-							{isAuthor && (
-								<Button
-									variant="outline"
-									size="icon"
-									onClick={() => setIsShareModalOpen(true)}
-									title="Manage Collaborators"
-								>
-									<Users className="h-4 w-4" />
-								</Button>
-							)}
-
-							{/* Delete button: Author or Group Owner */}
+				{!isEditing && (
+					<>
+						{canEdit && (
+							<Button
+								variant="outline"
+								size="icon"
+								onClick={() => setIsShareModalOpen(true)}
+								title="View Collaborators"
+							>
+								<Users className="h-4 w-4" />
+							</Button>
+						)}							{/* Delete button: Author or Group Owner */}
 							{canDelete && (
 								<AlertDialog>
 									<AlertDialogTrigger asChild>
@@ -437,8 +435,8 @@ export default function NoteDetailPage() {
 				</div>
 			</div>
 
-			<div className="ml-14 w-1/3 pb-4">
-				<div className="grid grid-cols-2 mb-2">
+			<div className="ml-14 pb-4 flex gap-5">
+				<div className="mb-2 flex gap-2">
 					<h4 className="text-gray-500">Created by:</h4>
 					<span>
 						{note.userId.firstName && note.userId.lastName
@@ -446,24 +444,10 @@ export default function NoteDetailPage() {
 							: note.userId.email || "Unknown User"}
 					</span>
 				</div>
-				<div className="grid grid-cols-2 mb-2">
+				<div className="mb-2 flex gap-2">
 					<h4 className="text-gray-500">Last modified:</h4>
 					<span>{new Date(note.updatedAt).toLocaleDateString()}</span>
 				</div>
-
-				{/* Display Collaborators */}
-				{note.collaborators && note.collaborators.length > 0 && (
-					<div className="grid grid-cols-2 mb-2">
-						<h4 className="text-gray-500">Collaborators:</h4>
-						<div className="flex flex-col">
-							{note.collaborators.map((collab) => (
-								<span key={collab._id} className="text-sm">
-									{collab.firstName} {collab.lastName}
-								</span>
-							))}
-						</div>
-					</div>
-				)}
 			</div>
 
 			<div className="min-h-screen pt-6 border-t border-gray-200">
@@ -481,6 +465,7 @@ export default function NoteDetailPage() {
 					onClose={() => setIsShareModalOpen(false)}
 					note={note}
 					group={group}
+					isAuthor={isAuthor}
 					onUpdate={(updatedNote) => setNote(updatedNote)}
 				/>
 			)}
