@@ -1,13 +1,18 @@
-import React from "react";
+"use client";
+
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
 export interface NoteComment {
-  _id: string;
-  text: string;
+  id?: string;
+  _id?: string;
+  content: string;
   highlightedText?: string;
-  blockId?: string;
-  userId: string;
-  createdAt: string;
-  updatedAt: string;
+  blockId?: string | null;
+  userId: string | { _id?: string }; // author id (backend uses userId)
+  authorName?: string; // optional prefilled name
+  createdAt?: string; // ISO date string
+  replies?: NoteComment[];
+  parentCommentId?: string | null; // <-- NEW: used to thread replies under parents
 }
 
 interface CommentSidebarProps {
@@ -15,58 +20,331 @@ interface CommentSidebarProps {
   loading: boolean;
   onAddComment: () => void;
   onDeleteComment: (commentId: string) => void;
+  onEditComment?: (commentId: string, newText: string) => Promise<void>;
+  onReplyComment?: (parentCommentId: string, text: string) => Promise<void>;
+  currentUserId?: string | null;
+  groupOwnerId?: string | null; // for delete permission
+  /**
+   * Optional: if your backend doesn't expose /api/users/:id, pass a function that
+   * takes a userId and returns { displayName } or null. If omitted we'll try /api/users/:id.
+   */
+  resolveUserName?: (userId: string) => Promise<string | null>;
 }
+
+// Internal threaded type (same fields, but replies are also ThreadedComment)
+type ThreadedComment = NoteComment & { replies?: ThreadedComment[] };
 
 export default function CommentSidebar({
   comments,
   loading,
   onAddComment,
   onDeleteComment,
+  onEditComment,
+  onReplyComment,
+  currentUserId,
+  groupOwnerId,
+  resolveUserName,
 }: CommentSidebarProps) {
-  return (
-    <div className="w-80 border-l bg-white p-4 overflow-y-auto">
-      <h2 className="text-xl font-semibold mb-4">Comments</h2>
+  const [openMenuFor, setOpenMenuFor] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingText, setEditingText] = useState<string>("");
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  const [replyText, setReplyText] = useState<string>("");
+  const [nameCache, setNameCache] = useState<Record<string, string>>({});
+  const replyInputRef = useRef<HTMLTextAreaElement | null>(null);
 
-      {loading && <p>Loading comments...</p>}
+  // helper to get stable id
+  const getId = (c: NoteComment) => c.id ?? c._id ?? "";
 
-      {!loading && comments.length === 0 && (
-        <p className="text-gray-500">No comments yet.</p>
-      )}
+  // Get author id string from comment (handles object or string)
+  const getAuthorId = (c: NoteComment) =>
+    typeof c.userId === "string" ? c.userId : c.userId?._id ?? "";
 
-      <div className="space-y-4">
-        {comments.map((c) => (
-          <div
-            key={c._id}
-            className="border rounded-md p-3 bg-gray-50"
-          >
-            <p className="text-sm text-gray-700 whitespace-pre-line">
-              {c.text}
-            </p>
+  // fetch user display name if missing. caches results
+  const fetchAuthorName = async (userId: string) => {
+    if (!userId) return null;
+    if (nameCache[userId]) return nameCache[userId];
 
-            {c.highlightedText && (
-              <p className="text-xs text-gray-500 mt-1 italic">
-                ↳ {c.highlightedText}
-              </p>
-            )}
+    // If a custom resolver was passed, use it
+    if (resolveUserName) {
+      try {
+        const resolved = await resolveUserName(userId);
+        if (resolved) {
+          setNameCache((s) => ({ ...s, [userId]: resolved }));
+          return resolved;
+        }
+      } catch (e) {
+        // ignore and fallback to local fetch
+      }
+    }
 
-            <div className="flex justify-end mt-2">
-              <button
-                className="text-red-600 text-xs hover:underline"
-                onClick={() => onDeleteComment(c._id)}
+    // Default fetch: attempt /api/users/:id (adjust if your endpoint differs)
+    try {
+      const res = await fetch(`/api/users/${userId}`, { credentials: "include" });
+      if (!res.ok) return null;
+      const data = await res.json();
+      const name =
+        data?.user?.firstName && data?.user?.lastName
+          ? `${data.user.firstName} ${data.user.lastName}`
+          : data?.user?.email ?? null;
+      if (name) setNameCache((s) => ({ ...s, [userId]: name }));
+      return name;
+    } catch (err) {
+      // ignore
+      return null;
+    }
+  };
+
+  // Preload missing author names for visible comments
+  useEffect(() => {
+    (async () => {
+      const missingIds = comments
+        .map(getAuthorId)
+        .filter((id) => id && !nameCache[id]) as string[];
+      const unique = Array.from(new Set(missingIds));
+      for (const id of unique) {
+        await fetchAuthorName(id);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [comments]);
+
+  const formatAuthorAndDate = (c: NoteComment) => {
+    const authorId = getAuthorId(c);
+    const nameFromComment = c.authorName ?? nameCache[authorId];
+    const name = nameFromComment ?? "Busy Bees";
+    if (!c.createdAt) return `${name}`;
+    try {
+      const d = new Date(c.createdAt);
+      const options: Intl.DateTimeFormatOptions = { month: "long", day: "numeric" };
+      const s = d.toLocaleDateString(undefined, options);
+      return `${name} on ${s}`;
+    } catch {
+      return name;
+    }
+  };
+
+  // Permission helpers
+  const isAuthor = (c: NoteComment) => {
+    const authorId = getAuthorId(c);
+    return currentUserId && authorId && currentUserId === authorId;
+  };
+  const canDelete = (c: NoteComment) =>
+    isAuthor(c) || (groupOwnerId && currentUserId === groupOwnerId);
+
+  const startEdit = (c: NoteComment) => {
+    setEditingId(getId(c));
+    setEditingText(c.content);
+    setOpenMenuFor(null);
+  };
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditingText("");
+  };
+  const saveEdit = async () => {
+    if (!editingId || !onEditComment) return;
+    const t = editingText.trim();
+    if (!t) return;
+    try {
+      await onEditComment(editingId, t);
+      setEditingId(null);
+      setEditingText("");
+    } catch (err) {
+      console.error("Edit failed", err);
+    }
+  };
+
+  const startReply = (c: NoteComment) => {
+    setReplyingTo(getId(c));
+    setReplyText("");
+    setOpenMenuFor(null);
+    setTimeout(() => replyInputRef.current?.focus(), 50);
+  };
+  const cancelReply = () => {
+    setReplyingTo(null);
+    setReplyText("");
+  };
+  const sendReply = async (parentCommentId: string) => {
+    const t = replyText.trim();
+    if (!t || !onReplyComment) return;
+    try {
+      await onReplyComment(parentCommentId, t);
+      setReplyingTo(null);
+      setReplyText("");
+    } catch (err) {
+      console.error("Reply failed", err);
+    }
+  };
+
+  // ---- Recursive renderer so replies appear nested under their parent ----
+  const renderComment = (c: ThreadedComment, depth = 0) => {
+    const id = getId(c) || Math.random().toString();
+    const authorLine = formatAuthorAndDate(c);
+    const editable = isAuthor(c);
+    const deletable = canDelete(c);
+
+    const visualDepth = depth > 0 ? 1 : 0;
+
+    const containerClasses =
+      "border rounded-md p-3 bg-gray-50" +
+      (visualDepth === 1 ? " mt-2 ml-4" : "");
+
+    return (
+      <div key={id} className={containerClasses}>
+        {/* header */}
+        <div className="flex items-start justify-between">
+          <div className="text-xs text-gray-600 font-medium break-words">
+            {authorLine}
+          </div>
+
+          <div className="relative">
+            <button
+              onClick={() =>
+                setOpenMenuFor((prev) => (prev === id ? null : id))
+              }
+              className="p-1 rounded hover:bg-gray-100"
+              aria-label="comment options"
+            >
+              <svg
+                className="w-4 h-4 text-gray-600"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
               >
-                Delete
+                <circle cx="12" cy="5" r="1.5" />
+                <circle cx="12" cy="12" r="1.5" />
+                <circle cx="12" cy="19" r="1.5" />
+              </svg>
+            </button>
+
+            {openMenuFor === id && (
+              <div
+                className="absolute right-0 mt-2 w-36 bg-white border rounded shadow-md z-20"
+                onMouseLeave={() => setOpenMenuFor(null)}
+              >
+                {editable && (
+                  <button
+                    onClick={() => startEdit(c)}
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50"
+                  >
+                    Edit
+                  </button>
+                )}
+
+                
+
+                {deletable && (
+                  <button
+                    onClick={() => onDeleteComment(id)}
+                    className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-gray-50"
+                  >
+                    Delete
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* content / edit UI */}
+        <div className="mt-2">
+          {editingId === id ? (
+            <div className="space-y-2">
+              <textarea
+                className="w-full rounded-md border border-gray-300 px-2 py-1 text-sm"
+                rows={4}
+                value={editingText}
+                onChange={(e) => setEditingText(e.target.value)}
+              />
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={cancelEdit}
+                  className="px-3 py-1 text-sm rounded border border-gray-300 hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={saveEdit}
+                  className="px-3 py-1 text-sm rounded bg-yellow-400 hover:bg-yellow-300 text-black"
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm text-gray-900 whitespace-pre-wrap break-words">
+              {c.content}
+            </p>
+          )}
+        </div>
+
+        {/* reply editor */}
+        {replyingTo === id && (
+          <div className="mt-3 space-y-2">
+            <textarea
+              ref={replyInputRef}
+              className="w-full rounded-md border border-gray-300 px-2 py-1 text-sm"
+              rows={3}
+              value={replyText}
+              onChange={(e) => setReplyText(e.target.value)}
+              placeholder="Write a reply..."
+            />
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={cancelReply}
+                className="px-3 py-1 text-sm rounded border border-gray-300 hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => sendReply(id)}
+                className="px-3 py-1 text-sm rounded bg-yellow-400 hover:bg-yellow-300 text-black"
+              >
+                Reply
               </button>
             </div>
           </div>
-        ))}
+        )}
+
+        {/* nested replies */}
+        {c.replies && c.replies.length > 0 && (
+          <div className="mt-3 space-y-3">
+            {c.replies.map((child) => renderComment(child, depth + 1))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <aside
+      className="flex-none w-80 md:w-96 border-l bg-white h-[calc(100vh-4rem)] overflow-hidden flex flex-col"
+      style={{ minWidth: 280 }}
+      aria-label="Comments Sidebar"
+    >
+      <div className="sticky top-0 z-10 bg-white border-b px-4 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <h2 className="text-lg font-semibold text-gray-800">Comments</h2>
+        </div>
+
+        <button
+          type="button"
+          onClick={onAddComment}
+          className="bg-yellow-400 text-black px-3 py-1.5 rounded-md text-sm font-medium hover:bg-yellow-300"
+        >
+          Add Comment
+        </button>
       </div>
 
-      <button
-        className="mt-6 w-full bg-yellow-400 text-black py-2 rounded-md font-medium"
-        onClick={onAddComment}
-      >
-        Add Comment
-      </button>
-    </div>
+      <div className="px-4 py-3 overflow-y-auto flex-1 space-y-3">
+          {loading && <p className="text-sm text-gray-500">Loading comments.</p>}
+          {!loading && comments.length === 0 && (
+            <p className="text-sm text-gray-500">No comments yet.</p>
+          )}
+
+          {!loading &&
+            (comments as ThreadedComment[]).map((c) => renderComment(c, 0))}
+        </div>
+    </aside>
   );
 }

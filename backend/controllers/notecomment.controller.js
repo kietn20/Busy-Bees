@@ -6,7 +6,7 @@ const CourseGroup = require("../models/CourseGroup.model");
 function mapComment(comment) {
   return {
     id: comment._id.toString(),
-    authorId: comment.userId.toString(),
+    userId: comment.userId.toString(),
     content: comment.content,
     parentCommentId: comment.parentCommentId || null,
     threadId: comment.threadId || null,
