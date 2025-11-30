@@ -4,9 +4,13 @@ import FlashcardInfo from "@/components/flashcards/FlashcardInfo";
 import { Plus } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
 import { getFlashcardSetsByGroup, FlashcardSet } from "@/services/flashcardApi";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import toast from "react-hot-toast";
 import { addRecentlyViewed } from "@/services/recentlyviewedApi";
+
+import SearchFilterBar from "@/components/SearchFilter";
+
+type SortKey = "recent" | "oldest" | "title-asc" | "title-desc";
 
 export default function FlashcardsList() {
   const router = useRouter();
@@ -14,6 +18,9 @@ export default function FlashcardsList() {
   const [flashcardsData, setFlashcardsData] = useState<FlashcardSet[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortOption, setSortOption] = useState<SortKey>("recent");
 
   // Handler for clicking a flashcard set
   const handleFlashcardSetClick = async (flashcardId: string) => {
@@ -50,6 +57,44 @@ export default function FlashcardsList() {
     fetchSets();
   }, [groupId]);
 
+  const filteredSets = useMemo(() => {
+    let result = [...flashcardsData];
+
+    // Search only by setName
+    const q = searchQuery.trim().toLowerCase();
+    if (q) {
+      result = result.filter((set) =>
+        set.setName.toLowerCase().includes(q)
+      );
+    }
+
+    // Sort
+    result.sort((a, b) => {
+      const anyA = a as any;
+      const anyB = b as any;
+
+      const aDate = new Date(anyA.updatedAt || anyA.createdAt || 0).getTime();
+      const bDate = new Date(anyB.updatedAt || anyB.createdAt || 0).getTime();
+
+      switch (sortOption) {
+        case "oldest":
+          return aDate - bDate; // oldest first
+        case "title-asc":
+          return a.setName.localeCompare(b.setName);
+        case "title-desc":
+          return b.setName.localeCompare(a.setName);
+        case "recent":
+        default:
+          return bDate - aDate; // newest first
+      }
+    });
+
+    return result;
+  }, [flashcardsData, searchQuery, sortOption]);
+
+  const hasSets = flashcardsData.length > 0;
+  const hasFilteredSets = filteredSets.length > 0;
+
   return (
     <div className="container mx-auto p-8">
       <div className="flex items-center justify-between mb-4">
@@ -61,15 +106,42 @@ export default function FlashcardsList() {
           <Plus className="w-4 h-4 text-gray-500" />
         </button>
       </div>
+
+      {/* Search + sort bar (horizontal layout) */}
+        <div className="mb-6">
+          <SearchFilterBar
+            query={searchQuery}
+            onQueryChange={setSearchQuery}
+            sortValue={sortOption}
+            onSortChange={(value) => setSortOption(value as SortKey)}
+            sortOptions={[
+              { value: "recent", label: "Most recent" },
+              { value: "oldest", label: "Oldest" },
+              { value: "title-asc", label: "Title A–Z" },
+              { value: "title-desc", label: "Title Z–A" },
+            ]}
+            placeholder="Search flashcard sets..."
+            layout="horizontal"
+          />
+        </div>
+
       {loading ? (
         <div>Loading...</div>
-      ) : flashcardsData.length === 0 ? (
+      ) : notFound ? (
         <div className="text-gray-500 text-center py-8">
           No flashcard sets found for this group.
         </div>
+      ) : !hasSets ? (
+        <div className="text-gray-500 text-center py-8">
+          No flashcard sets yet. Create one!
+        </div>
+      ) : !hasFilteredSets ? (
+        <div className="text-gray-500 text-center py-8">
+          No flashcard sets match your search.
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {flashcardsData.map((flashcard) => (
+          {filteredSets.map((flashcard) => (
             <FlashcardInfo
               key={flashcard._id}
               id={flashcard._id}
