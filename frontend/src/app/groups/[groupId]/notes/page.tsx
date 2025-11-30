@@ -1,7 +1,7 @@
 "use client";
 import { Plus } from "lucide-react";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import CreateNoteModal from "@/components/notes/CreateNoteModal";
 import { getNotesByGroup, getNoteById } from "@/services/noteApi";
 import { Note } from "@/services/noteApi";
@@ -11,6 +11,9 @@ import { Block } from "@blocknote/core";
 import { Button } from "@/components/ui/button";
 import toast from "react-hot-toast";
 import { addRecentlyViewed } from "@/services/recentlyviewedApi";
+import SearchFilterBar from "@/components/SearchFilter";
+
+type SortKey = "recent" | "oldest" | "title-asc" | "title-desc";
 
 export default function NotesList() {
   const router = useRouter();
@@ -25,6 +28,9 @@ export default function NotesList() {
   const [isNoteLoading, setIsNoteLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortOption, setSortOption] = useState<SortKey>("recent");
 
   const fetchSelectedNote = useCallback(
     async (noteId: string) => {
@@ -76,6 +82,37 @@ export default function NotesList() {
     }
   }, [selectedNoteId, notes.length, fetchSelectedNote]);
 
+  const filteredNotes = useMemo(() => {
+    let result = [...notes];
+
+    const q = searchQuery.trim().toLowerCase();
+    if (q) {
+      result = result.filter((note) =>
+        note.title.toLowerCase().includes(q)
+      );
+    }
+
+    // Sorting logic
+    result.sort((a, b) => {
+      const aDate = new Date(a.updatedAt || a.createdAt).getTime();
+      const bDate = new Date(b.updatedAt || b.createdAt).getTime();
+
+      switch (sortOption) {
+        case "oldest":
+          return aDate - bDate;
+        case "title-asc":
+          return a.title.localeCompare(b.title);
+        case "title-desc":
+          return b.title.localeCompare(a.title);
+        case "recent":
+        default:
+          return bDate - aDate;
+      }
+    });
+
+    return result;
+  }, [notes, searchQuery, sortOption]);
+
   const parseContent = (content: string): Block[] | undefined => {
     try {
       return JSON.parse(content);
@@ -118,12 +155,15 @@ export default function NotesList() {
     );
   }
 
+  const hasNotes = notes.length > 0;
+  const hasFilteredNotes = filteredNotes.length > 0;
+
   return (
     <div className="flex h-screen overflow-hidden">
       {/* Sidebar */}
       <div className="w-80 flex-shrink-0 border-r">
-        <div className="p-4 border-b h-16">
-          <div className="flex items-center justify-between">
+        <div className="p-4 border-b">
+          <div className="flex items-center justify-between mb-3">
             <h1 className="text-xl font-semibold">All Notes</h1>
             <button
               onClick={() => setIsCreateModalOpen(true)}
@@ -132,15 +172,36 @@ export default function NotesList() {
               <Plus className="w-4 h-4 text-gray-600" />
             </button>
           </div>
+
+          {/* NEW: search + sort bar under the title */}
+          <SearchFilterBar
+            query={searchQuery}
+            onQueryChange={setSearchQuery}
+            sortValue={sortOption}
+            onSortChange={(value) =>
+              setSortOption(value as SortKey)
+            }
+            sortOptions={[
+              { value: "recent", label: "Most recent" },
+              { value: "oldest", label: "Oldest" },
+              { value: "title-asc", label: "Title A–Z" },
+              { value: "title-desc", label: "Title Z–A" },
+            ]}
+            placeholder="Search notes..."
+          />
         </div>
 
-        {notes.length === 0 ? (
+        {!hasNotes ? (
           <div className="py-6 text-center text-gray-500">
             No notes yet. Create one!
           </div>
+        ) : !hasFilteredNotes ? (
+          <div className="py-6 text-center text-gray-500">
+            No notes match your search.
+          </div>
         ) : (
           <SidebarNotes
-            notes={notes}
+            notes={filteredNotes}
             selectedNoteId={selectedNoteId}
             onNoteSelect={handleNoteSelect}
           />
@@ -163,7 +224,9 @@ export default function NotesList() {
             </div>
             {/* Note Header */}
             <div className="p-6 border-b bg-white">
-              <h1 className="text-3xl font-bold mb-4">{selectedNote.title}</h1>
+              <h1 className="text-3xl font-bold mb-4">
+                {selectedNote.title}
+              </h1>
               <div className="w-64">
                 <div className="grid grid-cols-2 mb-2">
                   <h4 className="text-gray-500">Created by:</h4>
