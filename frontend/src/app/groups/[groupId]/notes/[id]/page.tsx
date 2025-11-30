@@ -57,7 +57,8 @@ export default function NoteDetailPage() {
   const [commentToDelete, setCommentToDelete] = useState<string | null>(null);
   const [isDeletingComment, setIsDeletingComment] = useState(false);
 
-  const { user } = useAuth();
+  // ⬇️ changed: also grab token from auth context
+  const { user, token } = useAuth();
   const params = useParams();
   const router = useRouter();
   const groupId = params.groupId as string;
@@ -95,6 +96,17 @@ export default function NoteDetailPage() {
     }
   };
 
+  // Attach Authorization header if a JWT token is present
+  const buildAuthHeaders = (extra: HeadersInit = {}) => {
+    const headers: Record<string, string> = {
+      ...(extra as Record<string, string>),
+    };
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+    return headers;
+  };
+
   const fetchComments = async () => {
     if (!groupId || !noteId) return;
     try {
@@ -104,6 +116,7 @@ export default function NoteDetailPage() {
         `http://localhost:8080/api/groups/${groupId}/notes/${noteId}/comments`,
         {
           credentials: "include",
+          headers: buildAuthHeaders(),
         }
       );
 
@@ -293,7 +306,7 @@ export default function NoteDetailPage() {
         {
           method: "POST",
           credentials: "include",
-          headers: { "Content-Type": "application/json" },
+          headers: buildAuthHeaders({ "Content-Type": "application/json" }),
           body: JSON.stringify({ content: trimmed }),
         }
       );
@@ -319,7 +332,7 @@ export default function NoteDetailPage() {
         {
           method: "PUT",
           credentials: "include",
-          headers: { "Content-Type": "application/json" },
+          headers: buildAuthHeaders({ "Content-Type": "application/json" }),
           body: JSON.stringify({ content: newText }),
         }
       );
@@ -343,7 +356,7 @@ export default function NoteDetailPage() {
         {
           method: "POST",
           credentials: "include",
-          headers: { "Content-Type": "application/json" },
+          headers: buildAuthHeaders({ "Content-Type": "application/json" }),
           body: JSON.stringify({ content: text, parentCommentId: parentId }),
         }
       );
@@ -374,6 +387,7 @@ export default function NoteDetailPage() {
         {
           method: "DELETE",
           credentials: "include",
+          headers: buildAuthHeaders(),
         }
       );
 
@@ -395,7 +409,7 @@ export default function NoteDetailPage() {
     }
   };
 
-  // NEW: resolve userId → "First Last" using PopulatedCourseGroup
+  // resolve userId -> "First Last" using PopulatedCourseGroup
   const resolveUserName = async (userId: string): Promise<string | null> => {
     if (!group) return null;
     if (!userId) return null;

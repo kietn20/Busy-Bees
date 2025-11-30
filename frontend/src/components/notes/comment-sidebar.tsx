@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 export interface NoteComment {
   id?: string;
@@ -12,7 +12,7 @@ export interface NoteComment {
   authorName?: string; // optional prefilled name
   createdAt?: string; // ISO date string
   replies?: NoteComment[];
-  parentCommentId?: string | null; // <-- NEW: used to thread replies under parents
+  parentCommentId?: string | null; // used to thread replies under parents
 }
 
 interface CommentSidebarProps {
@@ -52,6 +52,9 @@ export default function CommentSidebar({
   const [replyText, setReplyText] = useState<string>("");
   const [nameCache, setNameCache] = useState<Record<string, string>>({});
   const replyInputRef = useRef<HTMLTextAreaElement | null>(null);
+  const [expandedThreads, setExpandedThreads] = useState<
+    Record<string, boolean>
+  >({});
 
   // helper to get stable id
   const getId = (c: NoteComment) => c.id ?? c._id ?? "";
@@ -80,7 +83,9 @@ export default function CommentSidebar({
 
     // Default fetch: attempt /api/users/:id (adjust if your endpoint differs)
     try {
-      const res = await fetch(`/api/users/${userId}`, { credentials: "include" });
+      const res = await fetch(`/api/users/${userId}`, {
+        credentials: "include",
+      });
       if (!res.ok) return null;
       const data = await res.json();
       const name =
@@ -95,7 +100,7 @@ export default function CommentSidebar({
     }
   };
 
-  // Preload missing author names for visible comments
+  // Preload missing author names for visible comments (top-level).
   useEffect(() => {
     (async () => {
       const missingIds = comments
@@ -129,7 +134,7 @@ export default function CommentSidebar({
     const authorId = getAuthorId(c);
     return currentUserId && authorId && currentUserId === authorId;
   };
-  const canDelete = (c: NoteComment) =>
+  const canDeleteComment = (c: NoteComment) =>
     isAuthor(c) || (groupOwnerId && currentUserId === groupOwnerId);
 
   const startEdit = (c: NoteComment) => {
@@ -176,13 +181,38 @@ export default function CommentSidebar({
     }
   };
 
-  // ---- Recursive renderer so replies appear nested under their parent ----
+  // ---- Helper: flatten all descendants of a root into a single list and sort by createdAt ----
+  const collectReplies = (root: ThreadedComment): ThreadedComment[] => {
+    const result: ThreadedComment[] = [];
+
+    const traverse = (node: ThreadedComment) => {
+      if (node.replies && node.replies.length > 0) {
+        for (const child of node.replies) {
+          result.push(child);
+          traverse(child);
+        }
+      }
+    };
+
+    traverse(root);
+
+    result.sort((a, b) => {
+      const ta = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const tb = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return ta - tb;
+    });
+
+    return result;
+  };
+
+  // ---- Renderer for a single comment row (no recursive nesting) ----
   const renderComment = (c: ThreadedComment, depth = 0) => {
     const id = getId(c) || Math.random().toString();
     const authorLine = formatAuthorAndDate(c);
     const editable = isAuthor(c);
-    const deletable = canDelete(c);
+    const deletable = canDeleteComment(c);
 
+    // one visual indent level for any reply (depth > 0)
     const visualDepth = depth > 0 ? 1 : 0;
 
     const containerClasses =
@@ -231,7 +261,14 @@ export default function CommentSidebar({
                   </button>
                 )}
 
-                
+                {onReplyComment && (
+                  <button
+                    onClick={() => startReply(c)}
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50"
+                  >
+                    Reply
+                  </button>
+                )}
 
                 {deletable && (
                   <button
@@ -286,7 +323,9 @@ export default function CommentSidebar({
               className="w-full rounded-md border border-gray-300 px-2 py-1 text-sm"
               rows={3}
               value={replyText}
-              onChange={(e) => setReplyText(e.target.value)}
+              onChange={(e) =>
+                setReplyText(e.target.value.slice(0, 250))
+              }
               placeholder="Write a reply..."
             />
             <div className="flex justify-end gap-2">
@@ -306,12 +345,7 @@ export default function CommentSidebar({
           </div>
         )}
 
-        {/* nested replies */}
-        {c.replies && c.replies.length > 0 && (
-          <div className="mt-3 space-y-3">
-            {c.replies.map((child) => renderComment(child, depth + 1))}
-          </div>
-        )}
+        {/* NOTE: replies are rendered in a flat list per thread, not recursively here. */}
       </div>
     );
   };
@@ -337,14 +371,55 @@ export default function CommentSidebar({
       </div>
 
       <div className="px-4 py-3 overflow-y-auto flex-1 space-y-3">
-          {loading && <p className="text-sm text-gray-500">Loading comments.</p>}
-          {!loading && comments.length === 0 && (
-            <p className="text-sm text-gray-500">No comments yet.</p>
-          )}
+        {loading && (
+          <p className="text-sm text-gray-500">Loading comments.</p>
+        )}
+        {!loading && comments.length === 0 && (
+          <p className="text-sm text-gray-500">No comments yet.</p>
+        )}
 
-          {!loading &&
-            (comments as ThreadedComment[]).map((c) => renderComment(c, 0))}
-        </div>
+        {!loading &&
+          (comments as ThreadedComment[]).map((root) => {
+            const rootId = getId(root) || Math.random().toString();
+            const flatReplies = collectReplies(root);
+            const replyCount = flatReplies.length;
+            const isExpanded = expandedThreads[rootId] ?? false;
+
+            const toggleThread = () => {
+              setExpandedThreads((prev) => ({
+                ...prev,
+                [rootId]: !isExpanded,
+              }));
+            };
+
+            return (
+              <div key={rootId} className="space-y-2">
+                {/* Parent comment (thread root) */}
+                {renderComment(root, 0)}
+
+                {/* Toggle button for replies, if any exist */}
+                {replyCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={toggleThread}
+                    className="ml-4 mt-1 text-xs text-blue-600 hover:underline"
+                  >
+                    {isExpanded
+                      ? "Hide replies"
+                      : `Show ${replyCount} repl${
+                          replyCount === 1 ? "y" : "ies"
+                        }`}
+                  </button>
+                )}
+
+                {/* All replies for this thread:
+                    one indent level, chronological order — only when expanded */}
+                {isExpanded &&
+                  flatReplies.map((reply) => renderComment(reply, 1))}
+              </div>
+            );
+          })}
+      </div>
     </aside>
   );
 }
