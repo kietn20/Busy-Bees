@@ -26,7 +26,9 @@ import {
 } from "@/components/ui/alert-dialog";
 import toast from "react-hot-toast";
 import { generateFlashcardsFromNote } from "@/services/flashcardApi";
-import CommentSidebar, { NoteComment } from "@/components/notes/comment-sidebar";
+import CommentSidebar, {
+  NoteComment,
+} from "@/components/notes/comment-sidebar";
 import { CommentInputModal } from "@/components/notes/CommentModal";
 
 export default function NoteDetailPage() {
@@ -57,14 +59,17 @@ export default function NoteDetailPage() {
   const [commentToDelete, setCommentToDelete] = useState<string | null>(null);
   const [isDeletingComment, setIsDeletingComment] = useState(false);
 
-  // ⬇️ changed: also grab token from auth context
+  // auth
   const { user, token } = useAuth();
   const params = useParams();
   const router = useRouter();
   const groupId = params.groupId as string;
   const noteId = params.id as string;
 
-  const parseContent = (content: string | Block[] | null | undefined) => {
+  // Parse content helper (supports string or Block[])
+  const parseContent = (
+    content: string | Block[] | null | undefined
+  ): Block[] => {
     if (!content) return [];
     if (Array.isArray(content)) return content;
     try {
@@ -139,7 +144,6 @@ export default function NoteDetailPage() {
 
     const fetchData = async () => {
       try {
-        // fetch note and group data in parallel
         const [noteResponse, groupResponse] = await Promise.all([
           getNoteById(groupId, noteId),
           getGroupWithMembers(groupId),
@@ -168,7 +172,7 @@ export default function NoteDetailPage() {
     (collab) => collab._id === user?.id
   );
 
-  const isAuthor = user && note && user.id === note.userId._id;
+  const isAuthor = !!(user && note && user.id === note.userId._id);
 
   const isGroupOwner =
     user &&
@@ -178,10 +182,10 @@ export default function NoteDetailPage() {
       : user.id === group.ownerId._id);
 
   // Permission for DELETING (Strict: Author or Group Owner only)
-  const canDelete = isAuthor || isGroupOwner;
+  const canDelete = !!(isAuthor || isGroupOwner);
 
   // Permission for EDITING (Broad: Author OR Collaborator)
-  const canEdit = isAuthor || !!isCollaborator;
+  const canEdit = !!(isAuthor || isCollaborator);
 
   const handleSave = async () => {
     if (!note) return;
@@ -194,8 +198,8 @@ export default function NoteDetailPage() {
         content: JSON.stringify(editedContent),
       });
 
-      setIsEditing(false); // back to view mode
-      fetchNote(); // refetch the note to show the saved data
+      setIsEditing(false);
+      fetchNote();
       toast.success("Changes saved.");
     } catch (err) {
       console.error("Failed to save note:", err);
@@ -225,10 +229,9 @@ export default function NoteDetailPage() {
   const handleCancel = () => {
     if (!note) return;
 
-    // reset to original note content
     setEditedTitle(note.title);
     setEditedContent(parseContent(note.content) || []);
-    setEditorKey((prev) => prev + 1); // force editor to re-render with original content
+    setEditorKey((prev) => prev + 1);
     setIsEditing(false);
   };
 
@@ -265,15 +268,13 @@ export default function NoteDetailPage() {
     }
   };
 
-  // Handler for OCR result (original version, with safe cast)
+  // Handler for OCR result (uses BlockNote blocks)
   const handleOCRResult = (text: string) => {
-    // 1. Parse the raw text into BlockNote blocks
-    // We split by newlines to preserve some structure
     const newBlocks = text
       .split("\n")
       .filter((line) => line.trim() !== "")
       .map((line) => ({
-        id: Date.now().toString() + Math.random().toString(), // Temp ID
+        id: Date.now().toString() + Math.random().toString(),
         type: "paragraph",
         props: {
           textColor: "default",
@@ -284,10 +285,7 @@ export default function NoteDetailPage() {
         children: [],
       }));
 
-    // 2. Append new blocks to existing content
     setEditedContent((prev) => [...prev, ...newBlocks] as any[]);
-
-    // 3. Force Editor to re-render with new content
     setEditorKey((prev) => prev + 1);
   };
 
@@ -295,7 +293,6 @@ export default function NoteDetailPage() {
     setCommentModalOpen(true);
   };
 
-  // submit handler for the modal
   const handleSubmitComment = async (content: string) => {
     const trimmed = content.trim();
     if (!trimmed) return;
@@ -350,6 +347,9 @@ export default function NoteDetailPage() {
   };
 
   const handleReplyComment = async (parentId: string, text: string) => {
+    const trimmed = text.trim();
+    if (!trimmed) return;
+
     try {
       const res = await fetch(
         `http://localhost:8080/api/groups/${groupId}/notes/${noteId}/comments`,
@@ -357,7 +357,7 @@ export default function NoteDetailPage() {
           method: "POST",
           credentials: "include",
           headers: buildAuthHeaders({ "Content-Type": "application/json" }),
-          body: JSON.stringify({ content: text, parentCommentId: parentId }),
+          body: JSON.stringify({ content: trimmed, parentCommentId: parentId }),
         }
       );
       if (!res.ok) {
@@ -397,7 +397,6 @@ export default function NoteDetailPage() {
         return;
       }
 
-      // refresh comments after deletion
       await fetchComments();
       toast.success("Comment deleted.");
     } catch (err) {
@@ -414,12 +413,10 @@ export default function NoteDetailPage() {
     if (!group) return null;
     if (!userId) return null;
 
-    // Owner (PopulatedCourseGroup.ownerId is a populated user object)
     if (group.ownerId && group.ownerId._id === userId) {
       return `${group.ownerId.firstName} ${group.ownerId.lastName}`;
     }
 
-    // Members: each member has userId populated with user fields
     const member = group.members?.find(
       (m) => m.userId && m.userId._id === userId
     );
@@ -427,12 +424,10 @@ export default function NoteDetailPage() {
       return `${member.userId.firstName} ${member.userId.lastName}`;
     }
 
-    // Fallback: try backend /api/users/:id if available
     try {
-      const res = await fetch(
-        `http://localhost:8080/api/users/${userId}`,
-        { credentials: "include" }
-      );
+      const res = await fetch(`http://localhost:8080/api/users/${userId}`, {
+        credentials: "include",
+      });
       if (!res.ok) return null;
       const data = await res.json();
 
@@ -496,7 +491,6 @@ export default function NoteDetailPage() {
                 </Button>
               )}
 
-              {/* Edit button: Author or Collaborator */}
               {canEdit && (
                 <Button
                   variant="outline"
@@ -507,7 +501,6 @@ export default function NoteDetailPage() {
                 </Button>
               )}
 
-              {/* Generate flashcards button */}
               <AlertDialog
                 open={showGenerateDialog}
                 onOpenChange={setShowGenerateDialog}
@@ -556,10 +549,13 @@ export default function NoteDetailPage() {
             </>
           )}
 
-          {/* Save / Cancel buttons while editing */}
           {isEditing && (
             <>
-              <Button variant="outline" onClick={handleCancel} disabled={isSaving}>
+              <Button
+                variant="outline"
+                onClick={handleCancel}
+                disabled={isSaving}
+              >
                 Cancel
               </Button>
               <Button
@@ -572,7 +568,6 @@ export default function NoteDetailPage() {
             </>
           )}
 
-          {/* Delete button: Author or Group Owner */}
           {canDelete && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
@@ -614,7 +609,6 @@ export default function NoteDetailPage() {
 
       {/* --- MAIN CONTENT: Editor + Comment Sidebar --- */}
       <div className="min-h-screen pt-6 border-t border-gray-200 flex">
-        {/* Editor keeps same styling theme, just gets flex-1 */}
         <div className="flex-1 pr-6">
           <Editor
             key={editorKey}
@@ -624,7 +618,6 @@ export default function NoteDetailPage() {
           />
         </div>
 
-        {/* Comment sidebar on the right */}
         <CommentSidebar
           comments={comments}
           loading={commentsLoading}
@@ -644,7 +637,6 @@ export default function NoteDetailPage() {
         />
       </div>
 
-      {/* Comment input modal (for creating a new top-level comment) */}
       <CommentInputModal
         open={commentModalOpen}
         onClose={() => setCommentModalOpen(false)}
@@ -654,7 +646,6 @@ export default function NoteDetailPage() {
         }}
       />
 
-      {/* Delete comment confirmation dialog */}
       <AlertDialog
         open={!!commentToDelete}
         onOpenChange={(open) => {
@@ -671,7 +662,10 @@ export default function NoteDetailPage() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDeleteComment} disabled={isDeletingComment}>
+            <AlertDialogAction
+              onClick={confirmDeleteComment}
+              disabled={isDeletingComment}
+            >
               {isDeletingComment ? "Deleting..." : "Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -684,6 +678,7 @@ export default function NoteDetailPage() {
           onClose={() => setIsShareModalOpen(false)}
           note={note}
           group={group}
+          isAuthor={isAuthor}
           onUpdate={(updatedNote) => setNote(updatedNote)}
         />
       )}

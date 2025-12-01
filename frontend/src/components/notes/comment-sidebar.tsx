@@ -63,6 +63,19 @@ export default function CommentSidebar({
   const getAuthorId = (c: NoteComment) =>
     typeof c.userId === "string" ? c.userId : c.userId?._id ?? "";
 
+  // Flatten all comments + replies for name preloading
+  const flattenComments = (items: NoteComment[]): NoteComment[] => {
+    const result: NoteComment[] = [];
+    const traverse = (c: NoteComment) => {
+      result.push(c);
+      if (c.replies && c.replies.length) {
+        c.replies.forEach(traverse);
+      }
+    };
+    items.forEach(traverse);
+    return result;
+  };
+
   // fetch user display name if missing. caches results
   const fetchAuthorName = async (userId: string) => {
     if (!userId) return null;
@@ -100,10 +113,11 @@ export default function CommentSidebar({
     }
   };
 
-  // Preload missing author names for visible comments (top-level).
+  // Preload missing author names for all comments and replies.
   useEffect(() => {
     (async () => {
-      const missingIds = comments
+      const all = flattenComments(comments);
+      const missingIds = all
         .map(getAuthorId)
         .filter((id) => id && !nameCache[id]) as string[];
       const unique = Array.from(new Set(missingIds));
@@ -116,8 +130,9 @@ export default function CommentSidebar({
 
   const formatAuthorAndDate = (c: NoteComment) => {
     const authorId = getAuthorId(c);
-    const nameFromComment = c.authorName ?? nameCache[authorId];
-    const name = nameFromComment ?? "Busy Bees";
+    // Prefer cached name (from userId) over authorName to avoid stale/misassigned names
+    const nameFromCache = authorId ? nameCache[authorId] : undefined;
+    const name = nameFromCache ?? c.authorName ?? "Busy Bees";
     if (!c.createdAt) return `${name}`;
     try {
       const d = new Date(c.createdAt);
