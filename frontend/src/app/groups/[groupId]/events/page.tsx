@@ -27,6 +27,8 @@ export default function GroupEventsPage() {
 	const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
 	const [filteredEvents, setFilteredEvents] = useState<Event[] | null>(null);
 
+	const [timeFilter, setTimeFilter] = useState<"all" | "week" | "month">("all");
+
 	const params = useParams();
 	const groupId = params.groupId as string;
 
@@ -120,6 +122,39 @@ export default function GroupEventsPage() {
 		});
 	}
 
+	function filterEventsByTimeRange(
+		events: Event[],
+		range: "all" | "week" | "month"
+		) {
+		if (range === "all") return events;
+
+		const now = new Date();
+		const end = new Date(now);
+
+		if (range === "week") {
+			end.setDate(end.getDate() + 7); // next 7 days
+		} else {
+			end.setMonth(end.getMonth() + 1); // next month
+		}
+
+		return events.filter((event) => {
+			const start = new Date(event.startTime);
+			return start >= now && start <= end;
+		});
+	}
+
+	const displayedEvents = useMemo(() => {
+		// Base events: either date-filtered or all events
+		const base = filteredEvents !== null ? filteredEvents : events;
+
+		// If a specific date is selected (filteredEvents not null),
+		// ignore the time filter and just show that day's events.
+		const effectiveFilter =
+			filteredEvents !== null ? "all" : timeFilter;
+
+		return filterEventsByTimeRange(base, effectiveFilter);
+	}, [events, filteredEvents, timeFilter]);
+
 	return (
 		<ProtectedRoute>
 			<div className="container mx-auto p-8">
@@ -127,6 +162,7 @@ export default function GroupEventsPage() {
 					<h1 className="text-3xl font-bold">
 						{group ? `${group.groupName}: Events` : "Events"}
 					</h1>
+
 					<div className="flex flex-row items-start gap-2">
 						<Button
 						variant="outline"
@@ -135,26 +171,40 @@ export default function GroupEventsPage() {
 						Create Event
 						</Button>
 
-						{selectedDate && (
-							<Button
+						{selectedDate ? (
+						// When a date is selected: show "Show All Events" button
+						<Button
 							variant="outline"
 							onClick={() => {
-								setSelectedDate(undefined);
-								setFilteredEvents(null);
+							setSelectedDate(undefined);
+							setFilteredEvents(null);
+							setTimeFilter("all");
 							}}
-							>
+						>
 							Show All Events
-							</Button>
+						</Button>
+						) : (
+						// When NO date is selected: show the time-range dropdown
+						<select
+							value={timeFilter}
+							onChange={(e) =>
+							setTimeFilter(e.target.value as "all" | "week" | "month")
+							}
+							className="rounded-md border border-gray-300 px-3 py-1.5 text-sm bg-white outline-none focus:ring-2 focus:ring-gray-400"
+						>
+							<option value="all">All</option>
+							<option value="week">Within next week</option>
+							<option value="month">Within next month</option>
+						</select>
 						)}
 					</div>
-									
 				</div>
 
 				<div className="flex flex-col md:flex-row gap-8 justify-between">
 					<div className="md:w-2/3 w-full flex flex-col h-[calc(100vh-220px)]">
 						<div className="overflow-y-auto pr-2 flex-grow">
 							<EventList
-								events={filteredEvents !== null ? filteredEvents : events}
+								events={displayedEvents}
 								isLoading={isEventsLoading}
 								error={eventsError}
 								onEventClick={handleViewEvent}
