@@ -29,6 +29,7 @@ interface CollaboratorModalProps {
 	onClose: () => void;
 	note: Note;
 	group: PopulatedCourseGroup;
+	isAuthor: boolean | null;
 	onUpdate: (updatedNote: Note) => void;
 }
 
@@ -37,6 +38,7 @@ export default function CollaboratorModal({
 	onClose,
 	note,
 	group,
+	isAuthor,
 	onUpdate,
 }: CollaboratorModalProps) {
 	const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -98,10 +100,13 @@ export default function CollaboratorModal({
 		<Dialog open={isOpen} onOpenChange={onClose}>
 			<DialogContent className="sm:max-w-md">
 				<DialogHeader>
-					<DialogTitle>Manage Collaborators</DialogTitle>
+					<DialogTitle>
+						{isAuthor ? "Manage Collaborators" : "View Collaborators"}
+					</DialogTitle>
 					<DialogDescription>
-						Select group members to grant editing access to this
-						note.
+						{isAuthor
+							? "Select group members to grant editing access to this note."
+							: "These members have editing access to this note."}
 					</DialogDescription>
 				</DialogHeader>
 
@@ -122,6 +127,7 @@ export default function CollaboratorModal({
 									<Checkbox
 										id={user._id}
 										checked={selectedIds.includes(user._id)}
+										disabled={!isAuthor}
 										onCheckedChange={() =>
 											handleToggle(user._id)
 										}
@@ -145,11 +151,13 @@ export default function CollaboratorModal({
 
 				<DialogFooter>
 					<Button variant="ghost" onClick={onClose}>
-						Cancel
+						{isAuthor ? "Cancel" : "Close"}
 					</Button>
-					<Button onClick={handleSave} disabled={isLoading}>
-						{isLoading ? "Saving..." : "Save Changes"}
-					</Button>
+					{isAuthor && (
+						<Button onClick={handleSave} disabled={isLoading}>
+							{isLoading ? "Saving..." : "Save Changes"}
+						</Button>
+					)}
 				</DialogFooter>
 			</DialogContent>
 		</Dialog>
