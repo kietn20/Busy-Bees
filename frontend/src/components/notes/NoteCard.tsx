@@ -1,10 +1,5 @@
-import { PenLine, Ellipsis, User } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { PenLine, User } from "lucide-react";
+import FavoriteButton from "@/components/ui/FavoriteButton";
 
 const generatePreview = (content: string): string => {
   try {
@@ -34,6 +29,8 @@ const NoteCard = ({
   creator,
   onClick,
   isSelected = false,
+  favorited,
+  onToggleFavorite,
 }: {
   title: string;
   content: string;
@@ -41,6 +38,8 @@ const NoteCard = ({
   creator: string;
   onClick: () => void;
   isSelected?: boolean;
+  favorited?: boolean;
+  onToggleFavorite?: (newState: boolean) => Promise<void> | void;
 }) => {
   const contentPreview = generatePreview(content);
   const formattedDate = new Date(date).toLocaleDateString(undefined, {
@@ -48,6 +47,8 @@ const NoteCard = ({
     month: "short",
     day: "numeric",
   });
+
+  const isFavorited = Boolean(favorited);
 
   return (
     <div
@@ -60,6 +61,14 @@ const NoteCard = ({
     >
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-semibold">{title}</h1>
+        <FavoriteButton
+          isFavorited={isFavorited}
+          onClick={async (e) => {
+            e.stopPropagation();
+            const next = !isFavorited;
+            if (onToggleFavorite) await onToggleFavorite(next);
+          }}
+        />
       </div>
       <p className="text-gray-600 text-sm line-clamp-3">
         {contentPreview.length > 150
