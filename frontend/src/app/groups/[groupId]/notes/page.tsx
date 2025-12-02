@@ -94,29 +94,47 @@ export default function NotesList() {
 
     // Sorting logic
     result.sort((a, b) => {
-      const aDate = new Date(a.updatedAt || a.createdAt).getTime();
-      const bDate = new Date(b.updatedAt || b.createdAt).getTime();
+      const aCreated = new Date(a.createdAt).getTime();
+      const bCreated = new Date(b.createdAt).getTime();
+      const aUpdated = new Date(a.updatedAt || a.createdAt).getTime();
+      const bUpdated = new Date(b.updatedAt || b.createdAt).getTime();
 
       switch (sortOption) {
         case "oldest":
-          return aDate - bDate;
+          // Oldest by creation date
+          return aCreated - bCreated;
         case "title-asc":
           return a.title.localeCompare(b.title);
         case "title-desc":
           return b.title.localeCompare(a.title);
         case "recent":
         default:
-          return bDate - aDate;
+          // Most recent by last update
+          return bUpdated - aUpdated;
       }
     });
 
     return result;
   }, [notes, searchQuery, sortOption]);
 
-  const parseContent = (content: string): Block[] | undefined => {
+  // Safer parse that treats empty / null / "[]" as "no content"
+  const parseContent = (content: string | null | undefined): Block[] | undefined => {
+    if (!content) return undefined;
+
+    const trimmed = content.trim();
+    if (!trimmed || trimmed === "[]" || trimmed === "{}") {
+      return undefined;
+    }
+
     try {
-      return JSON.parse(content);
+      const parsed = JSON.parse(trimmed);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed as Block[];
+      }
+      // parsed but not a non-empty array -> treat as no content
+      return undefined;
     } catch {
+      // Non-JSON plain text: show as a single paragraph block
       return [
         {
           id: "initial-block",
@@ -129,7 +147,7 @@ export default function NotesList() {
           content: [
             {
               type: "text",
-              text: content,
+              text: trimmed,
               styles: {},
             },
           ],
@@ -161,7 +179,7 @@ export default function NotesList() {
   return (
     <div className="flex h-screen overflow-hidden">
       {/* Sidebar */}
-      <div className="w-80 flex-shrink-0 border-r">
+      <div className="w-80 flex-shrink-0 border-r flex flex-col">
         <div className="p-4 border-b">
           <div className="flex items-center justify-between mb-3">
             <h1 className="text-xl font-semibold">All Notes</h1>
@@ -173,14 +191,11 @@ export default function NotesList() {
             </button>
           </div>
 
-          {/* NEW: search + sort bar under the title */}
           <SearchFilterBar
             query={searchQuery}
             onQueryChange={setSearchQuery}
             sortValue={sortOption}
-            onSortChange={(value) =>
-              setSortOption(value as SortKey)
-            }
+            onSortChange={(value) => setSortOption(value as SortKey)}
             sortOptions={[
               { value: "recent", label: "Most recent" },
               { value: "oldest", label: "Oldest" },
@@ -191,21 +206,23 @@ export default function NotesList() {
           />
         </div>
 
-        {!hasNotes ? (
-          <div className="py-6 text-center text-gray-500">
-            No notes yet. Create one!
-          </div>
-        ) : !hasFilteredNotes ? (
-          <div className="py-6 text-center text-gray-500">
-            No notes match your search.
-          </div>
-        ) : (
-          <SidebarNotes
-            notes={filteredNotes}
-            selectedNoteId={selectedNoteId}
-            onNoteSelect={handleNoteSelect}
-          />
-        )}
+        <div className="flex-1 overflow-y-auto">
+          {!hasNotes ? (
+            <div className="py-6 text-center text-gray-500">
+              No notes yet. Create one!
+            </div>
+          ) : !hasFilteredNotes ? (
+            <div className="py-6 text-center text-gray-500">
+              No notes match your search.
+            </div>
+          ) : (
+            <SidebarNotes
+              notes={filteredNotes}
+              selectedNoteId={selectedNoteId}
+              onNoteSelect={handleNoteSelect}
+            />
+          )}
+        </div>
       </div>
 
       {/* Main Content */}
@@ -250,13 +267,23 @@ export default function NotesList() {
                 <div className="flex items-center justify-center h-32">
                   Loading note content...
                 </div>
-              ) : (
-                <Editor
-                  initialContent={parseContent(selectedNote.content)}
-                  editable={false}
-                  onChange={() => {}}
-                />
-              )}
+              ) : (() => {
+                  const blocks = parseContent(selectedNote.content);
+                  if (!blocks) {
+                    return (
+                      <div className="flex items-center justify-center h-32 text-gray-400 text-sm">
+                        This note has no content yet.
+                      </div>
+                    );
+                  }
+                  return (
+                    <Editor
+                      initialContent={blocks}
+                      editable={false}
+                      onChange={() => {}}
+                    />
+                  );
+                })()}
             </div>
           </>
         ) : (
