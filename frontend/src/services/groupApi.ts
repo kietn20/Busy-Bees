@@ -166,6 +166,8 @@ export interface GroupActivityItem {
   content: string;
   relatedId?: string;
   timestamp: string;
+  isReply?: boolean;
+  isEdited?: boolean;
 }
 
 export const getGroupActivity = async (groupId: string): Promise<GroupActivityItem[]> => {

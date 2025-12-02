@@ -76,12 +76,17 @@ const updateNote = async (req, res) => {
     if (content !== undefined) update.content = content;
     if (images !== undefined) update.images = images;
 
+    // Ensure we record who made the edit so activity shows the editor
+    if (Object.keys(update).length > 0) {
+      update.lastEditedBy = userId;
+    }
+
     // Update the note
     const updatedNote = await Note.findByIdAndUpdate(
       noteId,
       { $set: update },
       { new: true }
-    ).populate("userId", "firstName lastName email");
+    ).populate("userId", "firstName lastName email").populate('lastEditedBy', 'firstName lastName email');
 
     res.status(200).json({
       message: "Note updated successfully",
