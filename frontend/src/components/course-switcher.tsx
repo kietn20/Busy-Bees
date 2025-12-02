@@ -1,6 +1,6 @@
 "use client";
 
-import * as React from "react";
+import { useEffect, useState } from "react";
 import {
   Check,
   ChevronsUpDown,
@@ -11,7 +11,11 @@ import {
   Users,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { getUserGroups, type CourseGroup } from "@/services/groupApi";
+import {
+  getUserGroups,
+  getGroupById,
+  type CourseGroup,
+} from "@/services/groupApi";
 import { useAuth } from "@/context/AuthContext";
 import { generateInvite } from "@/services/groupApi";
 import { InviteModal } from "@/components/InviteModal";
@@ -31,18 +35,15 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 
-import { useState } from "react";
-
 export function CourseSwitcher({
   currentGroupId,
 }: {
   currentGroupId?: string;
 }) {
-  const [groups, setGroups] = React.useState<CourseGroup[]>([]);
-  const [selectedGroup, setSelectedGroup] = React.useState<CourseGroup | null>(
-    null
-  );
-  const [loading, setLoading] = React.useState(true);
+  const [groups, setGroups] = useState<CourseGroup[]>([]);
+  const [selectedGroup, setSelectedGroup] = useState<CourseGroup | null>(null);
+  const [fullGroupData, setFullGroupData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
   const { user, isLoading: authLoading } = useAuth();
 
@@ -50,7 +51,7 @@ export function CourseSwitcher({
   const [inviteCode, setInviteCode] = useState<string | null>(null);
   const [isInviteLoading, setIsInviteLoading] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const fetchGroups = async () => {
       if (authLoading) {
         return;
@@ -90,6 +91,26 @@ export function CourseSwitcher({
 
     fetchGroups();
   }, [currentGroupId, user, authLoading, router]);
+
+  // Fetch full group data when selectedGroup changes
+  useEffect(() => {
+    const fetchFullGroupData = async () => {
+      if (!selectedGroup?._id) {
+        setFullGroupData(null);
+        return;
+      }
+
+      try {
+        const fullGroup = await getGroupById(selectedGroup._id);
+        setFullGroupData(fullGroup);
+      } catch (error) {
+        console.error("Error fetching full group data:", error);
+        setFullGroupData(null);
+      }
+    };
+
+    fetchFullGroupData();
+  }, [selectedGroup]);
 
   const handleGroupChange = (group: CourseGroup) => {
     if (group._id === selectedGroup?._id) return;
@@ -207,13 +228,21 @@ export function CourseSwitcher({
               </SidebarMenuButton>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-64" align="start">
-              <DropdownMenuItem
-                onClick={() => router.push(`/groups/${selectedGroup._id}/edit`)}
-                className="cursor-pointer"
-              >
-                <Settings className="mr-2 h-4 w-4" />
-                <span>Group Settings</span>
-              </DropdownMenuItem>
+              {user &&
+                fullGroupData?.members?.find(
+                  (member: { userId: { _id: string }; role: string }) =>
+                    member.userId._id === user.id && member.role === "owner"
+                ) && (
+                  <DropdownMenuItem
+                    onClick={() =>
+                      router.push(`/groups/${selectedGroup._id}/edit`)
+                    }
+                    className="cursor-pointer"
+                  >
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Group Settings</span>
+                  </DropdownMenuItem>
+                )}
               <DropdownMenuItem
                 onClick={handleGenerateInvite}
                 className="cursor-pointer"

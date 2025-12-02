@@ -18,7 +18,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { X } from "lucide-react";
-import { useState } from "react";
 
 type CreateCardProps = {
   number: number;
@@ -39,7 +38,7 @@ const CreateCard = ({
 }: CreateCardProps) => {
   return (
     <div className="rounded-xl bg-gray-50  relative px-4">
-      <Accordion type="single" collapsible>
+      <Accordion type="single" collapsible defaultValue="item-1">
         <AccordionItem value="item-1" className="border-none">
           <div className="flex items-center justify-between">
             <AccordionTrigger className="hover:no-underline text-left font-medium ">
