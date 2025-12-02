@@ -157,7 +157,9 @@ export function AppSidebar({
                   return (
                     <SidebarMenuItem key={`${f.kind}-${f.itemId}`}>
                       <SidebarMenuButton asChild className="py-5 pl-6">
-                        <a href={url}>{title}</a>
+                        <a href={url} title={title}>
+                          <span className="block truncate w-44">{title}</span>
+                        </a>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   );
