@@ -79,8 +79,27 @@ export function AppSidebar({
       }
     };
     load();
+    // listen for cross-app favorite changes and reload or update local state
+    const handleFavChanged = (e: Event) => {
+      try {
+        const detail: any = (e as CustomEvent).detail;
+        console.debug("sidebar received favorites:changed:", detail);
+        if (!detail || detail.courseId !== currentGroupId) return;
+        // If an item was removed, optimistically remove it from local state
+        if (detail.isFavorited === false) {
+          setFavorites((prev) => prev.filter((f) => !(f.kind === detail.kind && f.itemId === detail.itemId)));
+          return;
+        }
+        // Otherwise reload to pick up new favorites (we don't have titleSnapshot on add)
+        load();
+      } catch (err) {
+        // ignore
+      }
+    };
+    window.addEventListener("favorites:changed", handleFavChanged);
     return () => {
       mounted = false;
+      window.removeEventListener("favorites:changed", handleFavChanged);
     };
   }, [currentGroupId, user]);
 

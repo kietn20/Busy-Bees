@@ -33,6 +33,16 @@ export const addFavorite = async (courseId: string, kind: "note" | "flashcardSet
   try {
     console.debug("addFavorite payload:", payload);
     const response = await api.post(`/account/favorites`, payload);
+    // Notify any listeners in the client that favorites changed
+    if (typeof window !== "undefined") {
+      try {
+        const detail = { courseId, kind, itemId, isFavorited: true };
+        console.debug("dispatching favorites:changed (add):", detail);
+        window.dispatchEvent(new CustomEvent("favorites:changed", { detail }));
+      } catch (e) {
+        // ignore in older browsers
+      }
+    }
     return response.data;
   } catch (e: any) {
     console.error("addFavorite error:", e?.response ?? e);
@@ -48,6 +58,16 @@ export const removeFavorite = async (courseId: string, kind: "note" | "flashcard
   try {
     console.debug("removeFavorite payload:", payload);
     const response = await api.delete(`/account/favorites`, { data: payload });
+    // Notify any listeners in the client that favorites changed
+    if (typeof window !== "undefined") {
+      try {
+        const detail = { courseId, kind, itemId, isFavorited: false };
+        console.debug("dispatching favorites:changed (remove):", detail);
+        window.dispatchEvent(new CustomEvent("favorites:changed", { detail }));
+      } catch (e) {
+        // ignore in older browsers
+      }
+    }
     return response.data;
   } catch (e: any) {
     console.error("removeFavorite error:", e?.response ?? e);
