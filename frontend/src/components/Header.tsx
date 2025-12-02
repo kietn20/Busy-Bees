@@ -24,14 +24,10 @@ export default function Header() {
           {user ? (
             // --- User is Logged In ---
             <>
-              <span className="text-gray-800">Welcome, {user.firstName}!</span>
-              <Link
-                href="/dashboard"
-                className="text-gray-600 hover:text-gray-800"
-              >
-                Dashboard
-              </Link>
-              <LogoutButton />
+              <p className="text-gray-800">Welcome, {user.firstName}!</p>
+              <button className="text-gray-600 hover:text-gray-800 border border-gray-600 font-medium py-2 px-5 rounded-3xl mx-2">
+                <LogoutButton />
+              </button>
             </>
           ) : (
             // --- User is Logged Out ---

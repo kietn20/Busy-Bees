@@ -55,40 +55,39 @@ export default function CreateFlashcard() {
   };
 
   const handleSave = async () => {
-    
     if (!title.trim()) {
       toast.error("Flashcard name required.", { id: TOAST_ERR_ID });
       setHasTitleError(true);
-    return;
-  }
+      return;
+    }
     setHasTitleError(false);
-  
+
     try {
-    // prepare flashcards array for backend (remove id/number, keep term/definition)
-    // only allows non-empty term and definition
-    const flashcards = cards
-    .filter(card => card.term.trim() && card.definition.trim())
-    .map(({ term, definition }) => ({ term, definition }));
+      // prepare flashcards array for backend (remove id/number, keep term/definition)
+      // only allows non-empty term and definition
+      const flashcards = cards
+        .filter((card) => card.term.trim() && card.definition.trim())
+        .map(({ term, definition }) => ({ term, definition }));
 
-    // Call the API
-    await createFlashcardSet(
-      groupId as string,
-      title,
-      description,
-      flashcards 
-    );
+      // Call the API
+      await createFlashcardSet(
+        groupId as string,
+        title,
+        description,
+        flashcards
+      );
 
-    // Redirect to the flashcard list page
-    router.push(`/groups/${groupId}/flashcards`);
-    toast.success("Flashcard set created.");
-  } catch (error : any) {
-    toast.error("Failed to create flashcard set.", { id: TOAST_ERR_ID });
-    console.error("Failed to create flashcard set:", error);
-  }
+      // Redirect to the flashcard list page
+      router.push(`/groups/${groupId}/flashcards`);
+      toast.success("Flashcard set created.");
+    } catch (error: any) {
+      toast.error("Failed to create flashcard set.", { id: TOAST_ERR_ID });
+      console.error("Failed to create flashcard set:", error);
+    }
   };
 
   return (
-    <div className="container mx-auto py-12">
+    <div className="container mx-auto p-8">
       <div className="flex justify-between my-4">
         <h1 className="text-2xl font-bold mb-4">Create Flashcard</h1>
         <Button onClick={handleSave} className="rounded-xl cursor-pointer">
@@ -101,19 +100,23 @@ export default function CreateFlashcard() {
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Flashcard Name
           </label>
-          
+
           <Input
             type="text"
             value={title}
-            onChange={(e) => {setTitle(e.target.value);
+            onChange={(e) => {
+              setTitle(e.target.value);
               setHasTitleError(false);
             }}
             maxLength={30}
-            className={`bg-white rounded-xl ${hasTitleError ? "border-red-500 ring-2 ring-red-200" : ""}`}
+            className={`bg-white rounded-xl ${
+              hasTitleError ? "border-red-500 ring-2 ring-red-200" : ""
+            }`}
             placeholder="Enter title"
           />
-          <div className="text-xs text-gray-400 text-right">{title.length}/30</div>
-          
+          <div className="text-xs text-gray-400 text-right">
+            {title.length}/30
+          </div>
         </div>
         <div className="w-1/2">
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -127,7 +130,9 @@ export default function CreateFlashcard() {
             placeholder="Enter description"
             maxLength={150}
           />
-          <div className="text-xs text-gray-400 text-right">{description.length}/150</div>
+          <div className="text-xs text-gray-400 text-right">
+            {description.length}/150
+          </div>
         </div>
       </div>
 
@@ -138,12 +143,12 @@ export default function CreateFlashcard() {
             number={idx + 1}
             term={card.term}
             definition={card.definition}
-            onTermChange={val => {
+            onTermChange={(val) => {
               const updated = [...cards];
               updated[idx].term = val;
               setCards(updated);
             }}
-            onDefinitionChange={val => {
+            onDefinitionChange={(val) => {
               const updated = [...cards];
               updated[idx].definition = val;
               setCards(updated);

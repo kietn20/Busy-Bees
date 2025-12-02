@@ -11,6 +11,7 @@ import { MessageCircle, Calendar, Mail } from "lucide-react";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import GoogleSignInToast from "@/components/GoogleSignInToast";
+import { Description } from "@radix-ui/react-dialog";
 
 export default function HomePage() {
   const [groups, setGroups] = useState<CourseGroup[]>([]);
@@ -51,36 +52,6 @@ export default function HomePage() {
 
   const pickId = (g: any) => g._id;
 
-  const openDetails = async (group: any) => {
-    try {
-      const id = pickId(group);
-
-      const res = await fetch(`http://localhost:8080/api/groups/${id}`, {
-        credentials: "include",
-      });
-
-      const data = await res.json();
-
-      if (!data?.group) {
-        setSelectedGroup({
-          groupName: pickName(group),
-          description: "No description available.",
-        });
-      } else {
-        setSelectedGroup(data.group);
-      }
-
-      setDetailsOpen(true);
-    } catch (err) {
-      console.error("Failed to load group details:", err);
-      setSelectedGroup({
-        groupName: pickName(group),
-        description: "Failed to load details.",
-      });
-      setDetailsOpen(true);
-    }
-  };
-
   const closeDetails = () => {
     setDetailsOpen(false);
     setSelectedGroup(null);
@@ -98,9 +69,11 @@ export default function HomePage() {
       }
     }
 
+    console.log(g);
+
     return (
       <>
-        <GoogleSignInToast />
+        
         <div className="w-full max-w-sm bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition-all">
           <Link href={`/groups/${id}`}>
             <div className="h-44 bg-[url('/beige.jpg')] bg-cover bg-center" />
@@ -111,38 +84,8 @@ export default function HomePage() {
               <h3 className="text-base font-semibold text-gray-800 truncate hover:underline">
                 {name}
               </h3>
+              <p className="text-sm">{g.description}</p>
             </Link>
-
-            <div className="mt-3 flex items-center space-x-4 text-gray-600">
-              <button
-                aria-label="Group Details"
-                title="View Group Details"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSelectedGroup(g);
-                  openDetails(g);
-                }}
-                className="text-gray-600 hover:text-black transition"
-              >
-                <MessageCircle className="w-5 h-5" />
-              </button>
-
-              <button
-                aria-label="events"
-                className="hover:text-black transition opacity-50 cursor-not-allowed"
-                title="Group Events (coming soon)"
-              >
-                <Calendar className="w-5 h-5" />
-              </button>
-
-              <button
-                aria-label="mail"
-                className="hover:text-black transition opacity-50 cursor-not-allowed"
-                title="Group Messaging (coming soon)"
-              >
-                <Mail className="w-5 h-5" />
-              </button>
-            </div>
           </div>
         </div>
       </>
@@ -151,6 +94,7 @@ export default function HomePage() {
 
   return (
     <>
+      <GoogleSignInToast />
       <main className="py-12 container mx-auto px-6">
         {user && (
           <div className="flex items-start justify-between mb-8 animate-in fade-in slide-in-from-top-3 duration-300">
@@ -206,7 +150,7 @@ export default function HomePage() {
             <AddGroup />
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 animate-in fade-in duration-300">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 animate-in fade-in duration-300">
             {groups.map((g) => (
               <Card key={pickId(g)} g={g} />
             ))}
