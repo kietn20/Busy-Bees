@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import toast from "react-hot-toast";
 import { addRecentlyViewed } from "@/services/recentlyviewedApi";
 import SearchFilterBar from "@/components/SearchFilter";
+import { checkFavorites, addFavorite, removeFavorite } from "@/services/accountApi";
 
 type SortKey = "recent" | "oldest" | "title-asc" | "title-desc";
 
@@ -75,6 +76,52 @@ export default function NotesList() {
   useEffect(() => {
     fetchNotes();
   }, [groupId, fetchNotes]);
+  const [favoritesMap, setFavoritesMap] = useState<Record<string, boolean>>({});
+
+  // load favorites for sidebar items after notes load
+  useEffect(() => {
+    const loadFavorites = async () => {
+      if (!groupId || notes.length === 0) return;
+      try {
+        const itemIds = notes.map((n) => n._id);
+        const map = await checkFavorites(groupId, "note", itemIds);
+        setNotes((prev) => [...prev]); // trigger re-render if needed
+        // store map in ref/state: we'll store in local state for SidebarNotes
+        setFavoritesMap(map);
+        // Debug: log the itemIds and the resulting map so we can inspect them on reload
+        console.debug("checkFavorites (notes) - itemIds:", itemIds, "map:", map);
+      } catch (err) {
+        // ignore if unauthenticated
+      }
+    };
+    loadFavorites();
+
+  }, [groupId, notes]);
+
+  const toggleFavorite = async (noteId: string, next: boolean) => {
+    // optimistic update
+    setFavoritesMap((m) => ({ ...m, [noteId]: next }));
+    try {
+      if (next) {
+        await addFavorite(groupId, "note", noteId);
+        toast.success("Note Saved to Favorites.");
+      } else {
+        await removeFavorite(groupId, "note", noteId);
+        toast.success("Note removed from favorites.");
+      }
+    } catch (err) {
+      console.error("toggleFavorite error:", err?.response ?? err);
+      const msg = err?.response?.data?.message || err?.message || "Failed to update favorites.";
+      if (err?.response?.status === 401) {
+        toast.error("You must be signed in to save favorites.");
+      } else {
+        toast.error(msg);
+      }
+      // revert optimistic update
+      setFavoritesMap((m) => ({ ...m, [noteId]: !next }));
+      throw err;
+    }
+  };
 
   useEffect(() => {
     if (selectedNoteId && notes.length > 0) {
@@ -206,23 +253,23 @@ export default function NotesList() {
           />
         </div>
 
-        <div className="flex-1 overflow-y-auto">
-          {!hasNotes ? (
-            <div className="py-6 text-center text-gray-500">
-              No notes yet. Create one!
-            </div>
-          ) : !hasFilteredNotes ? (
-            <div className="py-6 text-center text-gray-500">
-              No notes match your search.
-            </div>
-          ) : (
-            <SidebarNotes
+        {!hasNotes ? (
+          <div className="py-6 text-center text-gray-500">
+            No notes yet. Create one!
+          </div>
+        ) : !hasFilteredNotes ? (
+          <div className="py-6 text-center text-gray-500">
+            No notes match your search.
+          </div>
+        ) : (
+          <SidebarNotes
               notes={filteredNotes}
               selectedNoteId={selectedNoteId}
               onNoteSelect={handleNoteSelect}
+              favoritesMap={favoritesMap}
+              onToggleFavorite={toggleFavorite}
             />
-          )}
-        </div>
+        )}
       </div>
 
       {/* Main Content */}

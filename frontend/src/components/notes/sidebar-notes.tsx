@@ -5,12 +5,16 @@ interface SidebarNotesProps {
   notes: Note[];
   selectedNoteId: string | null;
   onNoteSelect: (noteId: string) => void;
+  favoritesMap?: Record<string, boolean>;
+  onToggleFavorite?: (noteId: string, next: boolean) => Promise<void> | void;
 }
 
 const SidebarNotes = ({
   notes,
   selectedNoteId,
   onNoteSelect,
+  favoritesMap = {},
+  onToggleFavorite,
 }: SidebarNotesProps) => {
   return (
     <div className="flex flex-col h-full">
@@ -31,6 +35,8 @@ const SidebarNotes = ({
                 creator={note.userId.firstName + " " + note.userId.lastName}
                 onClick={() => onNoteSelect(note._id)}
                 isSelected={selectedNoteId === note._id}
+                favorited={Boolean(favoritesMap[note._id])}
+                onToggleFavorite={(next) => onToggleFavorite && onToggleFavorite(note._id, next)}
               />
             ))}
           </div>

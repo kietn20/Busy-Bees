@@ -5,6 +5,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import FavoriteButton from "@/components/ui/FavoriteButton";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,7 +24,7 @@ import {
 } from "@/components/ui/tooltip";
 import { deleteFlashcardSet } from "@/services/flashcardApi";
 import { toast } from "react-hot-toast";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 
 const FlashcardInfo = ({
@@ -34,6 +35,8 @@ const FlashcardInfo = ({
   id,
   onClick,
   onDelete,
+  favorited,
+  onToggleFavorite,
 }: {
   title: string;
   description: string;
@@ -42,12 +45,15 @@ const FlashcardInfo = ({
   id: string;
   onClick: () => void;
   onDelete: () => void;
+  favorited?: boolean;
+  onToggleFavorite?: (next: boolean) => Promise<void> | void;
 }) => {
   const router = useRouter();
   const { groupId } = useParams();
 
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const isFavorited = Boolean(favorited);
 
   const handleDelete = async () => {
     setIsDeleting(true);
@@ -73,31 +79,44 @@ const FlashcardInfo = ({
       onClick={onClick}
       className="relative rounded-xl p-6 bg-gray-50 flex flex-col gap-2 cursor-pointer hover:bg-gray-100"
     >
-      <div className="absolute top-4 right-4 rounded-xl bg-gray-200 p-2 flex text-gray-500 z-10">
-        <DropdownMenu>
-          <DropdownMenuTrigger>
-            <Ellipsis className="w-4 h-4 cursor-pointer" />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="my-2">
-            <DropdownMenuItem
-              onClick={(e) => {
-                e.stopPropagation();
-                router.push(`/groups/${groupId}/flashcards/${id}/edit`);
-              }}
-            >
-              Edit
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowDeleteDialog(true);
-              }}
-              className="text-red-600"
-            >
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+      <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
+        <div className="flex items-center">
+          <FavoriteButton
+            isFavorited={isFavorited}
+            onClick={async (e) => {
+              e.stopPropagation();
+              const next = !isFavorited;
+              if (onToggleFavorite) await onToggleFavorite(next);
+            }}
+          />
+        </div>
+
+        <div className="rounded-xl bg-gray-200 p-2 flex text-gray-500 z-10">
+          <DropdownMenu>
+            <DropdownMenuTrigger>
+              <Ellipsis className="w-4 h-4 cursor-pointer" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="my-2">
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  router.push(`/groups/${groupId}/flashcards/${id}/edit`);
+                }}
+              >
+                Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowDeleteDialog(true);
+                }}
+                className="text-red-600"
+              >
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
 
       {/* Delete Confirmation Modal */}
