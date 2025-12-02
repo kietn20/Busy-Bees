@@ -129,9 +129,9 @@ const GroupActivity = () => {
                 </div>
 
                 <p className="text-sm text-gray-900 leading-snug min-w-0 overflow-hidden">
-                  <span className="font-semibold">{activity.user ? `${activity.user.firstName || ''} ${activity.user.lastName || ''}`.trim() : 'Someone'}</span>{' '}
-                  <span className="text-gray-700">{getVerb(activity)}</span>{' '}
-                  <span className="inline-block truncate max-w-full" title={activity.content}>{truncateText(activity.content, 90)}</span>
+                  <span className="inline-block font-semibold align-middle">{activity.user ? `${activity.user.firstName || ''} ${activity.user.lastName || ''}`.trim() : 'Someone'}</span>{' '}
+                  <span className="inline-block text-gray-700 align-middle">{getVerb(activity)}</span>{' '}
+                  <span className="inline-block align-middle truncate max-w-full" title={activity.content}>{truncateText(activity.content, 90)}</span>
                 </p>
               </div>
             </div>
