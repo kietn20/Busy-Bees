@@ -3,7 +3,7 @@
 const express = require('express');
 const { createCourseGroup, joinGroup, generateInvite, 
         getCourseGroupById, updateCourseGroup, deleteCourseGroup,
-        leaveGroup, getUserGroups, transferCourseGroupOwnership } 
+        leaveGroup, getUserGroups, transferCourseGroupOwnership, getGroupActivity } 
         = require('../controllers/coursegroup.controller'); 
 const { protect } = require('../middleware/auth.middleware');
 const { requireGroupOwner, requireGroupMember } = require('../middleware/coursegroup.middleware');
@@ -44,6 +44,9 @@ router.put("/:groupId/transfer-ownership", requireGroupOwner, transferCourseGrou
 // MEMBER-ONLY ROUTES
 // Leave group (requires authentication)
 router.post("/:groupId/leave", requireGroupMember, leaveGroup);
+
+// Recent activity for a group (members only)
+router.get('/:groupId/activity', requireGroupMember, getGroupActivity);
 
 
 module.exports = router;

@@ -499,6 +499,95 @@ const getUserGroups = async (req, res) => {
   }
 };
 
+// @desc    Get recent activity for a course group (notes, top-level comments, flashcard sets, events)
+// @route   GET /api/groups/:groupId/activity
+// @access  Private (group members)
+const getGroupActivity = async (req, res) => {
+  try {
+    const group = req.group; // set by requireGroupMember middleware
+    if (!group) return res.status(404).json({ message: 'Group not found' });
+
+    const groupId = group._id;
+
+    // fetch recent items from multiple collections in parallel
+    // each query fetches a small batch; we'll combine and trim to the global LIMIT
+    const [comments, notes, flashcardSets, events] = await Promise.all([
+      NoteComment.find({ groupId: groupId, parentCommentId: null })
+        .sort({ createdAt: -1 })
+        .limit(10)
+        .populate('userId', 'firstName lastName'),
+      Note.find({ groupId: groupId })
+        .sort({ updatedAt: -1 })
+        .limit(10)
+        .populate('userId', 'firstName lastName'),
+      FlashcardSet.find({ courseGroupId: groupId })
+        .sort({ createdAt: -1 })
+        .limit(10)
+        .populate('userId', 'firstName lastName'),
+      Event.find({ courseGroup: groupId })
+        .sort({ createdAt: -1 })
+        .limit(10)
+        .populate('createdBy', 'firstName lastName'),
+    ]);
+
+    // normalize into unified activity items
+    const mappedComments = (comments || []).map((c) => ({
+      id: c._id,
+      kind: 'comment',
+      categoryLabel: 'Comments',
+      user: c.userId || null,
+      content: c.content,
+      relatedId: c.noteId,
+      timestamp: c.createdAt,
+    }));
+
+    const mappedNotes = (notes || []).map((n) => ({
+      id: n._id,
+      kind: 'note',
+      categoryLabel: 'Notes',
+      user: n.userId || null,
+      // choose verb depending on whether it was updated
+      content:
+        (n.updatedAt && n.updatedAt > n.createdAt ? 'updated note ' : 'created note ') + (n.title || ''),
+      relatedId: n._id,
+      timestamp: n.updatedAt || n.createdAt,
+    }));
+
+    const mappedFlashcardSets = (flashcardSets || []).map((s) => ({
+      id: s._id,
+      kind: 'flashcardSet',
+      categoryLabel: 'Flashcards',
+      user: s.userId || null,
+      content: 'created flashcard set ' + (s.setName || ''),
+      relatedId: s._id,
+      timestamp: s.createdAt,
+    }));
+
+    const mappedEvents = (events || []).map((e) => ({
+      id: e._id,
+      kind: 'event',
+      categoryLabel: 'Events',
+      user: e.createdBy || null,
+      content: 'scheduled event ' + (e.title || ''),
+      relatedId: e._id,
+      timestamp: e.createdAt,
+    }));
+
+    // combine and sort by timestamp desc
+    const all = [...mappedComments, ...mappedNotes, ...mappedFlashcardSets, ...mappedEvents];
+    all.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+    // limit total results shown on dashboard
+    const LIMIT = 10;
+    const activities = all.slice(0, LIMIT);
+
+    res.status(200).json({ activities });
+  } catch (error) {
+    console.error('Error fetching group activity:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
 // USE THIS IMPLEMENTATION IF WE WANT TO DISPLAY GROUP DETAILS IN HOME PAGE
 // @desc    Get all groups where the user is a member
 // @route   GET /api/groups
@@ -584,5 +673,6 @@ module.exports = {
   deleteCourseGroup,
   leaveGroup,
   getUserGroups,
+  getGroupActivity,
   transferCourseGroupOwnership
 };
