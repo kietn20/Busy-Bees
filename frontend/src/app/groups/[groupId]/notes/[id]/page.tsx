@@ -298,6 +298,12 @@ export default function NoteDetailPage() {
       }));
 
     setEditedContent((prev) => [...prev, ...newBlocks] as any[]);
+    
+    // auto enter edit mode so the OCR text is visible
+    if (!isEditing) {
+      setIsEditing(true);
+    }
+    
     setEditorKey((prev) => prev + 1);
   };
 
@@ -556,13 +562,16 @@ export default function NoteDetailPage() {
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
-
-              <OCRButton onOCRResult={handleOCRResult} />
             </>
           )}
 
           {isEditing && (
             <>
+              {/* OCR button only available in edit mode for collaborator */}
+              {(isAuthor || isCollaborator) && (
+                <OCRButton onOCRResult={handleOCRResult} />
+              )}
+              
               <Button
                 variant="outline"
                 onClick={handleCancel}
