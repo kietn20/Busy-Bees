@@ -73,7 +73,7 @@ export default function HomePage() {
 
     return (
       <>
-        <GoogleSignInToast />
+        
         <div className="w-full max-w-sm bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition-all">
           <Link href={`/groups/${id}`}>
             <div className="h-44 bg-[url('/beige.jpg')] bg-cover bg-center" />
@@ -94,6 +94,7 @@ export default function HomePage() {
 
   return (
     <>
+      <GoogleSignInToast />
       <main className="py-12 container mx-auto px-6">
         {user && (
           <div className="flex items-start justify-between mb-8 animate-in fade-in slide-in-from-top-3 duration-300">
