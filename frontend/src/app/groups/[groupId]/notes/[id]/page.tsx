@@ -339,7 +339,7 @@ export default function NoteDetailPage() {
       const res = await fetch(
         `http://localhost:8080/api/groups/${groupId}/notes/${noteId}/comments/${commentId}`,
         {
-          method: "PUT",
+          method: "PATCH",
           credentials: "include",
           headers: buildAuthHeaders({ "Content-Type": "application/json" }),
           body: JSON.stringify({ content: newText }),
