@@ -66,18 +66,30 @@ export default function NoteDetailPage() {
   const groupId = params.groupId as string;
   const noteId = params.id as string;
 
-  // Parse content helper (supports string or Block[])
+  // Safer parse: treat empty / invalid JSON as "no content"
   const parseContent = (
     content: string | Block[] | null | undefined
-  ): Block[] => {
-    if (!content) return [];
-    if (Array.isArray(content)) return content;
+  ): Block[] | undefined => {
+    if (!content) return undefined;
+
+    if (Array.isArray(content)) {
+      return content.length > 0 ? content : undefined;
+    }
+
+    const trimmed = content.trim();
+    if (!trimmed || trimmed === "[]" || trimmed === "{}") {
+      return undefined;
+    }
+
     try {
-      const parsed = JSON.parse(content);
-      return parsed;
+      const parsed = JSON.parse(trimmed);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed as Block[];
+      }
+      return undefined;
     } catch (err) {
       console.error("Failed to parse content", err);
-      return [];
+      return undefined;
     }
   };
 
@@ -610,12 +622,33 @@ export default function NoteDetailPage() {
       {/* --- MAIN CONTENT: Editor + Comment Sidebar --- */}
       <div className="min-h-screen pt-6 border-t border-gray-200 flex">
         <div className="flex-1 pr-6">
-          <Editor
-            key={editorKey}
-            onChange={setEditedContent}
-            initialContent={isEditing ? editedContent : parseContent(note.content)}
-            editable={isEditing}
-          />
+          {isEditing ? (
+            <Editor
+              key={editorKey}
+              onChange={setEditedContent}
+              initialContent={
+                editedContent.length ? editedContent : undefined
+              }
+              editable={true}
+            />
+          ) : (() => {
+              const viewBlocks = parseContent(note.content);
+              if (!viewBlocks) {
+                return (
+                  <div className="flex items-center justify-center h-32 text-gray-400 text-sm">
+                    This note has no content.
+                  </div>
+                );
+              }
+              return (
+                <Editor
+                  key={editorKey}
+                  onChange={() => {}}
+                  initialContent={viewBlocks}
+                  editable={false}
+                />
+              );
+            })()}
         </div>
 
         <CommentSidebar
