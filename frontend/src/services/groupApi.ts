@@ -157,3 +157,20 @@ export const deleteCourseGroup = (groupId: string) => {
 export const leaveCourseGroup = (groupId: string) => {
   return api.post<{ message: string }>(`/groups/${groupId}/leave`);
 };
+
+export interface GroupActivityItem {
+  id: string;
+  kind: 'note' | 'comment' | 'flashcardSet' | 'event';
+  categoryLabel: string;
+  user: { _id?: string; firstName?: string; lastName?: string } | null;
+  content: string;
+  relatedId?: string;
+  timestamp: string;
+  isReply?: boolean;
+  isEdited?: boolean;
+}
+
+export const getGroupActivity = async (groupId: string): Promise<GroupActivityItem[]> => {
+  const response = await api.get<{ activities: GroupActivityItem[] }>(`/groups/${groupId}/activity`);
+  return response.data.activities;
+};

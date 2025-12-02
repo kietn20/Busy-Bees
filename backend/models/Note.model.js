@@ -34,6 +34,11 @@ const noteSchema = new mongoose.Schema(
                 ref: "User",
             }
         ],
+        lastEditedBy: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'User',
+          required: false,
+        },
     },
     {timestamps: true} // automates createdAt and updatedAt fields
 )

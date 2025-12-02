@@ -553,6 +553,194 @@ const getUserGroups = async (req, res) => {
   }
 };
 
+// @desc    Get recent activity for a course group (notes, top-level comments, flashcard sets, events)
+// @route   GET /api/groups/:groupId/activity
+// @access  Private (group members)
+const getGroupActivity = async (req, res) => {
+  try {
+    const group = req.group; // set by requireGroupMember middleware
+    if (!group) return res.status(404).json({ message: 'Group not found' });
+
+    const groupId = group._id;
+
+    // fetch recent items from multiple collections in parallel
+    const [comments, notes, flashcardSets, events] = await Promise.all([
+      NoteComment.find({ groupId: groupId })
+        .sort({ updatedAt: -1, createdAt: -1 })
+        .limit(10)
+        .populate('userId', 'firstName lastName')
+        .populate('noteId', 'title'),
+      Note.find({ groupId: groupId })
+        .sort({ updatedAt: -1 })
+        .limit(10)
+        .populate('userId', 'firstName lastName')
+        .populate('lastEditedBy', 'firstName lastName'),
+      FlashcardSet.find({ courseGroupId: groupId })
+        .sort({ updatedAt: -1, createdAt: -1 })
+        .limit(10)
+        .populate('userId', 'firstName lastName'),
+      Event.find({ courseGroup: groupId })
+        .sort({ updatedAt: -1, createdAt: -1 })
+        .limit(10)
+        .populate('createdBy', 'firstName lastName'),
+    ]);
+
+    // normalize into unified activity items
+    // For comments we return separate entries for creation and edit (if edited)
+    const mappedComments = (comments || []).flatMap((c) => {
+      const isReply = !!c.parentCommentId;
+      const createdAt = c.createdAt;
+      const updatedAt = c.updatedAt;
+      const noteTitle = c.noteId && c.noteId.title ? c.noteId.title : '';
+
+      const entries = [];
+
+      // creation entry - show the related note title (icon/header indicates this is a comment)
+      const createContent = noteTitle || '';
+      entries.push({
+        id: `${c._id}-created`,
+        kind: 'comment',
+        categoryLabel: 'Comments',
+        user: c.userId || null,
+        content: createContent,
+        isReply,
+        isEdited: false,
+        relatedId: c.noteId,
+        timestamp: createdAt,
+      });
+
+      // updated entry (if edited)
+      if (updatedAt && updatedAt > createdAt) {
+        // updated entry: show the same related note title, mark as edited via isEdited
+        const editContent = noteTitle || '';
+        entries.push({
+          id: `${c._id}-edited`,
+          kind: 'comment',
+          categoryLabel: 'Comments',
+          user: c.userId || null,
+          content: editContent,
+          isReply,
+          isEdited: true,
+          relatedId: c.noteId,
+          timestamp: updatedAt,
+        });
+      }
+
+      return entries;
+    });
+
+    // For notes, return separate created and updated entries when updated
+    const mappedNotes = (notes || []).flatMap((n) => {
+      const entries = [];
+      const createdAt = n.createdAt;
+      const updatedAt = n.updatedAt;
+
+      entries.push({
+        id: `${n._id}-created`,
+        kind: 'note',
+        categoryLabel: 'Notes',
+        user: n.userId || null,
+        content: n.title || '',
+        relatedId: n._id,
+        timestamp: createdAt,
+      });
+
+      if (updatedAt && updatedAt > createdAt) {
+          entries.push({
+            id: `${n._id}-updated`,
+            kind: 'note',
+            categoryLabel: 'Notes',
+            // prefer the editor when available (lastEditedBy), otherwise fall back to author
+            user: (n.lastEditedBy && n.lastEditedBy._id) ? n.lastEditedBy : (n.userId || null),
+            content: n.title || '',
+            relatedId: n._id,
+            timestamp: updatedAt,
+            isEdited: true,
+          });
+      }
+
+      return entries;
+    });
+
+    // Flashcard sets: emit separate created and updated entries
+    const mappedFlashcardSets = (flashcardSets || []).flatMap((s) => {
+      const entries = [];
+      const createdAt = s.createdAt;
+      const updatedAt = s.updatedAt;
+
+      entries.push({
+        id: `${s._id}-created`,
+        kind: 'flashcardSet',
+        categoryLabel: 'Flashcards',
+        user: s.userId || null,
+        content: s.setName || '',
+        relatedId: s._id,
+        timestamp: createdAt,
+      });
+
+      if (updatedAt && updatedAt > createdAt) {
+        entries.push({
+          id: `${s._id}-updated`,
+          kind: 'flashcardSet',
+          categoryLabel: 'Flashcards',
+          user: s.userId || null,
+          content: s.setName || '',
+          relatedId: s._id,
+          timestamp: updatedAt,
+          isEdited: true,
+        });
+      }
+
+      return entries;
+    });
+
+    // Events: emit created and updated entries separately
+    const mappedEvents = (events || []).flatMap((e) => {
+      const entries = [];
+      const createdAt = e.createdAt;
+      const updatedAt = e.updatedAt;
+
+      entries.push({
+        id: `${e._id}-created`,
+        kind: 'event',
+        categoryLabel: 'Events',
+        user: e.createdBy || null,
+        content: e.title || '',
+        relatedId: e._id,
+        timestamp: createdAt,
+      });
+
+      if (updatedAt && updatedAt > createdAt) {
+        entries.push({
+          id: `${e._id}-updated`,
+          kind: 'event',
+          categoryLabel: 'Events',
+          user: e.createdBy || null,
+          content: e.title || '',
+          relatedId: e._id,
+          timestamp: updatedAt,
+          isEdited: true,
+        });
+      }
+
+      return entries;
+    });
+
+    // combine and sort by timestamp desc
+    const all = [...mappedComments, ...mappedNotes, ...mappedFlashcardSets, ...mappedEvents];
+    all.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+    // limit total results shown on dashboard
+    const LIMIT = 10;
+    const activities = all.slice(0, LIMIT);
+
+    res.status(200).json({ activities });
+  } catch (error) {
+    console.error('Error fetching group activity:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
 // USE THIS IMPLEMENTATION IF WE WANT TO DISPLAY GROUP DETAILS IN HOME PAGE
 // @desc    Get all groups where the user is a member
 // @route   GET /api/groups
@@ -637,5 +825,6 @@ module.exports = {
   deleteCourseGroup,
   leaveGroup,
   getUserGroups,
-  transferCourseGroupOwnership,
+  getGroupActivity,
+  transferCourseGroupOwnership
 };
