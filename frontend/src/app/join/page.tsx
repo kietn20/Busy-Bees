@@ -65,7 +65,7 @@ export default function JoinGroupPage() {
     try {
       const response = await joinGroup(inviteCode);
 
-      toast.success("Joined group successfully!");
+      toast.success("Joined group successfully.");
       // on success, redirect to the group page
       const groupId = response.data.group.id;
       router.push(`/groups/${groupId}`);

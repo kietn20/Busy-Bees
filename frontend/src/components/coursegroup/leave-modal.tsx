@@ -37,7 +37,7 @@ const LeaveModal = ({
       toast.success("You have left the group.");
       router.push("/");
     } catch (err: any) {
-      const message = err?.response?.data?.message || "Failed to leave group";
+      const message = err?.response?.data?.message || "Failed to leave group.";
       setError(message);
       toast.error(message);
     } finally {
@@ -51,9 +51,23 @@ const LeaveModal = ({
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Leave course group</AlertDialogTitle>
-          <AlertDialogDescription>
-            This action cannot be undone. You will leave the group and lose
-            access until you're reinvited. Are you sure you want to leave?
+          <AlertDialogDescription asChild>
+            <div className="space-y-2 text-sm text-muted-foreground">
+              <p>
+                If you leave this course group, the content you created that is
+                associated with this group may be deleted, including:
+              </p>
+              <ul className="list-disc list-inside pl-4">
+                <li>Your notes in this course group</li>
+                <li>Your flashcard sets for this course group</li>
+                <li>Any events you created for this course group</li>
+              </ul>
+              <p className="font-medium">
+                This action cannot be undone. You will leave the group and lose
+                access until you&apos;re reinvited. Are you sure you want to
+                leave?
+              </p>
+            </div>
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -61,7 +75,11 @@ const LeaveModal = ({
             <Button variant="outline">Cancel</Button>
           </AlertDialogCancel>
           <AlertDialogAction asChild>
-            <Button variant="destructive" onClick={handleLeave} disabled={isLeaving}>
+            <Button
+              variant="destructive"
+              onClick={handleLeave}
+              disabled={isLeaving}
+            >
               {isLeaving ? "Leaving..." : "Leave"}
             </Button>
           </AlertDialogAction>

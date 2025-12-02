@@ -51,7 +51,7 @@ const LogInForm = () => {
 
       // Use AuthContext to set authentication state
       authLogin(token, user);
-      toast.success("Logged in successfully");
+      toast.success("Logged in successfully.");
 
       // Redirect to the home page after login
       router.push("/");

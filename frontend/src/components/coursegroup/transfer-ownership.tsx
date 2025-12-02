@@ -78,7 +78,7 @@ export default function TransferOwnership({ groupId, currentOwnerEmail }: Transf
     try {
       setTransferring(true);
       const result = await transferCourseGroupOwnership(groupId, selectedMemberId);
-      toast.success(result.message, 
+      toast.success(`${result.message}.`, 
         { duration: 2000 } // keeps notif visible for 3 seconds
       );
       
@@ -88,7 +88,7 @@ export default function TransferOwnership({ groupId, currentOwnerEmail }: Transf
       router.push(`/groups/${groupId}`);
     } catch (err: any) {
       
-      toast.error(err.response?.data?.message || "Failed to transfer ownership");
+      toast.error(err.response?.data?.message || "Failed to transfer ownership.");
       setShowConfirmDialog(false);
     } finally {
       setTransferring(false);

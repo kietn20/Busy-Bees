@@ -2,7 +2,7 @@ const express = require('express');
 const { allowJwtOrGoogle } = require('../middleware/auth.middleware');
 const { getFlashcardSetByGroup, createFlashcardSet, 
       getFlashcardSetById, updateFlashcardSet, deleteFlashcardSet } = require('../controllers/flashcardset.controller');
-const { deleteFlashcard, updateFlashcard, getFlashcardById, createFlashcard } = require('../controllers/flashcard.controller');
+const { deleteFlashcard, updateFlashcard, getFlashcardById, createFlashcard, generateFromNote } = require('../controllers/flashcard.controller');
 const { canEditFlashcardSet, canDeleteFlashcardSet } = require("../middleware/flashcardset.middleware");
 
 const router = express.Router({ mergeParams: true });
@@ -24,6 +24,9 @@ router.post('/', createFlashcardSet);
 
 // POST /api/groups/:groupId/flashcards/cards - create a new flashcard in a set
 router.post('/cards', createFlashcard);
+
+// POST /api/groups/:groupId/flashcards/generate-from-note - generate flashcards from a note
+router.post('/generate-from-note', generateFromNote);
 
 // PUT /api/groups/:groupId/flashcards/sets/:setId - update a specific flashcard set
 router.put('/sets/:setId', canEditFlashcardSet, updateFlashcardSet);

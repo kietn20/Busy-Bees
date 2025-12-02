@@ -1,6 +1,7 @@
 const flashcardset = require('../models/FlashcardSet.model');
 const flashcard = require('../models/Flashcard.model');
 const mongoose = require('mongoose');
+const User = require('../models/User.model');
 
 // creates a new flashcard set in the course group
 const createFlashcardSet = async (req, res) => {
@@ -76,8 +77,8 @@ const updateFlashcardSet = async (req, res) => {
   }
 
   try {
-    const updatedFlashcardSet = await flashcardset.findByIdAndUpdate(
-      id,
+    const updatedFlashcardSet = await flashcardset.findOneAndUpdate(
+      { _id: id },
       { setName, description, flashcards },
       { new: true }
     );
@@ -145,10 +146,29 @@ const getFlashcardSetById = async (req, res) => {
     if (!flashcardSet) {
       return res.status(404).json({ message: "Flashcard set not found" });
     }
-    res.status(200).json({
-      message: "Flashcard set retrieved successfully",
-      flashcardSet: flashcardSet
-    });
+      // compute isFavorited for authenticated users
+      let isFavorited = false;
+      try {
+        if (req.user && req.user._id) {
+          const user = await User.findOne(
+            { _id: req.user._id, 'registeredCourses.courseId': String(flashcardSet.courseGroupId) },
+            { 'registeredCourses.$': 1 }
+          );
+          if (user && Array.isArray(user.registeredCourses) && user.registeredCourses.length > 0) {
+            const reg = user.registeredCourses[0];
+            const favorites = Array.isArray(reg.favorites) ? reg.favorites : [];
+            isFavorited = favorites.some(f => f.kind === 'flashcardSet' && String(f.itemId) === String(flashcardSet._id));
+          }
+        }
+      } catch (e) {
+        console.error('Error computing isFavorited for flashcardSet:', e);
+      }
+
+      res.status(200).json({
+        message: "Flashcard set retrieved successfully",
+        flashcardSet: flashcardSet,
+        isFavorited
+      });
   } catch (error) {
     console.error("Error retrieving flashcard set:", error);
 

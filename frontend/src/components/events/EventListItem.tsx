@@ -22,7 +22,7 @@ export default function EventListItem({ event, onClick }: EventListItemProps) {
 
   return (
     <div
-      className="border border-gray-200 p-4 cursor-pointer hover:bg-gray-50 transition-colors rounded-2xl"
+      className="border border-gray-200 p-4 cursor-pointer hover:bg-gray-50 transition-colors rounded-2xl flex flex-col justify-between"
       onClick={onClick}
     >
       <h3 className="font-semibold text-lg">{event.title}</h3>
@@ -36,7 +36,7 @@ export default function EventListItem({ event, onClick }: EventListItemProps) {
           <span>Hosted by {event.createdBy.firstName}</span>
         </div>
       </div>
-      {event.description && <p className="mt-2 text-gray-600">{event.description}</p>}
+      {event.description && <p className="mt-2 text-gray-600 break-words whitespace-pre-line w-full">{event.description}</p>}
     </div>
   );
 }

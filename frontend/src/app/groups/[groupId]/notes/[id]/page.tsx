@@ -4,12 +4,15 @@ import Editor from "@/components/notes/editor";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { deleteNote, getNoteById, updateNote } from "@/services/noteApi";
-import { getGroupById } from "@/services/groupApi";
+import { getGroupById, getGroupWithMembers } from "@/services/groupApi";
 import { Note } from "@/services/noteApi";
-import { CourseGroup } from "@/services/groupApi";
+import { CourseGroup, PopulatedCourseGroup } from "@/services/groupApi";
 import { Block } from "@blocknote/core";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
+import { Users } from "lucide-react";
+import CollaboratorModal from "@/components/notes/CollaboratorModal";
+import OCRButton from "@/components/notes/OCRButton";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,6 +25,11 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import toast from "react-hot-toast";
+import { generateFlashcardsFromNote } from "@/services/flashcardApi";
+import CommentSidebar, {
+  NoteComment,
+} from "@/components/notes/comment-sidebar";
+import { CommentInputModal } from "@/components/notes/CommentModal";
 
 export default function NoteDetailPage() {
   const [note, setNote] = useState<Note | null>(null);
@@ -33,14 +41,45 @@ export default function NoteDetailPage() {
   const [editedContent, setEditedContent] = useState<Block[]>([]);
   const [isSaving, setIsSaving] = useState(false);
 
-  const [group, setGroup] = useState<CourseGroup | null>(null); // <-- NEW
-  const [isDeleting, setIsDeleting] = useState(false); // <-- NEW
+  const [group, setGroup] = useState<PopulatedCourseGroup | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  const { user } = useAuth();
+  const [showGenerateDialog, setShowGenerateDialog] = useState(false);
+  const [numFlashcards, setNumFlashcards] = useState(3);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [editorKey, setEditorKey] = useState(0);
+  const [commentModalOpen, setCommentModalOpen] = useState(false);
+
+  // comment state
+  const [comments, setComments] = useState<NoteComment[]>([]);
+  const [commentsLoading, setCommentsLoading] = useState<boolean>(false);
+
+  // delete-confirmation state for comments
+  const [commentToDelete, setCommentToDelete] = useState<string | null>(null);
+  const [isDeletingComment, setIsDeletingComment] = useState(false);
+
+  // auth
+  const { user, token } = useAuth();
   const params = useParams();
   const router = useRouter();
   const groupId = params.groupId as string;
   const noteId = params.id as string;
+
+  // Parse content helper (supports string or Block[])
+  const parseContent = (
+    content: string | Block[] | null | undefined
+  ): Block[] => {
+    if (!content) return [];
+    if (Array.isArray(content)) return content;
+    try {
+      const parsed = JSON.parse(content);
+      return parsed;
+    } catch (err) {
+      console.error("Failed to parse content", err);
+      return [];
+    }
+  };
 
   const fetchNote = async () => {
     setIsLoading(true);
@@ -48,7 +87,7 @@ export default function NoteDetailPage() {
     try {
       const [noteResponse, groupResponse] = await Promise.all([
         getNoteById(groupId, noteId),
-        getGroupById(groupId),
+        getGroupWithMembers(groupId),
       ]);
       setNote(noteResponse.note);
       setGroup(groupResponse);
@@ -62,23 +101,52 @@ export default function NoteDetailPage() {
     }
   };
 
-  useEffect(() => {
+  // Attach Authorization header if a JWT token is present
+  const buildAuthHeaders = (extra: HeadersInit = {}) => {
+    const headers: Record<string, string> = {
+      ...(extra as Record<string, string>),
+    };
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+    return headers;
+  };
+
+  const fetchComments = async () => {
     if (!groupId || !noteId) return;
-    fetchNote();
-  }, [groupId, noteId]);
+    try {
+      setCommentsLoading(true);
+
+      const res = await fetch(
+        `http://localhost:8080/api/groups/${groupId}/notes/${noteId}/comments`,
+        {
+          credentials: "include",
+          headers: buildAuthHeaders(),
+        }
+      );
+
+      if (!res.ok) {
+        console.error("Failed to fetch comments", await res.text());
+        return;
+      }
+
+      const data = await res.json();
+      setComments(data.comments || []);
+    } catch (err) {
+      console.error("Error fetching comments:", err);
+    } finally {
+      setCommentsLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (!groupId || !noteId) return;
 
     const fetchData = async () => {
-      setIsLoading(true);
-      setError(null);
-
       try {
-        // fetch note and group data in parallel
         const [noteResponse, groupResponse] = await Promise.all([
           getNoteById(groupId, noteId),
-          getGroupById(groupId),
+          getGroupWithMembers(groupId),
         ]);
 
         setNote(noteResponse.note);
@@ -95,7 +163,29 @@ export default function NoteDetailPage() {
     };
 
     fetchData();
+    fetchComments();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [groupId, noteId]);
+
+  // Logic to check if current user is a collaborator
+  const isCollaborator = note?.collaborators?.some(
+    (collab) => collab._id === user?.id
+  );
+
+  const isAuthor = !!(user && note && user.id === note.userId._id);
+
+  const isGroupOwner =
+    user &&
+    group &&
+    (typeof group.ownerId === "string"
+      ? user.id === group.ownerId
+      : user.id === group.ownerId._id);
+
+  // Permission for DELETING (Strict: Author or Group Owner only)
+  const canDelete = !!(isAuthor || isGroupOwner);
+
+  // Permission for EDITING (Broad: Author OR Collaborator)
+  const canEdit = !!(isAuthor || isCollaborator);
 
   const handleSave = async () => {
     if (!note) return;
@@ -108,44 +198,14 @@ export default function NoteDetailPage() {
         content: JSON.stringify(editedContent),
       });
 
-      setIsEditing(false); // back to view mode
-      fetchNote(); // refetch the note to show the saved data
-      // TODO: Add a success toast notification here
+      setIsEditing(false);
+      fetchNote();
       toast.success("Changes saved.");
     } catch (err) {
       console.error("Failed to save note:", err);
       toast.error("Failed to save note.");
-      // TODO: Add an error toast notification here
     } finally {
       setIsSaving(false);
-    }
-  };
-
-  // Helper to parse the content string
-  const parseContent = (content: string): Block[] | undefined => {
-    try {
-      return JSON.parse(content);
-    } catch (e) {
-      // If content is not valid JSON, return a single block with the raw text
-      return [
-        {
-          id: "initial-block",
-          type: "paragraph",
-          props: {
-            textColor: "default",
-            backgroundColor: "default",
-            textAlignment: "left",
-          },
-          content: [
-            {
-              type: "text",
-              text: content,
-              styles: {},
-            },
-          ],
-          children: [],
-        },
-      ];
     }
   };
 
@@ -156,21 +216,233 @@ export default function NoteDetailPage() {
 
     try {
       await deleteNote(groupId, noteId);
-      router.push(`/groups/${groupId}/notes`); // redirect to main notes page after deletion
+      router.push(`/groups/${groupId}/notes`);
       toast.success("Note deleted.");
-      // TODO: Add a success toast notification here
     } catch (err) {
       console.error("Failed to delete note:", err);
       toast.error("Failed to delete note.");
-      // TODO: Add an error toast notification here
     } finally {
       setIsDeleting(false);
     }
   };
 
-  const isAuthor = user && note && user.id === note.userId._id;
-  const isGroupOwner = user && group && user.id === group.ownerId;
-  const canModify = isAuthor || isGroupOwner;
+  const handleCancel = () => {
+    if (!note) return;
+
+    setEditedTitle(note.title);
+    setEditedContent(parseContent(note.content) || []);
+    setEditorKey((prev) => prev + 1);
+    setIsEditing(false);
+  };
+
+  const handleGenerate = async () => {
+    if (!note) return;
+
+    setIsGenerating(true);
+
+    try {
+      const response = await generateFlashcardsFromNote(
+        groupId,
+        noteId,
+        numFlashcards
+      );
+
+      setIsGenerating(false);
+
+      if (!response || !Array.isArray(response.flashcards)) {
+        toast.error("Failed to generate flashcards.");
+        return;
+      }
+
+      router.push(
+        `/groups/${groupId}/flashcards/create?generated=${encodeURIComponent(
+          JSON.stringify(response.flashcards)
+        )}`
+      );
+    } catch (err: any) {
+      setIsGenerating(false);
+      toast.dismiss();
+      toast.error(
+        "Generation failed. Add more notes or reduce number of flashcards."
+      );
+    }
+  };
+
+  // Handler for OCR result (uses BlockNote blocks)
+  const handleOCRResult = (text: string) => {
+    const newBlocks = text
+      .split("\n")
+      .filter((line) => line.trim() !== "")
+      .map((line) => ({
+        id: Date.now().toString() + Math.random().toString(),
+        type: "paragraph",
+        props: {
+          textColor: "default",
+          backgroundColor: "default",
+          textAlignment: "left",
+        },
+        content: [{ type: "text", text: line, styles: {} }],
+        children: [],
+      }));
+
+    setEditedContent((prev) => [...prev, ...newBlocks] as any[]);
+    setEditorKey((prev) => prev + 1);
+  };
+
+  const handleAddComment = () => {
+    setCommentModalOpen(true);
+  };
+
+  const handleSubmitComment = async (content: string) => {
+    const trimmed = content.trim();
+    if (!trimmed) return;
+
+    try {
+      const res = await fetch(
+        `http://localhost:8080/api/groups/${groupId}/notes/${noteId}/comments`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: buildAuthHeaders({ "Content-Type": "application/json" }),
+          body: JSON.stringify({ content: trimmed }),
+        }
+      );
+
+      if (!res.ok) {
+        console.error("Failed to create comment", await res.text());
+        toast.error("Failed to create comment.");
+        return;
+      }
+
+      await fetchComments();
+      toast.success("Comment created.");
+    } catch (err) {
+      console.error("Error creating comment:", err);
+      toast.error("Failed to create comment.");
+    }
+  };
+
+  const handleEditComment = async (commentId: string, newText: string) => {
+    try {
+      const res = await fetch(
+        `http://localhost:8080/api/groups/${groupId}/notes/${noteId}/comments/${commentId}`,
+        {
+          method: "PUT",
+          credentials: "include",
+          headers: buildAuthHeaders({ "Content-Type": "application/json" }),
+          body: JSON.stringify({ content: newText }),
+        }
+      );
+      if (!res.ok) {
+        console.error("Failed to update comment", await res.text());
+        toast.error("Failed to update comment.");
+        return;
+      }
+      await fetchComments();
+      toast.success("Comment updated.");
+    } catch (err) {
+      console.error("Error updating comment:", err);
+      toast.error("Failed to update comment.");
+    }
+  };
+
+  const handleReplyComment = async (parentId: string, text: string) => {
+    const trimmed = text.trim();
+    if (!trimmed) return;
+
+    try {
+      const res = await fetch(
+        `http://localhost:8080/api/groups/${groupId}/notes/${noteId}/comments`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: buildAuthHeaders({ "Content-Type": "application/json" }),
+          body: JSON.stringify({ content: trimmed, parentCommentId: parentId }),
+        }
+      );
+      if (!res.ok) {
+        console.error("Failed to create reply", await res.text());
+        toast.error("Failed to create reply.");
+        return;
+      }
+      await fetchComments();
+      toast.success("Reply added.");
+    } catch (err) {
+      console.error("Error creating reply:", err);
+      toast.error("Failed to create reply.");
+    }
+  };
+
+  const handleDeleteComment = (commentId: string) => {
+    setCommentToDelete(commentId);
+  };
+
+  const confirmDeleteComment = async () => {
+    if (!commentToDelete) return;
+    setIsDeletingComment(true);
+
+    try {
+      const res = await fetch(
+        `http://localhost:8080/api/groups/${groupId}/notes/${noteId}/comments/${commentToDelete}`,
+        {
+          method: "DELETE",
+          credentials: "include",
+          headers: buildAuthHeaders(),
+        }
+      );
+
+      if (!res.ok) {
+        console.error("Failed to delete comment", await res.text());
+        toast.error("Failed to delete comment.");
+        return;
+      }
+
+      await fetchComments();
+      toast.success("Comment deleted.");
+    } catch (err) {
+      console.error("Error deleting comment:", err);
+      toast.error("Failed to delete comment.");
+    } finally {
+      setIsDeletingComment(false);
+      setCommentToDelete(null);
+    }
+  };
+
+  // resolve userId -> "First Last" using PopulatedCourseGroup
+  const resolveUserName = async (userId: string): Promise<string | null> => {
+    if (!group) return null;
+    if (!userId) return null;
+
+    if (group.ownerId && group.ownerId._id === userId) {
+      return `${group.ownerId.firstName} ${group.ownerId.lastName}`;
+    }
+
+    const member = group.members?.find(
+      (m) => m.userId && m.userId._id === userId
+    );
+    if (member) {
+      return `${member.userId.firstName} ${member.userId.lastName}`;
+    }
+
+    try {
+      const res = await fetch(`http://localhost:8080/api/users/${userId}`, {
+        credentials: "include",
+      });
+      if (!res.ok) return null;
+      const data = await res.json();
+
+      if (data?.firstName && data?.lastName) {
+        return `${data.firstName} ${data.lastName}`;
+      }
+      if (data?.user?.firstName && data?.user?.lastName) {
+        return `${data.user.firstName} ${data.user.lastName}`;
+      }
+      return data?.email ?? data?.user?.email ?? null;
+    } catch (err) {
+      console.error("Failed to resolve user name", err);
+      return null;
+    }
+  };
 
   if (isLoading) {
     return <div className="text-center py-12">Loading note...</div>;
@@ -184,8 +456,15 @@ export default function NoteDetailPage() {
     return <div className="text-center py-12">Note not found.</div>;
   }
 
+  const isOwner =
+    user &&
+    group &&
+    (typeof group.ownerId === "string"
+      ? user.id === group.ownerId
+      : user.id === group.ownerId._id);
+
   return (
-    <div className="w-full max-w-4xl mx-auto py-12 px-6">
+    <div className="w-full py-12 px-6">
       {/* --- HEADER SECTION --- */}
       <div className="flex justify-between items-center ml-14 pb-4 mb-6">
         {isEditing ? (
@@ -199,7 +478,97 @@ export default function NoteDetailPage() {
           <h1 className="text-3xl font-bold">{note.title}</h1>
         )}
         <div className="flex items-center space-x-2">
-          {canModify && !isEditing && (
+          {!isEditing && (
+            <>
+              {isAuthor && (
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setIsShareModalOpen(true)}
+                  title="Manage Collaborators"
+                >
+                  <Users className="h-4 w-4" />
+                </Button>
+              )}
+
+              {canEdit && (
+                <Button
+                  variant="outline"
+                  onClick={() => setIsEditing(true)}
+                  disabled={isSaving}
+                >
+                  Edit
+                </Button>
+              )}
+
+              <AlertDialog
+                open={showGenerateDialog}
+                onOpenChange={setShowGenerateDialog}
+              >
+                <AlertDialogTrigger asChild>
+                  <Button variant="outline" disabled={isGenerating}>
+                    Generate Flashcards
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Generate Flashcards</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Enter how many flashcards you want to generate from this
+                      note.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <div className="space-y-4">
+                    <label className="block text-sm font-medium">
+                      Number of Flashcards
+                    </label>
+                    <input
+                      type="number"
+                      min={1}
+                      max={50}
+                      value={numFlashcards}
+                      onChange={(e) =>
+                        setNumFlashcards(Number(e.target.value))
+                      }
+                      className="w-full border rounded px-3 py-2"
+                    />
+                  </div>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleGenerate}
+                      disabled={isGenerating}
+                    >
+                      {isGenerating ? "Generating..." : "Generate"}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+
+              <OCRButton onOCRResult={handleOCRResult} />
+            </>
+          )}
+
+          {isEditing && (
+            <>
+              <Button
+                variant="outline"
+                onClick={handleCancel}
+                disabled={isSaving}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSave}
+                disabled={isSaving}
+                className="bg-yellow-400 hover:bg-yellow-500 text-black"
+              >
+                {isSaving ? "Saving..." : "Save"}
+              </Button>
+            </>
+          )}
+
+          {canDelete && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button variant="destructive">Delete</Button>
@@ -209,60 +578,110 @@ export default function NoteDetailPage() {
                   <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                   <AlertDialogDescription>
                     This action cannot be undone. This will permanently delete
-                    this note.
+                    the note.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={handleDelete}
-                    disabled={isDeleting}
-                  >
-                    {isDeleting ? "Deleting..." : "Delete"}
+                  <AlertDialogAction onClick={handleDelete}>
+                    Delete
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
           )}
-
-          {isAuthor &&
-            (isEditing ? (
-              <>
-                <Button variant="ghost" onClick={() => setIsEditing(false)}>
-                  Cancel
-                </Button>
-                <Button onClick={handleSave} disabled={isSaving}>
-                  {isSaving ? "Saving..." : "Save"}
-                </Button>
-              </>
-            ) : (
-              <Button variant="outline" onClick={() => setIsEditing(true)}>
-                Edit
-              </Button>
-            ))}
         </div>
       </div>
 
-      <div className="ml-14 w-1/3 pb-4">
-        <div className="grid grid-cols-2 mb-2">
-          <h4 className="text-gray-500">Created by:</h4>
-          <span>
-            {note.userId.firstName} {note.userId.lastName}
-          </span>
-        </div>
-        <div className="grid grid-cols-2 mb-2">
-          <h4 className="text-gray-500">Last modified:</h4>
-          <span>{new Date(note.updatedAt).toLocaleDateString()}</span>
-        </div>
+      {/* --- META INFO SECTION --- */}
+      <div className="ml-14 mb-4 text-gray-500">
+        <p>
+          <span className="font-semibold">Created by:</span>{" "}
+          {note.userId?.firstName} {note.userId?.lastName}
+        </p>
+        <p>
+          <span className="font-semibold">Last modified:</span>{" "}
+          {note.updatedAt
+            ? new Date(note.updatedAt).toLocaleDateString()
+            : "Unknown"}
+        </p>
       </div>
 
-      <div className="min-h-screen pt-6 border-t border-gray-200">
-        <Editor
-          onChange={setEditedContent}
-          initialContent={parseContent(note.content)}
-          editable={isEditing}
+      {/* --- MAIN CONTENT: Editor + Comment Sidebar --- */}
+      <div className="min-h-screen pt-6 border-t border-gray-200 flex">
+        <div className="flex-1 pr-6">
+          <Editor
+            key={editorKey}
+            onChange={setEditedContent}
+            initialContent={isEditing ? editedContent : parseContent(note.content)}
+            editable={isEditing}
+          />
+        </div>
+
+        <CommentSidebar
+          comments={comments}
+          loading={commentsLoading}
+          onAddComment={handleAddComment}
+          onDeleteComment={handleDeleteComment}
+          onEditComment={handleEditComment}
+          onReplyComment={handleReplyComment}
+          currentUserId={user?.id}
+          groupOwnerId={
+            group?.ownerId
+              ? typeof group.ownerId === "string"
+                ? group.ownerId
+                : group.ownerId._id
+              : undefined
+          }
+          resolveUserName={resolveUserName}
         />
       </div>
+
+      <CommentInputModal
+        open={commentModalOpen}
+        onClose={() => setCommentModalOpen(false)}
+        onSubmit={async (value) => {
+          await handleSubmitComment(value);
+          setCommentModalOpen(false);
+        }}
+      />
+
+      <AlertDialog
+        open={!!commentToDelete}
+        onOpenChange={(open) => {
+          if (!open) setCommentToDelete(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete comment?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the
+              comment.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDeleteComment}
+              disabled={isDeletingComment}
+            >
+              {isDeletingComment ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {note && group && (
+        <CollaboratorModal
+          isOpen={isShareModalOpen}
+          onClose={() => setIsShareModalOpen(false)}
+          note={note}
+          group={group}
+          isAuthor={isAuthor}
+          onUpdate={(updatedNote) => setNote(updatedNote)}
+        />
+      )}
     </div>
   );
 }

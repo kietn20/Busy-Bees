@@ -48,7 +48,9 @@ export default function EventDetailModal({ isOpen, onClose, event, isLoading, gr
       setTitle(event.title);
       setDescription(event.description || '');
 
-      const localDateTime = new Date(event.startTime).toISOString().slice(0, 16); // "YYYY-MM-DDTHH:MM"
+      const dt = new Date(event.startTime);
+      const pad = (n: number) => n.toString().padStart(2, '0');
+      const localDateTime = `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}T${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
       setStartTime(localDateTime);
     }
   }, [event]);
@@ -108,7 +110,7 @@ export default function EventDetailModal({ isOpen, onClose, event, isLoading, gr
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent>
+      <DialogContent className="max-w-md w-full">
         <DialogHeader>
           <DialogTitle>{isEditing ? 'Edit Event' : event?.title}</DialogTitle>
           {!isEditing && <DialogDescription className="pt-2">Hosted by {event?.createdBy.firstName}</DialogDescription>}
@@ -118,9 +120,12 @@ export default function EventDetailModal({ isOpen, onClose, event, isLoading, gr
         {isEditing ? (
           // --- EDIT MODE ---
           <div className="space-y-4 py-4">
-            <div><Label htmlFor="edit-title">Title</Label><Input id="edit-title" value={title} onChange={e => setTitle(e.target.value)} /></div>
-            <div><Label htmlFor="edit-startTime">Start Time</Label><Input id="edit-startTime" type="datetime-local" value={startTime} onChange={e => setStartTime(e.target.value)} /></div>
-            <div><Label htmlFor="edit-description">Description</Label><Textarea id="edit-description" value={description} onChange={e => setDescription(e.target.value)} /></div>
+            <div><Label htmlFor="edit-title">Title</Label><Input id="edit-title" value={title} onChange={e => setTitle(e.target.value)} maxLength={45} /></div>
+            <div><Label htmlFor="edit-startTime">Start Time</Label>
+                <Input id="edit-startTime" type="datetime-local" min="1900-01-01T00:00"
+                  max="2099-12-31T23:59" value={startTime} onChange={e => setStartTime(e.target.value)} />
+                </div>
+            <div><Label htmlFor="edit-description">Description</Label><Textarea id="edit-description" value={description} onChange={e => setDescription(e.target.value)} maxLength={150} className="w-[460px]"/></div>
           </div>
         ) : (
           // --- VIEW MODE ---
@@ -129,7 +134,9 @@ export default function EventDetailModal({ isOpen, onClose, event, isLoading, gr
             {event && (
               <>
                 <p><strong>Start Time:</strong> {formatDate(event.startTime)}</p>
-                {event.description && <p><strong>Description:</strong> {event.description}</p>}
+                {event.description && <p className="break-all whitespace-pre-line w-full" style={{ wordBreak: "break-all", overflowWrap: "break-word" }}>
+                    <strong>Description:</strong> {event.description}
+                  </p>}
               </>
             )}
           </div>

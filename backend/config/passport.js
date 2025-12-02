@@ -10,10 +10,10 @@ passport.deserializeUser(async (id, done) => {
 
 // Configure Passport to use Google OAuth 2.0 strategy
 passport.use(new GoogleStrategy({
-    clientID: process.env.GOOGLE_CLIENT_ID, // Store secrets in environment variables
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: "/api/auth/google/callback" // Use a secure callback URL
-  },
+  clientID: process.env.GOOGLE_CLIENT_ID, // Store secrets in environment variables
+  clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+  callbackURL: "/api/auth/google/callback" // Use a secure callback URL
+},
   // OAuth callback: runs after Google authenticates the user
   async (accessToken, refreshToken, profile, done) => {
     try {
@@ -31,11 +31,14 @@ passport.use(new GoogleStrategy({
         }
         // If user doesn't exist, create a new user record
         // For OAuth users, do NOT require or store a password
+        const email = profile.emails[0].value;
+        const displayName = profile.displayName || email.split('@')[0];
+
         user = new User({
           googleId: profile.id,
-          firstName: profile.name.givenName || "", // Use Google profile name
-          lastName: profile.name.familyName || "",
-          email: profile.emails[0].value, // Always use verified email
+          firstName: profile.name?.givenName || displayName, // Use Google profile name or display name
+          lastName: profile.name?.familyName || "", // Keep empty if not provided
+          email: email, // Always use verified email
           // No password for OAuth users
         });
         await user.save(); // Save new user to MongoDB

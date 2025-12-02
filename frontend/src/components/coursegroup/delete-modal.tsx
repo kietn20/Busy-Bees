@@ -31,7 +31,7 @@ const DeleteModal = ({ groupId }: { groupId: string }) => {
       toast.success("Group deleted successfully.");
       router.push('/');
     } catch (err: any) {
-      const message = err?.response?.data?.message || 'Failed to delete group';
+      const message = err?.response?.data?.message || 'Failed to delete group.';
       setError(message);
       toast.error(message);
     } finally {

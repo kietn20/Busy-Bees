@@ -5,6 +5,7 @@ const session = require("express-session");
 const passport = require("passport");
 const mongoose = require("mongoose");
 const User = require("./models/User.model");
+const ocrRoutes = require('./routes/ocr.routes');
 
 dotenv.config();
 
@@ -17,7 +18,10 @@ const accountRoutes = require("./routes/account.routes");
 const courseGroupRoutes = require("./routes/coursegroup.routes");
 const { nestedEventRouter, eventRouter } = require("./routes/event.routes"); 
 const { nestedNotesRouter, noteRouter } = require('./routes/notes.routes');
+const noteCommentRoutes = require("./routes/notecomment.routes");
 const flashcardRoutes = require('./routes/flashcard.routes');
+require('./hooks/favorites.hooks'); // hooks for favorites snapshots
+require('./hooks/recentlyViewed.hooks'); // hooks for recently viewed snapshots
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -27,7 +31,8 @@ app.use(cors({
   credentials: true
 }));
 
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 // Express session
 app.use(session({
@@ -52,8 +57,10 @@ app.use('/api/groups/:groupId/events', nestedEventRouter); // nested routes for 
 app.use('/api/events', eventRouter); // top-level event routes
 app.use('/api/groups/:groupId/notes', nestedNotesRouter);
 app.use('/api/notes', noteRouter);
+app.use("/api/groups/:groupId/notes/:noteId/comments", noteCommentRoutes);
 
-
+// OCR route
+app.use('/api/ocr', ocrRoutes);
 
 // Health Check Endpoint
 app.get('/api/health', (req, res) => {

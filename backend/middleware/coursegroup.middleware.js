@@ -1,4 +1,6 @@
 const CourseGroup = require('../models/CourseGroup.model');
+const User = require('../models/User.model');
+
 
 // Middleware to check if user is the owner of a group
 const requireGroupOwner = async (req, res, next) => {
@@ -60,7 +62,49 @@ const requireGroupMember = async (req, res, next) => {
   }
 };
 
+// Middleware to validate courseId from query (for GET /favorites and /recently-viewed)
+function requireCourseQuery(req, res, next) {
+  const { courseId, kind } = req.query || {};
+  if (!courseId) return res.status(400).json({ message: 'courseId query param is required' });
+  if (kind && !['note', 'flashcardSet'].includes(kind)) {
+    return res.status(400).json({ message: 'kind must be "note" or "flashcardSet"' });
+  }
+  req.courseQuery = { courseId, kind };
+  next();
+}
+
+// Middleware to load the user's registered course entry and user doc
+async function ensureRegisteredCourse(req, res, next) {
+  try {
+    const courseId =
+      req.courseAction?.courseId ||
+      req.courseQuery?.courseId ||
+      req.body?.courseId ||
+      req.query?.courseId;
+    if (!courseId) return res.status(400).json({ message: 'courseId is required' });
+
+    const userId = req.user && req.user._id;
+    if (!userId) return res.status(401).json({ message: 'Not authenticated' });
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    const reg = (user.registeredCourses || []).find(rc => String(rc.courseId) === String(courseId));
+    if (!reg) return res.status(403).json({ message: 'User not registered in course' });
+
+    // attach for controllers to use
+    req.userDoc = user;
+    req.registeredCourse = reg;
+    next();
+  } catch (err) {
+    console.error('ensureRegisteredCourse error:', err);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+}
+
 module.exports = {
   requireGroupOwner,
-  requireGroupMember
+  requireGroupMember,
+  requireCourseQuery,
+  ensureRegisteredCourse
 };
