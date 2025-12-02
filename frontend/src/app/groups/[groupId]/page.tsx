@@ -1,42 +1,64 @@
 "use client";
-import QuickLinks from "@/components/dashboard/quick-links";
+
 import RecentView from "@/components/dashboard/recent-view";
 import GroupActivity from "@/components/dashboard/group-activity";
 import UpcomingEvents from "@/components/dashboard/upcoming-events";
-import { useState, useEffect } from "react";
-import { getGroupEvents, Event } from "@/services/groupApi";
+import { useState, useEffect, useCallback } from "react";
+import {
+  getGroupEvents,
+  getGroupById,
+  Event,
+  CourseGroup,
+} from "@/services/groupApi";
 import { useParams } from "next/navigation";
+import { Tally1 } from "lucide-react";
 
 export default function GroupPage() {
   const params = useParams();
   const groupId = params.groupId as string;
   const [events, setEvents] = useState<Event[]>([]);
+  const [group, setGroup] = useState<CourseGroup | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   //make this only for the next 2 weeks or smth.
-  const fetchEvents = async () => {
+  const fetchData = useCallback(async () => {
     if (!groupId) return;
     setIsLoading(true);
     setError(null);
     try {
-      const fetchedEvents = await getGroupEvents(groupId);
+      const [fetchedEvents, fetchedGroup] = await Promise.all([
+        getGroupEvents(groupId),
+        getGroupById(groupId),
+      ]);
       setEvents(fetchedEvents);
+      setGroup(fetchedGroup);
     } catch (err) {
-      setError("Failed to load events.");
+      setError("Failed to load data.");
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [groupId]);
 
   useEffect(() => {
-    fetchEvents();
-  }, [groupId]);
+    fetchData();
+  }, [fetchData]);
 
   
   return (
     <div className="container mx-auto p-8">
-      <h1 className="text-2xl font-bold">Dashboard</h1>
+      <div className="mb-2">
+        <h1 className="text-2xl font-bold">Dashboard</h1>
+        {group?.description && (
+          <div className="flex items-center ">
+            <Tally1 className="inline text-gray-500" />
+            <p className="text-gray-500 py-1 text-[.95rem]">
+              {group.description}
+            </p>
+          </div>
+        )}
+      </div>
+
       <div className="flex gap-4">
         <div className="w-2/3">
           <div className="w-full overflow-y-auto py-6">

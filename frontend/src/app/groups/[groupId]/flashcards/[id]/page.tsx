@@ -183,6 +183,41 @@ export default function FlashcardPage() {
           </div>
         )}
       </div>
+
+      {/* Terms List Section */}
+      {hasTerms && (
+        <div className="container mx-auto px-8 pb-8">
+          <h2 className="text-xl font-semibold text-gray-700 mb-6">
+            {totalTerms} Terms
+          </h2>
+          <div className="space-y-4">
+            {(flashcardSet.flashcards as Flashcard[]).map(
+              (card: Flashcard, index: number) => (
+                <div
+                  key={index}
+                  className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow"
+                >
+                  <div className="flex items-center gap-6">
+                    <div className="flex-shrink-0 w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-sm font-medium text-gray-600">
+                      {index + 1}
+                    </div>
+                    <div className="flex w-full">
+                      <div className="flex items-center w-1/3 border-r border-gray-300">
+                        <h3 className="font-medium text-gray-900">
+                          {card.term}
+                        </h3>
+                      </div>
+                      <div className="pl-6 md:pl-6 flex items-center w-2/3">
+                        <p className="text-gray-600">{card.definition}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

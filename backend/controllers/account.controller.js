@@ -183,7 +183,7 @@ const addFavorite = async (req, res) => {
     if (exists) return res.json({ isFavorited: true });
 
     // push and save
-    reg.favorites.push({ kind, itemId: mongoose.Types.ObjectId(itemId), titleSnapshot });
+    reg.favorites.push({ kind, itemId: new mongoose.Types.ObjectId(itemId), titleSnapshot });
     await user.save();
 
     return res.json({ isFavorited: true });

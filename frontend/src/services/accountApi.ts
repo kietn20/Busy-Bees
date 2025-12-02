@@ -26,3 +26,98 @@ export const deleteAccount = async (): Promise<void> => {
     );
   }
 };
+
+// Favorites API
+export const addFavorite = async (courseId: string, kind: "note" | "flashcardSet", itemId: string) => {
+  const payload = { courseId, kind, itemId };
+  try {
+    console.debug("addFavorite payload:", payload);
+    const response = await api.post(`/account/favorites`, payload);
+    // Notify any listeners in the client that favorites changed
+    if (typeof window !== "undefined") {
+      try {
+        const detail = { courseId, kind, itemId, isFavorited: true };
+        console.debug("dispatching favorites:changed (add):", detail);
+        window.dispatchEvent(new CustomEvent("favorites:changed", { detail }));
+      } catch (e) {
+        // ignore in older browsers
+      }
+    }
+    return response.data;
+  } catch (e: any) {
+    console.error("addFavorite error:", e?.response ?? e);
+    const msg = e?.response?.data?.message || e?.message || "Failed to add favorite";
+    const err: any = new Error(msg);
+    err.status = e?.response?.status;
+    throw err;
+  }
+};
+
+export const removeFavorite = async (courseId: string, kind: "note" | "flashcardSet", itemId: string) => {
+  const payload = { courseId, kind, itemId };
+  try {
+    console.debug("removeFavorite payload:", payload);
+    const response = await api.delete(`/account/favorites`, { data: payload });
+    // Notify any listeners in the client that favorites changed
+    if (typeof window !== "undefined") {
+      try {
+        const detail = { courseId, kind, itemId, isFavorited: false };
+        console.debug("dispatching favorites:changed (remove):", detail);
+        window.dispatchEvent(new CustomEvent("favorites:changed", { detail }));
+      } catch (e) {
+        // ignore in older browsers
+      }
+    }
+    return response.data;
+  } catch (e: any) {
+    console.error("removeFavorite error:", e?.response ?? e);
+    const msg = e?.response?.data?.message || e?.message || "Failed to remove favorite";
+    const err: any = new Error(msg);
+    err.status = e?.response?.status;
+    throw err;
+  }
+};
+
+// Bulk-check favorites for a list of itemIds. Returns an object mapping itemId->boolean
+export const checkFavorites = async (
+  courseId: string,
+  kind: "note" | "flashcardSet",
+  itemIds: string[]
+) => {
+  const payload = { courseId, kind, itemIds };
+  try {
+    console.debug("checkFavorites payload:", payload);
+    const response = await api.post(`/account/favorites/check`, payload);
+    // Debug: log the raw response body so we can inspect shape in the browser
+    console.debug("checkFavorites response:", response.data);
+    // Backend returns { results: { itemId: boolean } }
+    const results = response.data?.results || {};
+    const map: Record<string, boolean> = {};
+    itemIds.forEach((id) => {
+      map[id] = Boolean(results[id]);
+    });
+    return map;
+  } catch (e: any) {
+    console.error("checkFavorites error:", e?.response ?? e);
+    const msg = e?.response?.data?.message || e?.message || "Failed to check favorites";
+    const err: any = new Error(msg);
+    err.status = e?.response?.status;
+    throw err;
+  }
+};
+
+// Get all favorites for a course (optionally filtered by kind)
+export const getFavorites = async (courseId: string, kind?: "note" | "flashcardSet") => {
+  try {
+    console.debug("getFavorites params:", { courseId, kind });
+    const response = await api.get(`/account/favorites`, { params: { courseId, kind } });
+    console.debug("getFavorites response:", response.data);
+    return response.data?.favorites || [];
+  } catch (e: any) {
+    console.error("getFavorites error:", e?.response ?? e);
+    const msg = e?.response?.data?.message || e?.message || "Failed to get favorites";
+    const err: any = new Error(msg);
+    err.status = e?.response?.status;
+    throw err;
+  }
+};

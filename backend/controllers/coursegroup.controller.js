@@ -1,15 +1,15 @@
 // purpose of this file is to serve as the controller for course group related actions
-const CourseGroup = require('../models/CourseGroup.model');
-const Invite = require('../models/Invite.model');
-const User = require('../models/User.model');
-const Note = require('../models/Note.model');
-const NoteComment = require('../models/NoteComment.model');
-const FlashcardSet = require('../models/FlashcardSet.model')
-const Flashcard = require('../models/Flashcard.model')
-const Event = require('../models/Event.model');
-const { generateInviteCode } = require('../utils/invite.util');
-const { omitUndefined } = require('mongoose');
-const mongoose = require('mongoose')
+const CourseGroup = require("../models/CourseGroup.model");
+const Invite = require("../models/Invite.model");
+const User = require("../models/User.model");
+const Note = require("../models/Note.model");
+const NoteComment = require("../models/NoteComment.model");
+const FlashcardSet = require("../models/FlashcardSet.model");
+const Flashcard = require("../models/Flashcard.model");
+const Event = require("../models/Event.model");
+const { generateInviteCode } = require("../utils/invite.util");
+const { omitUndefined } = require("mongoose");
+const mongoose = require("mongoose");
 
 const MAX_GROUP_NAME_LENGTH = 40;
 
@@ -21,7 +21,9 @@ const createCourseGroup = async (req, res) => {
     const { groupName, description } = req.body;
 
     if (!req.user || !req.user._id) {
-      return res.status(401).json({ message: "User must be logged in to create a group." });
+      return res
+        .status(401)
+        .json({ message: "User must be logged in to create a group." });
     }
 
     if (!groupName || groupName.trim() === "") {
@@ -29,7 +31,11 @@ const createCourseGroup = async (req, res) => {
     }
 
     if (groupName.length > MAX_GROUP_NAME_LENGTH) {
-      return res.status(400).json({ message: `Group name must be ${MAX_GROUP_NAME_LENGTH} characters or fewer.` });
+      return res
+        .status(400)
+        .json({
+          message: `Group name must be ${MAX_GROUP_NAME_LENGTH} characters or fewer.`,
+        });
     }
 
     // 1. Create the course group
@@ -49,7 +55,7 @@ const createCourseGroup = async (req, res) => {
         },
       },
     });
-    
+
     res.status(201).json({
       message: "Course group created successfully.",
       group: newGroup,
@@ -69,19 +75,22 @@ const getCourseGroupById = async (req, res) => {
 
     // returns the group with populated member and owner details
     const group = await CourseGroup.findById(id)
-    .populate("members.userId", "firstName lastName email")
-    .populate("ownerId", "firstName lastName email");
+      .populate("members.userId", "firstName lastName email")
+      .populate("ownerId", "firstName lastName email");
 
     if (!group) {
       return res.status(404).json({ message: "Group not found" });
     }
 
-
     // Filter out members with deleted accounts
-    const validMembers = group.members.filter(m => m.userId != null);
-    
+    const validMembers = group.members.filter((m) => m.userId != null);
+
     if (validMembers.length !== group.members.length) {
-      console.log(` Cleaned ${group.members.length - validMembers.length} orphaned members from group ${id}`);
+      console.log(
+        ` Cleaned ${
+          group.members.length - validMembers.length
+        } orphaned members from group ${id}`
+      );
       group.members = validMembers;
       await group.save();
     }
@@ -104,18 +113,17 @@ const generateInvite = async (req, res) => {
     const { groupId } = req.params;
     const userId = req.user._id; // from our 'protect' middleware
     const group = req.group; // from our 'requireGroupOwner' middleware
-  
 
     // 1. check for an existing, valid invite
     let invite = await Invite.findOne({
       courseGroup: groupId,
-      expiresAt: { $gt: new Date() } // check if the expiration date is in the future
+      expiresAt: { $gt: new Date() }, // check if the expiration date is in the future
     });
 
     // 2. if no valid invite exists, create one
     if (!invite) {
       const code = await generateInviteCode();
-      
+
       const expiration = new Date();
       expiration.setDate(expiration.getDate() + 7); // Set expiration to 7 days from now
 
@@ -133,10 +141,9 @@ const generateInvite = async (req, res) => {
       inviteCode: invite.code,
       expiresAt: invite.expiresAt,
     });
-
   } catch (error) {
-    console.error('Error generating invite code:', error);
-    res.status(500).json({ message: 'Internal server error.' });
+    console.error("Error generating invite code:", error);
+    res.status(500).json({ message: "Internal server error." });
   }
 };
 
@@ -150,17 +157,19 @@ const joinGroup = async (req, res) => {
 
     // 1. validate input
     if (!inviteCode) {
-      return res.status(400).json({ message: 'Invite code is required.' });
+      return res.status(400).json({ message: "Invite code is required." });
     }
 
     // 2. validate the invite code
     const invite = await Invite.findOne({
       code: inviteCode,
-      expiresAt: { $gt: new Date() } // ensure it's not expired
+      expiresAt: { $gt: new Date() }, // ensure it's not expired
     });
 
     if (!invite) {
-      return res.status(400).json({ message: 'Invalid or expired invite code.' });
+      return res
+        .status(400)
+        .json({ message: "Invalid or expired invite code." });
     }
 
     // 3. find the associated group
@@ -168,40 +177,43 @@ const joinGroup = async (req, res) => {
     if (!group) {
       // clean up the invalid invite
       await Invite.findByIdAndDelete(invite._id);
-      return res.status(404).json({ message: 'The group for this invite no longer exists.' });
+      return res
+        .status(404)
+        .json({ message: "The group for this invite no longer exists." });
     }
 
     // 4. check if user is already the owner or a member
-    
+
     // .some() checks if at least one element in the array passes the test
-    const isAlreadyMember = group.members.some(memberId => memberId.userId.equals(userId));
+    const isAlreadyMember = group.members.some((memberId) =>
+      memberId.userId.equals(userId)
+    );
     if (isAlreadyMember) {
-      return res.status(409).json({ message: 'You are already a member of this group.' });
+      return res
+        .status(409)
+        .json({ message: "You are already a member of this group." });
     }
 
     // 5. add user to the group's members list
     group.members.push({ userId, role: "member" });
     await group.save();
 
-
-
     // 6. add the group to the user's registeredCourses (NOT IMPLEMENTED YET BECAUSE USER MODEL DOESN'T HAVE IT)
     const courseInfo = { courseId: group._id, courseName: group.groupName };
-    await User.findByIdAndUpdate(userId, { $addToSet: { registeredCourses: courseInfo } });
-
-
+    await User.findByIdAndUpdate(userId, {
+      $addToSet: { registeredCourses: courseInfo },
+    });
 
     res.status(200).json({
-      message: 'Successfully joined the group.',
+      message: "Successfully joined the group.",
       group: {
         id: group._id,
         groupName: group.groupName,
-      }
+      },
     });
-
   } catch (error) {
-    console.error('Error joining group:', error);
-    res.status(500).json({ message: 'Internal server error.' });
+    console.error("Error joining group:", error);
+    res.status(500).json({ message: "Internal server error." });
   }
 };
 
@@ -214,7 +226,11 @@ const updateCourseGroup = async (req, res) => {
     const group = req.group; // from our 'requireGroupOwner' middleware
 
     if (groupName && groupName.length > MAX_GROUP_NAME_LENGTH) {
-      return res.status(400).json({ message: `Group name must be ${MAX_GROUP_NAME_LENGTH} characters or fewer.` });
+      return res
+        .status(400)
+        .json({
+          message: `Group name must be ${MAX_GROUP_NAME_LENGTH} characters or fewer.`,
+        });
     }
 
     // update values (only if provided)
@@ -254,11 +270,14 @@ const deleteCourseGroup = async (req, res) => {
           { groupId: group._id },
           { _id: 1 },
           { session }
-        ).then(notes => notes.map(n => n._id));
+        ).then((notes) => notes.map((n) => n._id));
 
         if (noteIds.length > 0) {
           if (NoteComment) {
-            await NoteComment.deleteMany({ noteId: { $in: noteIds } }, { session });
+            await NoteComment.deleteMany(
+              { noteId: { $in: noteIds } },
+              { session }
+            );
           }
           await Note.deleteMany({ _id: { $in: noteIds } }, { session });
         }
@@ -270,13 +289,16 @@ const deleteCourseGroup = async (req, res) => {
           { courseGroupId: group._id },
           { _id: 1, flashcards: 1 },
           { session }
-        ).then(sets => sets.map(s => s._id));
+        ).then((sets) => sets.map((s) => s._id));
 
-        const setIds = sets.map(s => s._id);
-        const flashcardIds = sets.flatMap(s => s.flashcards);
+        const setIds = sets.map((s) => s._id);
+        const flashcardIds = sets.flatMap((s) => s.flashcards);
 
         if (flashcardIds.length > 0 && Flashcard) {
-          await Flashcard.deleteMany({ _id: { $in: flashcardIds } }, { session });
+          await Flashcard.deleteMany(
+            { _id: { $in: flashcardIds } },
+            { session }
+          );
         }
 
         if (setIds.length > 0) {
@@ -320,25 +342,30 @@ const leaveGroup = async (req, res) => {
   try {
     const { groupId } = req.params;
     const userId = req.user._id;
-    const group = req.group;           // from requireGroup middleware
+    const group = req.group; // from requireGroup middleware
     const memberRecord = req.memberRecord; // from requireGroup middleware
 
     // 1) Prevent owner from leaving
     if (memberRecord?.role === "owner") {
       return res.status(403).json({
-        message: "Group owners cannot leave their own group. Transfer ownership first.",
+        message:
+          "Group owners cannot leave their own group. Transfer ownership first.",
       });
     }
 
     // 2) Ensure user is currently a member
-    const isMember = group.members.some(m => m.userId.toString() === userId.toString());
+    const isMember = group.members.some(
+      (m) => m.userId.toString() === userId.toString()
+    );
     if (!isMember) {
-      return res.status(409).json({ message: "You are not a member of this group." });
+      return res
+        .status(409)
+        .json({ message: "You are not a member of this group." });
     }
 
     await session.withTransaction(async () => {
       // 3) Remove user from group's members
-      group.members = group.members.filter(m => !m.userId.equals(userId));
+      group.members = group.members.filter((m) => !m.userId.equals(userId));
       await group.save({ session });
 
       // 4) Remove group from user's registeredCourses
@@ -354,11 +381,14 @@ const leaveGroup = async (req, res) => {
           { groupId: groupId, userId: userId },
           { _id: 1 },
           { session }
-        ).then(rows => rows.map(n => n._id));
+        ).then((rows) => rows.map((n) => n._id));
 
         if (noteIds.length > 0) {
           if (NoteComment) {
-            await NoteComment.deleteMany({ noteId: { $in: noteIds } }, { session });
+            await NoteComment.deleteMany(
+              { noteId: { $in: noteIds } },
+              { session }
+            );
           }
           await Note.deleteMany({ _id: { $in: noteIds } }, { session });
         }
@@ -372,11 +402,14 @@ const leaveGroup = async (req, res) => {
           { session }
         );
 
-        const setIds = sets.map(s => s._id);
-        const flashcardIds = sets.flatMap(s => s.flashcards);
+        const setIds = sets.map((s) => s._id);
+        const flashcardIds = sets.flatMap((s) => s.flashcards);
 
         if (flashcardIds.length > 0 && Flashcard) {
-          await Flashcard.deleteMany({ _id: { $in: flashcardIds } }, { session });
+          await Flashcard.deleteMany(
+            { _id: { $in: flashcardIds } },
+            { session }
+          );
         }
 
         if (setIds.length > 0) {
@@ -386,7 +419,10 @@ const leaveGroup = async (req, res) => {
 
       // 7) Delete all events created by this user in the group
       if (Event) {
-        await Event.deleteMany({ courseGroup: groupId, createdBy: userId }, { session });
+        await Event.deleteMany(
+          { courseGroup: groupId, createdBy: userId },
+          { session }
+        );
 
         // And remove the user from attendees of any remaining events in the group
         await Event.updateMany(
@@ -421,27 +457,39 @@ const transferCourseGroupOwnership = async (req, res) => {
 
     // validate input
     if (!newOwnerId) {
-      return res.status(400).json({ message: 'New owner ID is required.' });
+      return res.status(400).json({ message: "New owner ID is required." });
     }
 
     // check if new owner is different from current owner
     if (group.ownerId.equals(newOwnerId)) {
-      return res.status(400).json({ message: 'New owner must be different from current owner.' });
+      return res
+        .status(400)
+        .json({ message: "New owner must be different from current owner." });
     }
 
     // Filter out members with null userId first (deleted accounts)
-    group.members = group.members.filter(m => m.userId != null);
+    group.members = group.members.filter((m) => m.userId != null);
 
     // check if new owner is member of the group and find the owner
-    const newOwnerMember = group.members.find(member => member.userId.equals(newOwnerId));
-    const currentOwnerMember = group.members.find(member => member.userId.equals(currentUserId));
+    const newOwnerMember = group.members.find((member) =>
+      member.userId.equals(newOwnerId)
+    );
+    const currentOwnerMember = group.members.find((member) =>
+      member.userId.equals(currentUserId)
+    );
 
     if (!newOwnerMember) {
-      return res.status(404).json({ message: 'The specified new owner is not a member of the group.' });
+      return res
+        .status(404)
+        .json({
+          message: "The specified new owner is not a member of the group.",
+        });
     }
 
     if (!currentOwnerMember) {
-      return res.status(500).json({ message: 'Current owner not found in members list.' });
+      return res
+        .status(500)
+        .json({ message: "Current owner not found in members list." });
     }
 
     // update roles in members array
@@ -461,12 +509,14 @@ const transferCourseGroupOwnership = async (req, res) => {
 
     // Filter again after populate (in case any became null during populate)
     if (updatedGroup) {
-      updatedGroup.members = updatedGroup.members.filter(m => m.userId != null);
+      updatedGroup.members = updatedGroup.members.filter(
+        (m) => m.userId != null
+      );
     }
 
     res.status(200).json({
       message: "Ownership transferred successfully.",
-      group: updatedGroup
+      group: updatedGroup,
     });
   } catch (error) {
     console.error("Error transferring ownership:", error);
@@ -486,16 +536,20 @@ const getUserGroups = async (req, res) => {
     }
 
     // Get the latest group info from CourseGroup collection
-    const groupIds = user.registeredCourses.map(rc => rc.courseId);
-    const groups = await CourseGroup.find({ _id: { $in: groupIds } }).select("_id groupName");
-    
+    const groupIds = user.registeredCourses.map((rc) => rc.courseId);
+    const groups = await CourseGroup.find({ _id: { $in: groupIds } }).select(
+      "_id groupName description"
+    );
+
     return res.status(200).json({
       message: "User's registered course groups retrieved successfully",
-      groups
+      groups,
     });
   } catch (error) {
     console.error("Error fetching user groups:", error);
-    return res.status(500).json({ message: "Server error", error: error.message });
+    return res
+      .status(500)
+      .json({ message: "Server error", error: error.message });
   }
 };
 
@@ -706,13 +760,13 @@ const getGroupActivity = async (req, res) => {
 //     // Filter out null members from each group
 //     const cleanedGroups = groups.map(group => {
 //       const validMembers = group.members.filter(m => m.userId != null);
-      
+
 //       if (validMembers.length !== group.members.length) {
 //         console.log(`⚠️ Cleaned ${group.members.length - validMembers.length} orphaned members from group ${group._id}`);
 //         group.members = validMembers;
 //         group.save(); // Save asynchronously (fire and forget)
 //       }
-      
+
 //       return group;
 //     });
 //     res.status(200).json({
@@ -742,7 +796,6 @@ const addUserToCourseGroup = (req, res) => {
 const removeUserFromCourseGroup = (req, res) => {
   res.status(200).json({ message: "Stub: removeUserFromCourseGroup" });
 };
-
 
 // lists all members of a course group
 // we do not need this for displaying members

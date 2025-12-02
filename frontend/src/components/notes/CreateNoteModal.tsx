@@ -42,6 +42,19 @@ export default function CreateNoteModal({
       setError("Title is required.");
       return;
     }
+
+    const isEmpty =
+      !content ||
+      content.length === 0 ||
+      (content.length === 1 &&
+        content[0].type === "paragraph" &&
+        (!content[0].content || content[0].content.length === 0));
+
+    if (isEmpty) {
+      toast.error("Content is required.", { id: TOAST_ERR_ID });
+      setError("Content is required.");
+      return;
+    }
     setIsLoading(true);
     setError(null);
 
@@ -91,7 +104,7 @@ export default function CreateNoteModal({
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Note Title"
               required
-              className="text-2xl font-bold border-none shadow-none focus-visible:ring-0 bg-white text-gray-900 w-full max-w-full"
+              className="!text-2xl !font-bold border-none shadow-none focus-visible:ring-0 bg-white text-gray-900 w-full max-w-full "
             />
           </div>
           <div className="flex-grow min-h-0 bg-white overflow-hidden">
