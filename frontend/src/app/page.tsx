@@ -92,6 +92,7 @@ export default function HomePage() {
 
   return (
     <>
+      <GoogleSignInToast />
       <main className="py-12 container mx-auto px-6">
         {user && (
           <div className="flex items-start justify-between mb-8 animate-in fade-in slide-in-from-top-3 duration-300">

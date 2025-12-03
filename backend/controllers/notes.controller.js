@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const Note = require("../models/Note.model");
 const CourseGroup = require("../models/CourseGroup.model");
 const User = require("../models/User.model");
-
+const NoteComment = require("../models/NoteComment.model");
 
 // @desc    Create a new note in a group
 // @route   POST /api/groups/:groupId/notes
@@ -76,12 +76,17 @@ const updateNote = async (req, res) => {
     if (content !== undefined) update.content = content;
     if (images !== undefined) update.images = images;
 
+    // Ensure we record who made the edit so activity shows the editor
+    if (Object.keys(update).length > 0) {
+      update.lastEditedBy = userId;
+    }
+
     // Update the note
     const updatedNote = await Note.findByIdAndUpdate(
       noteId,
       { $set: update },
       { new: true }
-    ).populate("userId", "firstName lastName email");
+    ).populate("userId", "firstName lastName email").populate('lastEditedBy', 'firstName lastName email');
 
     res.status(200).json({
       message: "Note updated successfully",
@@ -127,7 +132,10 @@ const deleteNote = async (req, res) => {
       return res.status(403).json({ message: "Only the author or group owner can delete this note" });
     }
 
-    // 5. Delete the note
+    // 5. Delete all comments associated with this note
+    await NoteComment.deleteMany({ noteId: noteId }); 
+
+    // 6. Delete the note
     await Note.findByIdAndDelete(noteId);
 
     res.status(200).json({

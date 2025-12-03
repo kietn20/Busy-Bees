@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import toast from "react-hot-toast";
 import { addRecentlyViewed } from "@/services/recentlyviewedApi";
 import SearchFilterBar from "@/components/SearchFilter";
+import { checkFavorites, addFavorite, removeFavorite } from "@/services/accountApi";
 
 type SortKey = "recent" | "oldest" | "title-asc" | "title-desc";
 
@@ -75,6 +76,52 @@ export default function NotesList() {
   useEffect(() => {
     fetchNotes();
   }, [groupId, fetchNotes]);
+  const [favoritesMap, setFavoritesMap] = useState<Record<string, boolean>>({});
+
+  // load favorites for sidebar items after notes load
+  useEffect(() => {
+    const loadFavorites = async () => {
+      if (!groupId || notes.length === 0) return;
+      try {
+        const itemIds = notes.map((n) => n._id);
+        const map = await checkFavorites(groupId, "note", itemIds);
+        setNotes((prev) => [...prev]); // trigger re-render if needed
+        // store map in ref/state: we'll store in local state for SidebarNotes
+        setFavoritesMap(map);
+        // Debug: log the itemIds and the resulting map so we can inspect them on reload
+        console.debug("checkFavorites (notes) - itemIds:", itemIds, "map:", map);
+      } catch (err) {
+        // ignore if unauthenticated
+      }
+    };
+    loadFavorites();
+
+  }, [groupId, notes]);
+
+  const toggleFavorite = async (noteId: string, next: boolean) => {
+    // optimistic update
+    setFavoritesMap((m) => ({ ...m, [noteId]: next }));
+    try {
+      if (next) {
+        await addFavorite(groupId, "note", noteId);
+        toast.success("Note Saved to Favorites.");
+      } else {
+        await removeFavorite(groupId, "note", noteId);
+        toast.success("Note removed from favorites.");
+      }
+    } catch (err) {
+      console.error("toggleFavorite error:", err?.response ?? err);
+      const msg = err?.response?.data?.message || err?.message || "Failed to update favorites.";
+      if (err?.response?.status === 401) {
+        toast.error("You must be signed in to save favorites.");
+      } else {
+        toast.error(msg);
+      }
+      // revert optimistic update
+      setFavoritesMap((m) => ({ ...m, [noteId]: !next }));
+      throw err;
+    }
+  };
 
   useEffect(() => {
     if (selectedNoteId && notes.length > 0) {
@@ -94,29 +141,47 @@ export default function NotesList() {
 
     // Sorting logic
     result.sort((a, b) => {
-      const aDate = new Date(a.updatedAt || a.createdAt).getTime();
-      const bDate = new Date(b.updatedAt || b.createdAt).getTime();
+      const aCreated = new Date(a.createdAt).getTime();
+      const bCreated = new Date(b.createdAt).getTime();
+      const aUpdated = new Date(a.updatedAt || a.createdAt).getTime();
+      const bUpdated = new Date(b.updatedAt || b.createdAt).getTime();
 
       switch (sortOption) {
         case "oldest":
-          return aDate - bDate;
+          // Oldest by creation date
+          return aCreated - bCreated;
         case "title-asc":
           return a.title.localeCompare(b.title);
         case "title-desc":
           return b.title.localeCompare(a.title);
         case "recent":
         default:
-          return bDate - aDate;
+          // Most recent by last update
+          return bUpdated - aUpdated;
       }
     });
 
     return result;
   }, [notes, searchQuery, sortOption]);
 
-  const parseContent = (content: string): Block[] | undefined => {
+  // Safer parse that treats empty / null / "[]" as "no content"
+  const parseContent = (content: string | null | undefined): Block[] | undefined => {
+    if (!content) return undefined;
+
+    const trimmed = content.trim();
+    if (!trimmed || trimmed === "[]" || trimmed === "{}") {
+      return undefined;
+    }
+
     try {
-      return JSON.parse(content);
+      const parsed = JSON.parse(trimmed);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed as Block[];
+      }
+      // parsed but not a non-empty array -> treat as no content
+      return undefined;
     } catch {
+      // Non-JSON plain text: show as a single paragraph block
       return [
         {
           id: "initial-block",
@@ -129,7 +194,7 @@ export default function NotesList() {
           content: [
             {
               type: "text",
-              text: content,
+              text: trimmed,
               styles: {},
             },
           ],
@@ -161,7 +226,7 @@ export default function NotesList() {
   return (
     <div className="flex h-screen overflow-hidden">
       {/* Sidebar */}
-      <div className="w-80 flex-shrink-0 border-r">
+      <div className="w-80 flex-shrink-0 border-r flex flex-col">
         <div className="p-4 border-b">
           <div className="flex items-center justify-between mb-3">
             <h1 className="text-xl font-semibold">All Notes</h1>
@@ -173,14 +238,11 @@ export default function NotesList() {
             </button>
           </div>
 
-          {/* NEW: search + sort bar under the title */}
           <SearchFilterBar
             query={searchQuery}
             onQueryChange={setSearchQuery}
             sortValue={sortOption}
-            onSortChange={(value) =>
-              setSortOption(value as SortKey)
-            }
+            onSortChange={(value) => setSortOption(value as SortKey)}
             sortOptions={[
               { value: "recent", label: "Most recent" },
               { value: "oldest", label: "Oldest" },
@@ -201,10 +263,12 @@ export default function NotesList() {
           </div>
         ) : (
           <SidebarNotes
-            notes={filteredNotes}
-            selectedNoteId={selectedNoteId}
-            onNoteSelect={handleNoteSelect}
-          />
+              notes={filteredNotes}
+              selectedNoteId={selectedNoteId}
+              onNoteSelect={handleNoteSelect}
+              favoritesMap={favoritesMap}
+              onToggleFavorite={toggleFavorite}
+            />
         )}
       </div>
 
@@ -250,13 +314,23 @@ export default function NotesList() {
                 <div className="flex items-center justify-center h-32">
                   Loading note content...
                 </div>
-              ) : (
-                <Editor
-                  initialContent={parseContent(selectedNote.content)}
-                  editable={false}
-                  onChange={() => {}}
-                />
-              )}
+              ) : (() => {
+                  const blocks = parseContent(selectedNote.content);
+                  if (!blocks) {
+                    return (
+                      <div className="flex items-center justify-center h-32 text-gray-400 text-sm">
+                        This note has no content yet.
+                      </div>
+                    );
+                  }
+                  return (
+                    <Editor
+                      initialContent={blocks}
+                      editable={false}
+                      onChange={() => {}}
+                    />
+                  );
+                })()}
             </div>
           </>
         ) : (

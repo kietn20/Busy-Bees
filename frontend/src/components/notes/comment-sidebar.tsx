@@ -306,7 +306,7 @@ export default function CommentSidebar({
                 className="w-full rounded-md border border-gray-300 px-2 py-1 text-sm"
                 rows={4}
                 value={editingText}
-                onChange={(e) => setEditingText(e.target.value)}
+                onChange={(e) => setEditingText(e.target.value.slice(0, 250))}
               />
               <div className="flex justify-end gap-2">
                 <button

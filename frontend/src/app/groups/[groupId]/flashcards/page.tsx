@@ -6,6 +6,7 @@ import { useRouter, useParams } from "next/navigation";
 import { getFlashcardSetsByGroup, FlashcardSet } from "@/services/flashcardApi";
 import { useEffect, useState, useMemo } from "react";
 import toast from "react-hot-toast";
+import { checkFavorites, addFavorite, removeFavorite } from "@/services/accountApi";
 import { addRecentlyViewed } from "@/services/recentlyviewedApi";
 
 import SearchFilterBar from "@/components/SearchFilter";
@@ -56,6 +57,44 @@ export default function FlashcardsList() {
     };
     fetchSets();
   }, [groupId]);
+
+  // Favorites map for flashcard sets
+  const [favoritesMap, setFavoritesMap] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    const loadFavorites = async () => {
+      if (!groupId || flashcardsData.length === 0) return;
+      try {
+        const itemIds = flashcardsData.map((f) => f._id);
+        const map = await checkFavorites(groupId as string, "flashcardSet", itemIds);
+        setFavoritesMap(map);
+        // Debug: log the itemIds and map for troubleshooting persisted favorite rendering
+        console.debug("checkFavorites (flashcards) - itemIds:", itemIds, "map:", map);
+      } catch (err) {
+        // ignore if unauthenticated
+      }
+    };
+    loadFavorites();
+  }, [groupId, flashcardsData]);
+
+  const toggleFavorite = async (setId: string, next: boolean) => {
+    try {
+      if (next) await addFavorite(groupId as string, "flashcardSet", setId);
+      else await removeFavorite(groupId as string, "flashcardSet", setId);
+      setFavoritesMap((m) => ({ ...m, [setId]: next }));
+      if (next) toast.success("Flashcard Set Saved to Favorites.");
+      else toast.success("Flashcard Set removed from favorites.");
+    } catch (err) {
+      console.error("toggleFavorite (flashcard) error:", err?.response ?? err);
+      const msg = err?.response?.data?.message || err?.message || "Failed to update favorites.";
+      if (err?.response?.status === 401) {
+        toast.error("You must be signed in to save favorites.");
+      } else {
+        toast.error(msg);
+      }
+      throw err;
+    }
+  };
 
   const filteredSets = useMemo(() => {
     let result = [...flashcardsData];
@@ -160,6 +199,8 @@ export default function FlashcardsList() {
                   prev.filter((set) => set._id !== flashcard._id)
                 )
               }
+              favorited={Boolean(favoritesMap[flashcard._id])}
+              onToggleFavorite={(next) => toggleFavorite(flashcard._id, next)}
             />
           ))}
         </div>
