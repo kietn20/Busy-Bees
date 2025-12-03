@@ -255,7 +255,7 @@ export default function NoteDetailPage() {
     try {
       const response = await generateFlashcardsFromNote(
         groupId,
-        noteId,
+        note.content,
         numFlashcards
       );
 
