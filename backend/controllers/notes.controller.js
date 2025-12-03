@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const Note = require("../models/Note.model");
 const CourseGroup = require("../models/CourseGroup.model");
 const User = require("../models/User.model");
-
+const NoteComment = require("../models/NoteComment.model");
 
 // @desc    Create a new note in a group
 // @route   POST /api/groups/:groupId/notes
@@ -132,7 +132,10 @@ const deleteNote = async (req, res) => {
       return res.status(403).json({ message: "Only the author or group owner can delete this note" });
     }
 
-    // 5. Delete the note
+    // 5. Delete all comments associated with this note
+    await NoteComment.deleteMany({ noteId: noteId }); 
+
+    // 6. Delete the note
     await Note.findByIdAndDelete(noteId);
 
     res.status(200).json({
