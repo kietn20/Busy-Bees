@@ -7,11 +7,9 @@ import type { CourseGroup } from "@/services/groupApi";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 import GroupDetailsModal from "@/components/coursegroup/display-details";
-import { MessageCircle, Calendar, Mail } from "lucide-react";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import GoogleSignInToast from "@/components/GoogleSignInToast";
-import { Description } from "@radix-ui/react-dialog";
 
 export default function HomePage() {
   const [groups, setGroups] = useState<CourseGroup[]>([]);
@@ -74,17 +72,17 @@ export default function HomePage() {
     return (
       <>
         <GoogleSignInToast />
-        <div className="w-full max-w-sm bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition-all">
+        <div className="w-full max-w-sm bg-[#FFFBEF]/30 rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition-all">
           <Link href={`/groups/${id}`}>
             <div className="h-44 bg-[url('/beige.jpg')] bg-cover bg-center" />
           </Link>
 
           <div className="p-4">
             <Link href={`/groups/${id}`}>
-              <h3 className="text-base font-semibold text-gray-800 truncate hover:underline">
+              <h3 className="text-lg font-semibold truncate hover:underline">
                 {name}
               </h3>
-              <p className="text-sm">{g.description}</p>
+              <p className="text-sm text-accent-foreground">{g.description}</p>
             </Link>
           </div>
         </div>
@@ -98,10 +96,8 @@ export default function HomePage() {
         {user && (
           <div className="flex items-start justify-between mb-8 animate-in fade-in slide-in-from-top-3 duration-300">
             <div>
-              <h1 className="text-3xl md:text-4xl font-bold text-gray-900">
-                My Groups
-              </h1>
-              <p className="mt-2 text-gray-600">
+              <h1 className="text-3xl md:text-4xl font-bold">My Groups</h1>
+              <p className="mt-2 text-accent-foreground">
                 Quick access to the course groups you belong to.
               </p>
             </div>
@@ -121,16 +117,16 @@ export default function HomePage() {
           </p>
         ) : !user ? (
           <div className="flex flex-col items-center justify-center py-24 text-center w-3/5 mx-auto">
-            <h1 className="text-6xl font-medium  tracking-wide">
+            <h1 className="text-6xl font-medium tracking-wide ">
               Study Smarter. Together.
             </h1>
-            <h3 className="mt-3  text-lg py-4">
+            <h3 className="mt-3 text-lg py-4">
               Create groups, drop notes, build flashcards, and plan your next
               session—all in one sleek workspace.
             </h3>
             <Button
               asChild
-              className="mt-6 px-6 py-6 text-lg text-[#fff6e6] font-medium rounded-3xl"
+              className="mt-6 px-6 py-6 text-lg font-medium rounded-3xl"
             >
               <Link href="/signup">Get Started</Link>
             </Button>
