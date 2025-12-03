@@ -9,6 +9,7 @@ import {
   UserPlus,
   LogOut,
   Users,
+  Home,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
@@ -227,7 +228,15 @@ export function CourseSwitcher({
                 <ChevronsUpDown className="ml-auto" />
               </SidebarMenuButton>
             </DropdownMenuTrigger>
+
             <DropdownMenuContent className="w-64" align="start">
+              <DropdownMenuItem
+                onClick={() => router.push("/")}
+                className="cursor-pointer"
+              >
+                <Home className="mr-2 h-4 w-4" />
+                <span>All Groups</span>
+              </DropdownMenuItem>
               {user &&
                 fullGroupData?.members?.find(
                   (member: { userId: { _id: string }; role: string }) =>

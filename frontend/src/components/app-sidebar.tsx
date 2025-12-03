@@ -94,7 +94,6 @@ export function AppSidebar({
         <CourseSwitcher currentGroupId={currentGroupId} />
       </SidebarHeader>
       <SidebarContent>
-        {/* We create a SidebarGroup for each parent. */}
         {navMainWithGroupId.map((item) => (
           <SidebarGroup key={item.title}>
             <SidebarGroupLabel>{item.title}</SidebarGroupLabel>
