@@ -59,7 +59,7 @@ export default function UpcomingEvents({
   };
 
   return (
-    <div className="bg-[#FFFBEF]/30 border border-[#5f471d]/10 rounded-2xl p-6 h-[343px] overflow-y-auto ">
+    <div className="bg-[#FFFBEF]/10 border border-[#5f471d]/10 rounded-2xl p-6 h-[343px] overflow-y-auto ">
       <div className="space-y-6">
         {Object.entries(groupedEvents).map(
           ([date, { dayOfWeek, events: dateEvents }]) => (
