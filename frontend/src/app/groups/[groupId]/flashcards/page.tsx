@@ -63,9 +63,7 @@ export default function FlashcardsList() {
     // Search only by setName
     const q = searchQuery.trim().toLowerCase();
     if (q) {
-      result = result.filter((set) =>
-        set.setName.toLowerCase().includes(q)
-      );
+      result = result.filter((set) => set.setName.toLowerCase().includes(q));
     }
 
     // Sort
@@ -100,7 +98,7 @@ export default function FlashcardsList() {
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-bold mb-4">All Flashcards</h1>
         <button
-          className="p-2 rounded-xl bg-gray-100 hover:bg-gray-200 cursor-pointer"
+          className="p-2 rounded-xl border-foreground bg-primary hover:bg-primary/70 cursor-pointer"
           onClick={() => router.push(`/groups/${groupId}/flashcards/create`)}
         >
           <Plus className="w-4 h-4 text-gray-500" />
@@ -108,22 +106,22 @@ export default function FlashcardsList() {
       </div>
 
       {/* Search + sort bar (horizontal layout) */}
-        <div className="mb-6">
-          <SearchFilterBar
-            query={searchQuery}
-            onQueryChange={setSearchQuery}
-            sortValue={sortOption}
-            onSortChange={(value) => setSortOption(value as SortKey)}
-            sortOptions={[
-              { value: "recent", label: "Most recent" },
-              { value: "oldest", label: "Oldest" },
-              { value: "title-asc", label: "Title A–Z" },
-              { value: "title-desc", label: "Title Z–A" },
-            ]}
-            placeholder="Search flashcard sets..."
-            layout="horizontal"
-          />
-        </div>
+      <div className="mb-6">
+        <SearchFilterBar
+          query={searchQuery}
+          onQueryChange={setSearchQuery}
+          sortValue={sortOption}
+          onSortChange={(value) => setSortOption(value as SortKey)}
+          sortOptions={[
+            { value: "recent", label: "Most recent" },
+            { value: "oldest", label: "Oldest" },
+            { value: "title-asc", label: "Title A–Z" },
+            { value: "title-desc", label: "Title Z–A" },
+          ]}
+          placeholder="Search flashcard sets..."
+          layout="horizontal"
+        />
+      </div>
 
       {loading ? (
         <div>Loading...</div>
