@@ -10,7 +10,6 @@ import EventDetailModal from "@/components/events/EventDetailModal";
 import CreateEventModal from "@/components/events/CreateEventModal";
 import { getGroupById, CourseGroup } from "@/services/groupApi";
 import { Button } from "@/components/ui/button";
-import EventCalendar from "@/components/events/EventCalendar";
 import { Calendar } from "@/components/ui/calendar";
 import { toast } from "react-hot-toast";
 
@@ -155,9 +154,7 @@ export default function GroupEventsPage() {
     <ProtectedRoute>
       <div className="container mx-auto p-8">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">
-            {group ? `${group.groupName}: Events` : "Events"}
-          </h1>
+          <h1 className="text-2xl font-bold">Events</h1>
 
           <div className="flex flex-row items-start gap-2">
             <Button

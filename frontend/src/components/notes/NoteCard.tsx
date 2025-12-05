@@ -52,10 +52,10 @@ const NoteCard = ({
 
   return (
     <div
-      className={`rounded-xl p-4 mx-2 flex flex-col gap-2 cursor-pointer hover:bg-gray-100 transition-all ${
+      className={`rounded-xl p-4 mx-2 flex flex-col gap-2 cursor-pointer hover:bg-primary/30 transition-all ${
         isSelected
-          ? "border-2 border-[var(--color-3)] bg-[var(--color-1)]"
-          : "border-2 border-transparent bg-gray-100"
+          ? "border-2 border-foreground/40 bg-primary/30"
+          : "border-1 border-foreground/10 bg-accent/30"
       }`}
       onClick={onClick}
     >
@@ -70,17 +70,25 @@ const NoteCard = ({
           }}
         />
       </div>
-      <p className="text-gray-600 text-sm line-clamp-3">
+      <p className="text-accent-foreground text-sm line-clamp-3">
         {contentPreview.length > 150
           ? `${contentPreview.substring(0, 150)}...`
           : contentPreview}
       </p>
       <div className="flex items-center gap-2">
-        <p className="text-gray-500 text-xs rounded-xl bg-gray-200 w-fit px-4 py-2 flex items-center gap-2 my-2">
+        <p
+          className={`text-foreground text-xs rounded-xl w-fit px-4 py-2 flex items-center gap-2 my-2 ${
+            isSelected ? "bg-primary/50" : "bg-accent/60"
+          }`}
+        >
           <PenLine className="w-4 h-4" />
           {formattedDate}
         </p>
-        <p className="text-gray-500 text-xs rounded-xl bg-gray-200 w-fit px-4 py-2 flex items-center gap-2 my-2">
+        <p
+          className={`text-foreground text-xs rounded-xl w-fit px-4 py-2 flex items-center gap-2 my-2 ${
+            isSelected ? "bg-primary/50" : "bg-accent/60"
+          }`}
+        >
           <User className="w-4 h-4" />
           {creator}
         </p>
