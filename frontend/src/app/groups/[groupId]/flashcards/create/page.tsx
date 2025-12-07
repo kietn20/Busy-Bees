@@ -10,7 +10,6 @@ import { createFlashcardSet } from "@/services/flashcardApi";
 import { toast } from "react-hot-toast";
 
 export default function CreateFlashcard() {
-
   type Flashcard = {
     term: string;
     definition: string;
@@ -24,7 +23,6 @@ export default function CreateFlashcard() {
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [error, setError] = useState("");
   const [hasTitleError, setHasTitleError] = useState(false);
   const router = useRouter();
   const { groupId } = useParams();
@@ -33,15 +31,17 @@ export default function CreateFlashcard() {
 
   const searchParams = useSearchParams();
   const generated = searchParams.get("generated");
-  const generatedFlashcards: Flashcard[] = generated ? JSON.parse(generated) : [];
+  const generatedFlashcards: Flashcard[] = generated
+    ? JSON.parse(generated)
+    : [];
   const [cards, setCards] = useState<Card[]>(
     generatedFlashcards.length > 0
-    ? generatedFlashcards.map((card, idx) => ({
-        id: idx + 1,
-        term: card.term,
-        definition: card.definition,
-      }))
-    : [{ id: 1, term: "", definition: "" }]
+      ? generatedFlashcards.map((card, idx) => ({
+          id: idx + 1,
+          term: card.term,
+          definition: card.definition,
+        }))
+      : [{ id: 1, term: "", definition: "" }]
   );
 
   const handleDeleteCard = (id: number) => {
@@ -95,9 +95,9 @@ export default function CreateFlashcard() {
         </Button>
       </div>
 
-      <div className="w-full bg-gray-50 p-6 rounded-xl flex gap-4 my-4">
+      <div className="w-full bg-accent/20 p-6 rounded-xl flex gap-4 my-4">
         <div className="w-1/2">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium mb-2">
             Flashcard Name
           </label>
 
@@ -114,12 +114,12 @@ export default function CreateFlashcard() {
             }`}
             placeholder="Enter title"
           />
-          <div className="text-xs text-gray-400 text-right">
+          <div className="text-xs text-muted-foreground text-right">
             {title.length}/30
           </div>
         </div>
         <div className="w-1/2">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium mb-2">
             Flashcard Description
           </label>
           <Input
@@ -130,7 +130,7 @@ export default function CreateFlashcard() {
             placeholder="Enter description"
             maxLength={150}
           />
-          <div className="text-xs text-gray-400 text-right">
+          <div className="text-xs text-muted-foreground text-right">
             {description.length}/150
           </div>
         </div>
@@ -161,7 +161,7 @@ export default function CreateFlashcard() {
       <Button
         onClick={addNewCard}
         variant="outline"
-        className="p-4 rounded-xl cursor-pointer flex items-center justify-center gap-2 text-sm w-full my-4"
+        className="p-4 rounded-xl cursor-pointer flex items-center justify-center gap-2 text-sm w-full my-4 hover:bg-primary/50"
       >
         <Plus className="w-4 h-4" />
         Add Card

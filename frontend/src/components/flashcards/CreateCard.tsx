@@ -37,7 +37,7 @@ const CreateCard = ({
   onDelete,
 }: CreateCardProps) => {
   return (
-    <div className="rounded-xl bg-gray-50  relative px-4">
+    <div className="rounded-xl bg-accent/20  relative px-4">
       <Accordion type="single" collapsible defaultValue="item-1">
         <AccordionItem value="item-1" className="border-none">
           <div className="flex items-center justify-between">
@@ -62,7 +62,10 @@ const CreateCard = ({
                     <button className="btn btn-outline">Cancel</button>
                   </AlertDialogCancel>
                   <AlertDialogAction asChild>
-                    <button className="btn btn-destructive" onClick={onDelete}>
+                    <button
+                      className="bg-red-400 hover:bg-red-500 text-white"
+                      onClick={onDelete}
+                    >
                       Delete
                     </button>
                   </AlertDialogAction>
@@ -73,9 +76,7 @@ const CreateCard = ({
           <AccordionContent className="pt-4">
             <div className="flex gap-4 w-full">
               <div className="w-1/2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Term
-                </label>
+                <label className="block text-sm font-medium mb-2">Term</label>
                 <Textarea
                   placeholder="Enter term"
                   className="min-h-[100px] max-h-40 overflow-auto bg-white rounded-xl w-full break-words"
@@ -83,12 +84,12 @@ const CreateCard = ({
                   onChange={(e) => onTermChange(e.target.value)}
                   maxLength={100}
                 />
-                <div className="text-xs text-gray-400 text-right">
+                <div className="text-xs text-muted-foreground text-right">
                   {term.length}/100
                 </div>
               </div>
               <div className="w-1/2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium mb-2">
                   Definition
                 </label>
                 <Textarea
@@ -98,7 +99,7 @@ const CreateCard = ({
                   onChange={(e) => onDefinitionChange(e.target.value)}
                   maxLength={300}
                 />
-                <div className="text-xs text-gray-400 text-right">
+                <div className="text-xs text-muted-foreground text-right">
                   {definition.length}/300
                 </div>
               </div>

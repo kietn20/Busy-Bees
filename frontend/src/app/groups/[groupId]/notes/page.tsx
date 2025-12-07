@@ -245,7 +245,10 @@ export default function NotesList() {
         <div className="p-4 border-b">
           <div className="flex items-center justify-between mb-3">
             <h1 className="text-xl font-semibold">All Notes</h1>
-            <Button onClick={() => setIsCreateModalOpen(true)}>
+            <Button
+              onClick={() => setIsCreateModalOpen(true)}
+              className="rounded-xl"
+            >
               <Plus className="w-4 h-4 text-foreground" />
             </Button>
           </div>
