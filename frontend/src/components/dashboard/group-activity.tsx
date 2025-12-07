@@ -126,7 +126,7 @@ const GroupActivity = () => {
           {activities.map((activity) => (
             <div
               key={activity.id}
-              className="relative flex items-start gap-4 p-4 bg-accent/40 rounded-2xl hover:bg-accent/60 transition-colors cursor-pointer"
+              className="relative flex items-start gap-4 p-4 bg-accent/40 rounded-2xl hover:bg-accent/60 transition-colors"
             >
               <div
                 className={`flex-shrink-0 w-10 h-10 rounded-2xl bg-white flex items-center justify-center`}
