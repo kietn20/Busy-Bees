@@ -121,7 +121,7 @@ export default function NotesList() {
         await removeFavorite(groupId, "note", noteId);
         toast.success("Note removed from favorites.");
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("toggleFavorite error:", err?.response ?? err);
       const msg =
         err?.response?.data?.message ||
@@ -265,23 +265,25 @@ export default function NotesList() {
           />
         </div>
 
-        {!hasNotes ? (
-          <div className="py-6 text-center text-muted-foreground">
-            No notes yet. Create one!
-          </div>
-        ) : !hasFilteredNotes ? (
-          <div className="py-6 text-center text-muted-foreground">
-            No notes match your search.
-          </div>
-        ) : (
-          <SidebarNotes
-            notes={filteredNotes}
-            selectedNoteId={selectedNoteId}
-            onNoteSelect={handleNoteSelect}
-            favoritesMap={favoritesMap}
-            onToggleFavorite={toggleFavorite}
-          />
-        )}
+        <div className="flex-1 overflow-y-auto">
+          {!hasNotes ? (
+            <div className="py-6 text-center text-muted-foreground">
+              No notes yet. Create one!
+            </div>
+          ) : !hasFilteredNotes ? (
+            <div className="py-6 text-center text-muted-foreground">
+              No notes match your search.
+            </div>
+          ) : (
+            <SidebarNotes
+              notes={filteredNotes}
+              selectedNoteId={selectedNoteId}
+              onNoteSelect={handleNoteSelect}
+              favoritesMap={favoritesMap}
+              onToggleFavorite={toggleFavorite}
+            />
+          )}
+        </div>
       </div>
 
       {/* Main Content */}
