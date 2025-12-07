@@ -137,12 +137,8 @@ export default function CommentSidebar({
     if (!c.createdAt) return `${name}`;
     try {
       const d = new Date(c.createdAt);
-      const options: Intl.DateTimeFormatOptions = {
-        month: "long",
-        day: "numeric",
-      };
-      const s = d.toLocaleDateString(undefined, options);
-      return `${name} on ${s}`;
+      const s = d.toLocaleDateString("en-US");
+      return `${name} • ${s}`;
     } catch {
       return name;
     }
@@ -235,7 +231,7 @@ export default function CommentSidebar({
     const visualDepth = depth > 0 ? 1 : 0;
 
     const containerClasses =
-      "border rounded-md p-3 bg-gray-50" +
+      "border rounded-md p-3 bg-accent/30" +
       (visualDepth === 1 ? " mt-2 ml-4" : "");
 
     return (
@@ -249,7 +245,7 @@ export default function CommentSidebar({
               onClick={() =>
                 setOpenMenuFor((prev) => (prev === id ? null : id))
               }
-              className="p-1 rounded hover:bg-gray-100"
+              className="p-1 rounded cursor-pointer"
               aria-label="comment options"
             >
               <svg
@@ -272,7 +268,7 @@ export default function CommentSidebar({
                 {editable && (
                   <button
                     onClick={() => startEdit(c)}
-                    className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50"
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-accent"
                   >
                     Edit
                   </button>
@@ -281,7 +277,7 @@ export default function CommentSidebar({
                 {onReplyComment && (
                   <button
                     onClick={() => startReply(c)}
-                    className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50"
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-accent"
                   >
                     Reply
                   </button>
@@ -290,7 +286,7 @@ export default function CommentSidebar({
                 {deletable && (
                   <button
                     onClick={() => onDeleteComment(id)}
-                    className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-gray-50"
+                    className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-accent"
                   >
                     Delete
                   </button>
@@ -305,28 +301,23 @@ export default function CommentSidebar({
           {editingId === id ? (
             <div className="space-y-2">
               <textarea
-                className="w-full rounded-md border border-gray-300 px-2 py-1 text-sm"
+                className="w-full rounded-md border border-foreground/10 px-2 py-1 text-sm bg-white"
                 rows={4}
                 value={editingText}
                 onChange={(e) => setEditingText(e.target.value.slice(0, 250))}
               />
               <div className="flex justify-end gap-2">
-                <button
+                <Button
                   onClick={cancelEdit}
-                  className="px-3 py-1 text-sm rounded border border-gray-300 hover:bg-gray-50"
+                  className="bg-transparent hover:bg-accent"
                 >
                   Cancel
-                </button>
-                <button
-                  onClick={saveEdit}
-                  className="px-3 py-1 text-sm rounded bg-yellow-400 hover:bg-yellow-300 text-black"
-                >
-                  Save
-                </button>
+                </Button>
+                <Button onClick={saveEdit}>Save</Button>
               </div>
             </div>
           ) : (
-            <p className="text-sm text-gray-900 whitespace-pre-wrap break-words">
+            <p className="text-sm text-foreground whitespace-pre-wrap break-words">
               {c.content}
             </p>
           )}
@@ -337,25 +328,20 @@ export default function CommentSidebar({
           <div className="mt-3 space-y-2">
             <textarea
               ref={replyInputRef}
-              className="w-full rounded-md border border-gray-300 px-2 py-1 text-sm"
+              className="w-full rounded-md border border-foreground/10 px-2 py-1 text-sm bg-white"
               rows={3}
               value={replyText}
               onChange={(e) => setReplyText(e.target.value.slice(0, 250))}
               placeholder="Write a reply..."
             />
             <div className="flex justify-end gap-2">
-              <button
+              <Button
                 onClick={cancelReply}
-                className="px-3 py-1 text-sm rounded border border-gray-300 hover:bg-gray-50"
+                className="bg-transparent hover:bg-accent"
               >
                 Cancel
-              </button>
-              <button
-                onClick={() => sendReply(id)}
-                className="px-3 py-1 text-sm rounded bg-yellow-400 hover:bg-yellow-300 text-black"
-              >
-                Reply
-              </button>
+              </Button>
+              <Button onClick={() => sendReply(id)}>Reply</Button>
             </div>
           </div>
         )}
@@ -373,16 +359,20 @@ export default function CommentSidebar({
     >
       <div className="sticky top-0 z-10 bg-white border-b px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <h2 className="text-lg font-semibold text-gray-800">Comments</h2>
+          <h2 className="text-lg font-semibold">Comments</h2>
         </div>
 
-        <Button type="button">Add Comment</Button>
+        <Button type="button" onClick={onAddComment}>
+          Add Comment
+        </Button>
       </div>
 
       <div className="px-4 py-3 overflow-y-auto flex-1 space-y-3">
-        {loading && <p className="text-sm text-gray-500">Loading comments.</p>}
+        {loading && (
+          <p className="text-sm text-muted-foreground">Loading comments.</p>
+        )}
         {!loading && comments.length === 0 && (
-          <p className="text-sm text-gray-500">No comments yet.</p>
+          <p className="text-sm text-muted-foreground">No comments yet.</p>
         )}
 
         {!loading &&
@@ -409,7 +399,7 @@ export default function CommentSidebar({
                   <button
                     type="button"
                     onClick={toggleThread}
-                    className="ml-4 mt-1 text-xs text-blue-600 hover:underline"
+                    className="ml-4 mt-1 text-xs text-[#bf9748] hover:underline"
                   >
                     {isExpanded
                       ? "Hide replies"

@@ -51,7 +51,7 @@ export default function GroupPage() {
         {group?.description && (
           <div className="flex items-center ">
             <Tally1 className="inline text-[#efc576] " />
-            <p className="text-[#efc576] py-1 text-[.95rem]">
+            <p className="text-[#bf9748] py-1 text-[.95rem]">
               {group.description}
             </p>
           </div>

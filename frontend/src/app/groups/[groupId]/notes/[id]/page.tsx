@@ -577,11 +577,7 @@ export default function NoteDetailPage() {
               >
                 Cancel
               </Button>
-              <Button
-                onClick={handleSave}
-                disabled={isSaving}
-                className="bg-yellow-400 hover:bg-yellow-500"
-              >
+              <Button onClick={handleSave} disabled={isSaving}>
                 {isSaving ? "Saving..." : "Save"}
               </Button>
             </>
@@ -604,7 +600,10 @@ export default function NoteDetailPage() {
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleDelete}>
+                  <AlertDialogAction
+                    onClick={handleDelete}
+                    className="bg-red-400 hover:bg-red-500 text-white"
+                  >
                     Delete
                   </AlertDialogAction>
                 </AlertDialogFooter>
@@ -717,6 +716,7 @@ export default function NoteDetailPage() {
             <AlertDialogAction
               onClick={confirmDeleteComment}
               disabled={isDeletingComment}
+              className="bg-red-400 hover:bg-red-500 text-white"
             >
               {isDeletingComment ? "Deleting..." : "Delete"}
             </AlertDialogAction>
