@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
+import { Button } from "../ui/button";
 
 export interface NoteComment {
   id?: string;
@@ -136,7 +137,10 @@ export default function CommentSidebar({
     if (!c.createdAt) return `${name}`;
     try {
       const d = new Date(c.createdAt);
-      const options: Intl.DateTimeFormatOptions = { month: "long", day: "numeric" };
+      const options: Intl.DateTimeFormatOptions = {
+        month: "long",
+        day: "numeric",
+      };
       const s = d.toLocaleDateString(undefined, options);
       return `${name} on ${s}`;
     } catch {
@@ -238,9 +242,7 @@ export default function CommentSidebar({
       <div key={id} className={containerClasses}>
         {/* header */}
         <div className="flex items-start justify-between">
-          <div className="text-xs text-gray-600 font-medium break-words">
-            {authorLine}
-          </div>
+          <div className="text-xs font-medium break-words">{authorLine}</div>
 
           <div className="relative">
             <button
@@ -251,7 +253,7 @@ export default function CommentSidebar({
               aria-label="comment options"
             >
               <svg
-                className="w-4 h-4 text-gray-600"
+                className="w-4 h-4 text-foreground"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -338,9 +340,7 @@ export default function CommentSidebar({
               className="w-full rounded-md border border-gray-300 px-2 py-1 text-sm"
               rows={3}
               value={replyText}
-              onChange={(e) =>
-                setReplyText(e.target.value.slice(0, 250))
-              }
+              onChange={(e) => setReplyText(e.target.value.slice(0, 250))}
               placeholder="Write a reply..."
             />
             <div className="flex justify-end gap-2">
@@ -376,19 +376,11 @@ export default function CommentSidebar({
           <h2 className="text-lg font-semibold text-gray-800">Comments</h2>
         </div>
 
-        <button
-          type="button"
-          onClick={onAddComment}
-          className="bg-yellow-400 text-black px-3 py-1.5 rounded-md text-sm font-medium hover:bg-yellow-300"
-        >
-          Add Comment
-        </button>
+        <Button type="button">Add Comment</Button>
       </div>
 
       <div className="px-4 py-3 overflow-y-auto flex-1 space-y-3">
-        {loading && (
-          <p className="text-sm text-gray-500">Loading comments.</p>
-        )}
+        {loading && <p className="text-sm text-gray-500">Loading comments.</p>}
         {!loading && comments.length === 0 && (
           <p className="text-sm text-gray-500">No comments yet.</p>
         )}

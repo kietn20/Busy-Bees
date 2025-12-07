@@ -50,8 +50,8 @@ export default function GroupPage() {
         <h1 className="text-2xl font-bold">Dashboard</h1>
         {group?.description && (
           <div className="flex items-center ">
-            <Tally1 className="inline text-[#7b8a72] " />
-            <p className="text-[#7b8a72] py-1 text-[.95rem]">
+            <Tally1 className="inline text-[#efc576] " />
+            <p className="text-[#efc576] py-1 text-[.95rem]">
               {group.description}
             </p>
           </div>
@@ -77,7 +77,7 @@ export default function GroupPage() {
             </div>
           </div>
         </div>
-        <div className="w-1/3 max-h-[750px] overflow-y-auto border border-[#5f471d]/10 rounded-3xl py-6 bg-[#FFFBEF]/10">
+        <div className="w-1/3 max-h-[750px] overflow-y-auto border border-foreground/10 rounded-3xl py-6 bg-[#ead4aa]/3">
           <h2 className="text-xl font-semibold px-4">Group Activity</h2>
           <GroupActivity />
         </div>

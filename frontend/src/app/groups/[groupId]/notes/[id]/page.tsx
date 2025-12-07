@@ -4,9 +4,9 @@ import Editor from "@/components/notes/editor";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { deleteNote, getNoteById, updateNote } from "@/services/noteApi";
-import { getGroupById, getGroupWithMembers } from "@/services/groupApi";
+import { getGroupWithMembers } from "@/services/groupApi";
 import { Note } from "@/services/noteApi";
-import { CourseGroup, PopulatedCourseGroup } from "@/services/groupApi";
+import { PopulatedCourseGroup } from "@/services/groupApi";
 import { Block } from "@blocknote/core";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -298,12 +298,12 @@ export default function NoteDetailPage() {
       }));
 
     setEditedContent((prev) => [...prev, ...newBlocks] as any[]);
-    
+
     // auto enter edit mode so the OCR text is visible
     if (!isEditing) {
       setIsEditing(true);
     }
-    
+
     setEditorKey((prev) => prev + 1);
   };
 
@@ -484,7 +484,7 @@ export default function NoteDetailPage() {
   return (
     <div className="w-full py-12 px-6">
       {/* --- HEADER SECTION --- */}
-      <div className="flex justify-between items-center ml-14 pb-4 mb-6">
+      <div className="flex justify-between items-center ml-14 pb-4 ">
         {isEditing ? (
           <input
             type="text"
@@ -545,9 +545,7 @@ export default function NoteDetailPage() {
                       min={1}
                       max={50}
                       value={numFlashcards}
-                      onChange={(e) =>
-                        setNumFlashcards(Number(e.target.value))
-                      }
+                      onChange={(e) => setNumFlashcards(Number(e.target.value))}
                       className="w-full border rounded px-3 py-2"
                     />
                   </div>
@@ -571,7 +569,7 @@ export default function NoteDetailPage() {
               {(isAuthor || isCollaborator) && (
                 <OCRButton onOCRResult={handleOCRResult} />
               )}
-              
+
               <Button
                 variant="outline"
                 onClick={handleCancel}
@@ -582,7 +580,7 @@ export default function NoteDetailPage() {
               <Button
                 onClick={handleSave}
                 disabled={isSaving}
-                className="bg-yellow-400 hover:bg-yellow-500 text-black"
+                className="bg-yellow-400 hover:bg-yellow-500"
               >
                 {isSaving ? "Saving..." : "Save"}
               </Button>
@@ -592,7 +590,9 @@ export default function NoteDetailPage() {
           {canDelete && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="destructive">Delete</Button>
+                <Button className="bg-red-400 hover:bg-red-500 text-white">
+                  Delete
+                </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
@@ -615,49 +615,59 @@ export default function NoteDetailPage() {
       </div>
 
       {/* --- META INFO SECTION --- */}
-      <div className="ml-14 mb-4 text-gray-500">
-        <p>
-          <span className="font-semibold">Created by:</span>{" "}
-          {note.userId?.firstName} {note.userId?.lastName}
-        </p>
-        <p>
-          <span className="font-semibold">Last modified:</span>{" "}
-          {note.updatedAt
-            ? new Date(note.updatedAt).toLocaleDateString()
-            : "Unknown"}
-        </p>
+      <div className="ml-14 mb-4 text-muted-foreground">
+        <div className="flex items-center gap-2">
+          <span className="">Created by:</span>{" "}
+          <p className="text-foreground">
+            {note.userId?.firstName} {note.userId?.lastName}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="">Last modified:</span>{" "}
+          <p className="text-foreground">
+            {note.updatedAt
+              ? new Date(note.updatedAt).toLocaleDateString()
+              : "Unknown"}
+          </p>
+        </div>
       </div>
 
       {/* --- MAIN CONTENT: Editor + Comment Sidebar --- */}
-      <div className="min-h-screen pt-6 border-t border-gray-200 flex">
+      <div className="min-h-screen border-t border-foreground/10 flex">
         <div className="flex-1 pr-6">
           {isEditing ? (
-            <Editor
-              key={editorKey}
-              onChange={setEditedContent}
-              initialContent={
-                editedContent.length ? editedContent : undefined
-              }
-              editable={true}
-            />
-          ) : (() => {
+            <div className="py-8">
+              <Editor
+                key={editorKey}
+                onChange={setEditedContent}
+                initialContent={
+                  editedContent.length ? editedContent : undefined
+                }
+                editable={true}
+              />
+            </div>
+          ) : (
+            (() => {
               const viewBlocks = parseContent(note.content);
               if (!viewBlocks) {
                 return (
-                  <div className="flex items-center justify-center h-32 text-gray-400 text-sm">
+                  <div className="flex items-center justify-center h-32 text-muted-foreground text-sm">
                     This note has no content.
                   </div>
                 );
               }
               return (
-                <Editor
-                  key={editorKey}
-                  onChange={() => {}}
-                  initialContent={viewBlocks}
-                  editable={false}
-                />
+                <div className="py-8">
+                  <Editor
+                    key={editorKey}
+                    onChange={() => {}}
+                    initialContent={viewBlocks}
+                    editable={false}
+                  />
+                </div>
               );
-            })()}
+            })()
+          )}
         </div>
 
         <CommentSidebar

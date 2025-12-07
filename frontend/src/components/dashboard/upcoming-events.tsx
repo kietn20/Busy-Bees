@@ -59,7 +59,7 @@ export default function UpcomingEvents({
   };
 
   return (
-    <div className="bg-[#FFFBEF]/10 border border-[#5f471d]/10 rounded-2xl p-6 h-[343px] overflow-y-auto ">
+    <div className="bg-[#ead4aa]/5 border border-foreground/10 rounded-2xl p-6 h-[343px] overflow-y-auto ">
       <div className="space-y-6">
         {Object.entries(groupedEvents).map(
           ([date, { dayOfWeek, events: dateEvents }]) => (
@@ -93,7 +93,7 @@ export default function UpcomingEvents({
                       className="cursor-pointer hover:bg-accent/40 transition-colors rounded-lg p-3 -mx-3"
                     >
                       <div className="flex items-start gap-3">
-                        <div className="w-2 h-2 bg-[#FFDEA3] rounded-full flex-shrink-0 mt-2" />
+                        <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0 mt-2" />
                         <div className="flex-1">
                           <h4 className="font-medium text-base">
                             {event.title}

@@ -12,7 +12,11 @@ import { Button } from "@/components/ui/button";
 import toast from "react-hot-toast";
 import { addRecentlyViewed } from "@/services/recentlyviewedApi";
 import SearchFilterBar from "@/components/SearchFilter";
-import { checkFavorites, addFavorite, removeFavorite } from "@/services/accountApi";
+import {
+  checkFavorites,
+  addFavorite,
+  removeFavorite,
+} from "@/services/accountApi";
 
 type SortKey = "recent" | "oldest" | "title-asc" | "title-desc";
 
@@ -66,7 +70,11 @@ export default function NotesList() {
 
   const handleNoteSelect = useCallback(
     async (noteId: string) => {
-      await addRecentlyViewed({ courseId: groupId, kind: "note", itemId: noteId });
+      await addRecentlyViewed({
+        courseId: groupId,
+        kind: "note",
+        itemId: noteId,
+      });
 
       router.push(`/groups/${groupId}/notes?noteId=${noteId}`);
     },
@@ -89,13 +97,17 @@ export default function NotesList() {
         // store map in ref/state: we'll store in local state for SidebarNotes
         setFavoritesMap(map);
         // Debug: log the itemIds and the resulting map so we can inspect them on reload
-        console.debug("checkFavorites (notes) - itemIds:", itemIds, "map:", map);
+        console.debug(
+          "checkFavorites (notes) - itemIds:",
+          itemIds,
+          "map:",
+          map
+        );
       } catch (err) {
         // ignore if unauthenticated
       }
     };
     loadFavorites();
-
   }, [groupId, notes]);
 
   const toggleFavorite = async (noteId: string, next: boolean) => {
@@ -111,7 +123,10 @@ export default function NotesList() {
       }
     } catch (err) {
       console.error("toggleFavorite error:", err?.response ?? err);
-      const msg = err?.response?.data?.message || err?.message || "Failed to update favorites.";
+      const msg =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Failed to update favorites.";
       if (err?.response?.status === 401) {
         toast.error("You must be signed in to save favorites.");
       } else {
@@ -134,9 +149,7 @@ export default function NotesList() {
 
     const q = searchQuery.trim().toLowerCase();
     if (q) {
-      result = result.filter((note) =>
-        note.title.toLowerCase().includes(q)
-      );
+      result = result.filter((note) => note.title.toLowerCase().includes(q));
     }
 
     // Sorting logic
@@ -165,7 +178,9 @@ export default function NotesList() {
   }, [notes, searchQuery, sortOption]);
 
   // Safer parse that treats empty / null / "[]" as "no content"
-  const parseContent = (content: string | null | undefined): Block[] | undefined => {
+  const parseContent = (
+    content: string | null | undefined
+  ): Block[] | undefined => {
     if (!content) return undefined;
 
     const trimmed = content.trim();
@@ -230,12 +245,9 @@ export default function NotesList() {
         <div className="p-4 border-b">
           <div className="flex items-center justify-between mb-3">
             <h1 className="text-xl font-semibold">All Notes</h1>
-            <button
-              onClick={() => setIsCreateModalOpen(true)}
-              className="p-2 rounded-lg bg-white hover:bg-gray-100 border cursor-pointer"
-            >
-              <Plus className="w-4 h-4 text-gray-600" />
-            </button>
+            <Button onClick={() => setIsCreateModalOpen(true)}>
+              <Plus className="w-4 h-4 text-foreground" />
+            </Button>
           </div>
 
           <SearchFilterBar
@@ -254,21 +266,21 @@ export default function NotesList() {
         </div>
 
         {!hasNotes ? (
-          <div className="py-6 text-center text-gray-500">
+          <div className="py-6 text-center text-muted-foreground">
             No notes yet. Create one!
           </div>
         ) : !hasFilteredNotes ? (
-          <div className="py-6 text-center text-gray-500">
+          <div className="py-6 text-center text-muted-foreground">
             No notes match your search.
           </div>
         ) : (
           <SidebarNotes
-              notes={filteredNotes}
-              selectedNoteId={selectedNoteId}
-              onNoteSelect={handleNoteSelect}
-              favoritesMap={favoritesMap}
-              onToggleFavorite={toggleFavorite}
-            />
+            notes={filteredNotes}
+            selectedNoteId={selectedNoteId}
+            onNoteSelect={handleNoteSelect}
+            favoritesMap={favoritesMap}
+            onToggleFavorite={toggleFavorite}
+          />
         )}
       </div>
 
@@ -288,19 +300,17 @@ export default function NotesList() {
             </div>
             {/* Note Header */}
             <div className="p-6 border-b bg-white">
-              <h1 className="text-3xl font-bold mb-4">
-                {selectedNote.title}
-              </h1>
+              <h1 className="text-3xl font-bold mb-4">{selectedNote.title}</h1>
               <div className="w-64">
                 <div className="grid grid-cols-2 mb-2">
-                  <h4 className="text-gray-500">Created by:</h4>
+                  <h4 className="text-muted-foreground">Created by:</h4>
                   <span>
                     {selectedNote.userId.firstName}{" "}
                     {selectedNote.userId.lastName}
                   </span>
                 </div>
                 <div className="grid grid-cols-2 mb-2">
-                  <h4 className="text-gray-500">Last modified:</h4>
+                  <h4 className="text-muted-foreground">Last modified:</h4>
                   <span>
                     {new Date(selectedNote.updatedAt).toLocaleDateString()}
                   </span>
@@ -314,11 +324,12 @@ export default function NotesList() {
                 <div className="flex items-center justify-center h-32">
                   Loading note content...
                 </div>
-              ) : (() => {
+              ) : (
+                (() => {
                   const blocks = parseContent(selectedNote.content);
                   if (!blocks) {
                     return (
-                      <div className="flex items-center justify-center h-32 text-gray-400 text-sm">
+                      <div className="flex items-center justify-center h-32 text-muted-foreground/70 text-sm">
                         This note has no content yet.
                       </div>
                     );
@@ -330,11 +341,12 @@ export default function NotesList() {
                       onChange={() => {}}
                     />
                   );
-                })()}
+                })()
+              )}
             </div>
           </>
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center text-gray-500">
+          <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground">
             <div className="text-center">
               <h2 className="text-xl font-semibold mb-2">
                 {notes.length > 0

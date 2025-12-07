@@ -89,7 +89,7 @@ const RecentView = ({ courseId }: { courseId: string }) => {
             <div className="embla__container flex">
               {recentItems.map((item, i) => (
                 <div className="embla__slide px-2" key={item.itemId}>
-                  <div className="relative rounded-lg border shadow-sm overflow-hidden w-full bg-[#FFFBEF]/30 mb-4 hover:shadow-md transition-all cursor-pointer">
+                  <div className="relative rounded-lg border border-foreground/10 shadow-sm overflow-hidden w-full bg-[#ead4aa]/5 mb-4 hover:shadow-md transition-all cursor-pointer">
                     <div className="relative h-40 overflow-hidden rounded-t-lg">
                       <Image
                         src="/beige.jpg"
