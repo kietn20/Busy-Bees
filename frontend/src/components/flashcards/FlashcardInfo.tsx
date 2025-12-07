@@ -77,7 +77,7 @@ const FlashcardInfo = ({
   return (
     <div
       onClick={onClick}
-      className="relative rounded-xl p-6 bg-gray-50 flex flex-col gap-2 cursor-pointer hover:bg-gray-100"
+      className="relative rounded-xl p-6 flex flex-col gap-2 cursor-pointer border-1 border-foreground/10 bg-accent/30 hover:bg-accent/40"
     >
       <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
         <div className="flex items-center">
@@ -91,9 +91,9 @@ const FlashcardInfo = ({
           />
         </div>
 
-        <div className="rounded-xl bg-gray-200 p-2 flex text-gray-500 z-10">
+        <div className="rounded-xl bg-accent/70 p-2 flex text-foreground/70 z-10">
           <DropdownMenu>
-            <DropdownMenuTrigger>
+            <DropdownMenuTrigger asChild>
               <Ellipsis className="w-4 h-4 cursor-pointer" />
             </DropdownMenuTrigger>
             <DropdownMenuContent className="my-2">
@@ -135,7 +135,7 @@ const FlashcardInfo = ({
             </AlertDialogCancel>
             <AlertDialogAction asChild>
               <Button
-                variant="destructive"
+                className="bg-red-400 text-white hover:bg-red-500 "
                 onClick={handleDelete}
                 disabled={isDeleting}
               >
@@ -152,7 +152,7 @@ const FlashcardInfo = ({
       {description.length > 124 ? (
         <Tooltip>
           <TooltipTrigger asChild>
-            <p className="text-gray-600 text-sm line-clamp-3 cursor-pointer ml-2">
+            <p className="text-foreground text-sm line-clamp-3 cursor-pointer ml-2">
               {description}
             </p>
           </TooltipTrigger>
@@ -161,15 +161,15 @@ const FlashcardInfo = ({
           </TooltipContent>
         </Tooltip>
       ) : (
-        <p className="text-gray-600 text-sm ml-2">{description}</p>
+        <p className="text-accent-foreground text-sm ml-2">{description}</p>
       )}
 
       <div className="flex items-center gap-2">
-        <p className="text-gray-500 text-xs rounded-xl bg-gray-200 w-fit px-4 py-2 flex items-center gap-2 my-2">
+        <p className="text-xs rounded-xl bg-accent/60 w-fit px-4 py-2 flex items-center gap-2 my-2">
           <WalletCards className="w-4 h-4" />
           {terms.length} Terms
         </p>
-        <p className="text-gray-500 text-xs rounded-xl bg-gray-200 w-fit px-4 py-2 flex items-center gap-2 my-2">
+        <p className="text-xs rounded-xl bg-accent/60 w-fit px-4 py-2 flex items-center gap-2 my-2">
           <User className="w-4 h-4" />
           {creator}
         </p>

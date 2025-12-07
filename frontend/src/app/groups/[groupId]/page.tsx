@@ -44,15 +44,14 @@ export default function GroupPage() {
     fetchData();
   }, [fetchData]);
 
-  
   return (
     <div className="container mx-auto p-8">
       <div className="mb-2">
         <h1 className="text-2xl font-bold">Dashboard</h1>
         {group?.description && (
           <div className="flex items-center ">
-            <Tally1 className="inline text-gray-500" />
-            <p className="text-gray-500 py-1 text-[.95rem]">
+            <Tally1 className="inline text-[#efc576] " />
+            <p className="text-[#bf9748] py-1 text-[.95rem]">
               {group.description}
             </p>
           </div>
@@ -62,16 +61,12 @@ export default function GroupPage() {
       <div className="flex gap-4">
         <div className="w-2/3">
           <div className="w-full overflow-y-auto py-6">
-            <h2 className="text-xl font-semibold text-gray-900 px-4">
-              Recently Viewed
-            </h2>
-            <RecentView courseId={groupId}/>
+            <h2 className="text-xl font-semibold px-4">Recently Viewed</h2>
+            <RecentView courseId={groupId} />
           </div>
 
           <div className="w-full overflow-y-auto pb-6">
-            <h2 className="text-xl font-semibold text-gray-900 p-4">
-              Upcoming Events
-            </h2>
+            <h2 className="text-xl font-semibold p-4">Upcoming Events</h2>
             <div className="px-4">
               <UpcomingEvents
                 events={events}
@@ -82,10 +77,8 @@ export default function GroupPage() {
             </div>
           </div>
         </div>
-        <div className="w-1/3 max-h-[750px] overflow-y-auto border rounded-3xl py-6">
-          <h2 className="text-xl font-semibold text-gray-900 px-4">
-            Group Activity
-          </h2>
+        <div className="w-1/3 max-h-[750px] overflow-y-auto border border-foreground/10 rounded-3xl py-6">
+          <h2 className="text-xl font-semibold px-4">Group Activity</h2>
           <GroupActivity />
         </div>
       </div>

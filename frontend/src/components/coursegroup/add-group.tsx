@@ -37,7 +37,7 @@ const AddGroup = () => {
       if (isCreateMode) {
         // Create group
         const response = await createGroup(inputValue);
-        
+
         toast.success("Group created successfully.");
 
         // Close the dialog and redirect to the group page
@@ -48,9 +48,9 @@ const AddGroup = () => {
       } else {
         // Join group
         const response = await joinGroup(inputValue);
-        
+
         toast.success("Joined group successfully.");
-        
+
         // Close the dialog and redirect
         setIsOpen(false);
         setInputValue("");
@@ -58,8 +58,9 @@ const AddGroup = () => {
         router.refresh();
       }
     } catch (err) {
-      
-      let errorMessage = `Failed to ${isCreateMode ? "create" : "join"} group. Please try again.`;
+      let errorMessage = `Failed to ${
+        isCreateMode ? "create" : "join"
+      } group. Please try again.`;
 
       if (err instanceof AxiosError && err.response?.data?.message) {
         errorMessage = err.response.data.message;
@@ -75,13 +76,18 @@ const AddGroup = () => {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline">Add Group</Button>
+        <Button
+          variant="outline"
+          className="px-5 border-muted-foreground py-2 font-medium rounded-3xl"
+        >
+          Add Group
+        </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-lg">
         <form onSubmit={handleSubmit}>
           <div className="flex flex-col items-center space-y-6 py-6">
             <DialogHeader className="text-center">
-              <DialogTitle className="text-2xl font-bold">
+              <DialogTitle className="text-2xl font-bold text-foreground">
                 {isCreateMode ? "Create a Group" : "Join a Group"}
               </DialogTitle>
             </DialogHeader>
@@ -97,8 +103,6 @@ const AddGroup = () => {
                 disabled={isLoading}
               />
             </div>
-
-          
 
             <Button
               type="submit"
@@ -118,7 +122,7 @@ const AddGroup = () => {
               </span>
               <button
                 type="button"
-                className="text-sm text-blue-500 hover:text-blue-600 font-medium"
+                className="text-sm text-muted-foreground hover:text-foreground font-medium cursor-pointer"
                 onClick={toggleMode}
                 disabled={isLoading}
               >

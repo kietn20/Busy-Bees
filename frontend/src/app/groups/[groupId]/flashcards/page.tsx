@@ -6,10 +6,15 @@ import { useRouter, useParams } from "next/navigation";
 import { getFlashcardSetsByGroup, FlashcardSet } from "@/services/flashcardApi";
 import { useEffect, useState, useMemo } from "react";
 import toast from "react-hot-toast";
-import { checkFavorites, addFavorite, removeFavorite } from "@/services/accountApi";
+import {
+  checkFavorites,
+  addFavorite,
+  removeFavorite,
+} from "@/services/accountApi";
 import { addRecentlyViewed } from "@/services/recentlyviewedApi";
 
 import SearchFilterBar from "@/components/SearchFilter";
+import { Button } from "@/components/ui/button";
 
 type SortKey = "recent" | "oldest" | "title-asc" | "title-desc";
 
@@ -66,10 +71,19 @@ export default function FlashcardsList() {
       if (!groupId || flashcardsData.length === 0) return;
       try {
         const itemIds = flashcardsData.map((f) => f._id);
-        const map = await checkFavorites(groupId as string, "flashcardSet", itemIds);
+        const map = await checkFavorites(
+          groupId as string,
+          "flashcardSet",
+          itemIds
+        );
         setFavoritesMap(map);
         // Debug: log the itemIds and map for troubleshooting persisted favorite rendering
-        console.debug("checkFavorites (flashcards) - itemIds:", itemIds, "map:", map);
+        console.debug(
+          "checkFavorites (flashcards) - itemIds:",
+          itemIds,
+          "map:",
+          map
+        );
       } catch (err) {
         // ignore if unauthenticated
       }
@@ -86,7 +100,10 @@ export default function FlashcardsList() {
       else toast.success("Flashcard Set removed from favorites.");
     } catch (err) {
       console.error("toggleFavorite (flashcard) error:", err?.response ?? err);
-      const msg = err?.response?.data?.message || err?.message || "Failed to update favorites.";
+      const msg =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Failed to update favorites.";
       if (err?.response?.status === 401) {
         toast.error("You must be signed in to save favorites.");
       } else {
@@ -102,9 +119,7 @@ export default function FlashcardsList() {
     // Search only by setName
     const q = searchQuery.trim().toLowerCase();
     if (q) {
-      result = result.filter((set) =>
-        set.setName.toLowerCase().includes(q)
-      );
+      result = result.filter((set) => set.setName.toLowerCase().includes(q));
     }
 
     // Sort
@@ -138,44 +153,44 @@ export default function FlashcardsList() {
     <div className="container mx-auto p-8">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-bold mb-4">All Flashcards</h1>
-        <button
-          className="p-2 rounded-xl bg-gray-100 hover:bg-gray-200 cursor-pointer"
+        <Button
           onClick={() => router.push(`/groups/${groupId}/flashcards/create`)}
+          className="rounded-xl"
         >
-          <Plus className="w-4 h-4 text-gray-500" />
-        </button>
+          <Plus className="w-4 h-4 text-foreground" />
+        </Button>
       </div>
 
       {/* Search + sort bar (horizontal layout) */}
-        <div className="mb-6">
-          <SearchFilterBar
-            query={searchQuery}
-            onQueryChange={setSearchQuery}
-            sortValue={sortOption}
-            onSortChange={(value) => setSortOption(value as SortKey)}
-            sortOptions={[
-              { value: "recent", label: "Most recent" },
-              { value: "oldest", label: "Oldest" },
-              { value: "title-asc", label: "Title A–Z" },
-              { value: "title-desc", label: "Title Z–A" },
-            ]}
-            placeholder="Search flashcard sets..."
-            layout="horizontal"
-          />
-        </div>
+      <div className="mb-6">
+        <SearchFilterBar
+          query={searchQuery}
+          onQueryChange={setSearchQuery}
+          sortValue={sortOption}
+          onSortChange={(value) => setSortOption(value as SortKey)}
+          sortOptions={[
+            { value: "recent", label: "Most recent" },
+            { value: "oldest", label: "Oldest" },
+            { value: "title-asc", label: "Title A–Z" },
+            { value: "title-desc", label: "Title Z–A" },
+          ]}
+          placeholder="Search flashcard sets..."
+          layout="horizontal"
+        />
+      </div>
 
       {loading ? (
         <div>Loading...</div>
       ) : notFound ? (
-        <div className="text-gray-500 text-center py-8">
+        <div className="text-muted-foreground text-center py-8">
           No flashcard sets found for this group.
         </div>
       ) : !hasSets ? (
-        <div className="text-gray-500 text-center py-8">
+        <div className="text-muted-foreground text-center py-8">
           No flashcard sets yet. Create one!
         </div>
       ) : !hasFilteredSets ? (
-        <div className="text-gray-500 text-center py-8">
+        <div className="text-muted-foreground text-center py-8">
           No flashcard sets match your search.
         </div>
       ) : (

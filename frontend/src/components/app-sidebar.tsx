@@ -46,7 +46,9 @@ export function AppSidebar({
 }: React.ComponentProps<typeof Sidebar> & { currentGroupId?: string }) {
   const pathname = usePathname();
   const { user } = useAuth();
-  const [favorites, setFavorites] = useState<Array<{ itemId: string; kind: string; titleSnapshot?: string }>>([]);
+  const [favorites, setFavorites] = useState<
+    Array<{ itemId: string; kind: string; titleSnapshot?: string }>
+  >([]);
   const [favLoading, setFavLoading] = useState(false);
 
   // Update navigation items with current group ID
@@ -54,7 +56,9 @@ export function AppSidebar({
     ...section,
     items: section.items.map((item) => ({
       ...item,
-      url: currentGroupId ? item.url.replace("[groupId]", currentGroupId) : item.url,
+      url: currentGroupId
+        ? item.url.replace("[groupId]", currentGroupId)
+        : item.url,
     })),
   }));
 
@@ -87,7 +91,11 @@ export function AppSidebar({
         if (!detail || detail.courseId !== currentGroupId) return;
         // If an item was removed, optimistically remove it from local state
         if (detail.isFavorited === false) {
-          setFavorites((prev) => prev.filter((f) => !(f.kind === detail.kind && f.itemId === detail.itemId)));
+          setFavorites((prev) =>
+            prev.filter(
+              (f) => !(f.kind === detail.kind && f.itemId === detail.itemId)
+            )
+          );
           return;
         }
         // Otherwise reload to pick up new favorites (we don't have titleSnapshot on add)
@@ -109,7 +117,6 @@ export function AppSidebar({
         <CourseSwitcher currentGroupId={currentGroupId} />
       </SidebarHeader>
       <SidebarContent>
-        {/* Workspace group */}
         {navMainWithGroupId.map((item) => (
           <SidebarGroup key={item.title}>
             <SidebarGroupLabel>{item.title}</SidebarGroupLabel>
@@ -121,7 +128,8 @@ export function AppSidebar({
                       asChild
                       isActive={
                         pathname === item.url ||
-                        (item.title !== "Dashboard" && pathname.startsWith(item.url + "/"))
+                        (item.title !== "Dashboard" &&
+                          pathname.startsWith(item.url + "/"))
                       }
                       className="py-5 pl-6"
                     >
@@ -141,15 +149,21 @@ export function AppSidebar({
             <SidebarMenu>
               {favLoading ? (
                 <SidebarMenuItem>
-                  <div className="py-4 pl-6 text-sm text-gray-500">Loading favorites...</div>
+                  <div className="py-4 pl-6 text-sm text-muted-foreground">
+                    Loading favorites...
+                  </div>
                 </SidebarMenuItem>
               ) : favorites.length === 0 ? (
                 <SidebarMenuItem>
-                  <div className="py-4 pl-6 text-sm text-gray-500">No favorites yet</div>
+                  <div className="py-4 pl-6 text-sm text-muted-foreground">
+                    No favorites yet
+                  </div>
                 </SidebarMenuItem>
               ) : (
                 favorites.map((f) => {
-                  const title = f.titleSnapshot || (f.kind === "note" ? "Note" : "Flashcard Set");
+                  const title =
+                    f.titleSnapshot ||
+                    (f.kind === "note" ? "Note" : "Flashcard Set");
                   const url =
                     f.kind === "note"
                       ? `/groups/${currentGroupId}/notes/${f.itemId}`

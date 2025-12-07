@@ -1,15 +1,21 @@
 // File: /frontend/src/components/events/CreateEventModal.tsx
 
-'use client';
+"use client";
 
-import { useState, FormEvent } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { useState, FormEvent } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { createEvent } from '@/services/groupApi'; 
-import toast from 'react-hot-toast';
+import { createEvent } from "@/services/groupApi";
+import toast from "react-hot-toast";
 
 interface CreateEventModalProps {
   isOpen: boolean;
@@ -18,10 +24,15 @@ interface CreateEventModalProps {
   onEventCreated: () => void;
 }
 
-export default function CreateEventModal({ isOpen, onClose, groupId, onEventCreated }: CreateEventModalProps) {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [startTime, setStartTime] = useState('');
+export default function CreateEventModal({
+  isOpen,
+  onClose,
+  groupId,
+  onEventCreated,
+}: CreateEventModalProps) {
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [startTime, setStartTime] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -37,12 +48,12 @@ export default function CreateEventModal({ isOpen, onClose, groupId, onEventCrea
       setIsLoading(false);
       return;
     }
-    
+
     if (!startTime.trim()) {
       toast.error("Event start time is required.", { id: TOAST_ERR_ID });
-      setIsLoading(false); 
+      setIsLoading(false);
       return;
-    } 
+    }
 
     if (isNaN(new Date(startTime).getTime())) {
       toast.error("Please enter a valid date and time.", { id: TOAST_ERR_ID });
@@ -50,7 +61,7 @@ export default function CreateEventModal({ isOpen, onClose, groupId, onEventCrea
       return;
     }
 
-    // convert local datetime string to ISO 8601 format for the backend    
+    // convert local datetime string to ISO 8601 format for the backend
     const isoStartTime = new Date(startTime).toISOString();
 
     try {
@@ -65,7 +76,7 @@ export default function CreateEventModal({ isOpen, onClose, groupId, onEventCrea
       toast.success("Event created.");
     } catch (err: any) {
       toast.error("Failed to create event.", { id: TOAST_ERR_ID });
-      setError(err.response?.data?.message || 'Failed to create event.');
+      setError(err.response?.data?.message || "Failed to create event.");
     } finally {
       setIsLoading(false);
     }
@@ -73,9 +84,9 @@ export default function CreateEventModal({ isOpen, onClose, groupId, onEventCrea
 
   // Helper to clear form state when closing
   const handleClose = () => {
-    setTitle('');
-    setDescription('');
-    setStartTime('');
+    setTitle("");
+    setDescription("");
+    setStartTime("");
     setError(null);
     onClose();
   };
@@ -86,18 +97,21 @@ export default function CreateEventModal({ isOpen, onClose, groupId, onEventCrea
         <DialogHeader>
           <DialogTitle>Create a New Event</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} noValidate className="space-y-4 py-4">
+        <form onSubmit={handleSubmit} noValidate className="space-y-6 py-4">
           <div>
-            <Label htmlFor="title">Event Title</Label>
-            <Input 
-              id="title" value={title} 
-              onChange={(e) => setTitle(e.target.value)} 
-              maxLength={45}
-              //style={{ height: "40px" }} 
-              />
-              <div className="text-xs text-gray-400 text-right">
+            <div className="flex justify-between">
+              <Label htmlFor="title">Event Title</Label>
+              <div className="text-xs text-muted-foreground text-right">
                 {title.length} / 45
               </div>
+            </div>
+            <Input
+              id="title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              maxLength={45}
+              className="mt-2"
+            />
           </div>
           <div>
             <Label htmlFor="startTime">Start Time</Label>
@@ -108,30 +122,33 @@ export default function CreateEventModal({ isOpen, onClose, groupId, onEventCrea
               max="2099-12-31T23:59"
               value={startTime}
               onChange={(e) => setStartTime(e.target.value)}
-              //style={{ height: "40px" }}
+              className="mt-2"
             />
           </div>
           <div>
-            <Label htmlFor="description">Description (Optional)</Label>
+            <div className="flex justify-between">
+              <Label htmlFor="description">Description (Optional)</Label>
+              <div className="text-xs text-muted-foreground text-right">
+                {description.length} / 150
+              </div>
+            </div>
             <Textarea
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               maxLength={150}
               placeholder="E.g., Discuss chapters 4-6"
-              className="w-[460px]"
+              className="mt-2 w-[460px]"
               //style={{ height: "70px", overflowY: "auto", resize: "vertical", overflowX: "hidden" }}
             />
-            <div className="text-xs text-gray-400 text-right">
-              {description.length} / 150
-            </div>
           </div>
 
-          
           <DialogFooter>
-            <Button type="button" variant="ghost" onClick={handleClose}>Cancel</Button>
+            <Button type="button" variant="ghost" onClick={handleClose}>
+              Cancel
+            </Button>
             <Button type="submit" disabled={isLoading}>
-              {isLoading ? 'Creating...' : 'Create Event'}
+              {isLoading ? "Creating..." : "Create Event"}
             </Button>
           </DialogFooter>
         </form>

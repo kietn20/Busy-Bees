@@ -91,7 +91,7 @@ export default function FlashcardPage() {
     <div className="container mx-auto p-8 justify-center">
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-2xl font-semibold ">{flashcardSet.setName}</h1>
-        <div className="rounded-xl bg-gray-200 p-2 flex text-gray-500 mr-6">
+        <div className="rounded-xl bg-accent p-2 flex text-muted-foreground mr-6">
           <DropdownMenu>
             <DropdownMenuTrigger>
               <Ellipsis className="w-4 h-4 cursor-pointer" />
@@ -126,27 +126,23 @@ export default function FlashcardPage() {
                 }}
               >
                 <div
-                  className="absolute inset-0 w-full h-full bg-white border-2 border-gray-200 rounded-2xl p-12 flex items-center justify-center hover:shadow-lg transition-shadow"
+                  className="absolute inset-0 w-full h-full bg-white border-2 border-foreground/20 rounded-2xl p-12 flex items-center justify-center hover:shadow-lg transition-shadow"
                   style={{ backfaceVisibility: "hidden" }}
                 >
                   <div className="text-center">
-                    <h2 className="text-3xl text-gray-800">
-                      {currentCard.term}
-                    </h2>
+                    <h2 className="text-3xl">{currentCard.term}</h2>
                   </div>
                 </div>
 
                 <div
-                  className="absolute inset-0 w-full h-full bg-white border-2 rounded-2xl p-12 flex items-center justify-center hover:shadow-lg transition-shadow"
+                  className="absolute inset-0 w-full h-full bg-white border-2 border-foreground/20 rounded-2xl p-12 flex items-center justify-center hover:shadow-lg transition-shadow"
                   style={{
                     backfaceVisibility: "hidden",
                     transform: "rotateX(180deg)",
                   }}
                 >
                   <div className="text-center">
-                    <h2 className="text-3xl text-gray-800">
-                      {currentCard.definition}
-                    </h2>
+                    <h2 className="text-3xl">{currentCard.definition}</h2>
                   </div>
                 </div>
               </div>
@@ -161,7 +157,7 @@ export default function FlashcardPage() {
               >
                 <ChevronLeft className="w-4 h-4" />
               </Button>
-              <span className="text-gray-600 font-medium">
+              <span className="text-muted-foreground font-medium">
                 {currentIndex + 1} / {totalTerms}
               </span>
               <Button
@@ -173,12 +169,12 @@ export default function FlashcardPage() {
                 <ChevronRight className="w-4 h-4" />
               </Button>
             </div>
-            <p className="text-center text-gray-400 text-sm mt-4">
+            <p className="text-center text-muted-foreground text-sm mt-4">
               Use ← → arrow keys to navigate & Press Space to flip
             </p>
           </div>
         ) : (
-          <div className="text-center py-12 text-gray-500">
+          <div className="text-center py-12 text-muted-foreground">
             This flashcard set has no terms yet. Add some to start studying!
           </div>
         )}
@@ -187,28 +183,24 @@ export default function FlashcardPage() {
       {/* Terms List Section */}
       {hasTerms && (
         <div className="container mx-auto px-8 pb-8">
-          <h2 className="text-xl font-semibold text-gray-700 mb-6">
-            {totalTerms} Terms
-          </h2>
+          <h2 className="text-xl font-semibold mb-6">{totalTerms} Terms</h2>
           <div className="space-y-4">
             {(flashcardSet.flashcards as Flashcard[]).map(
               (card: Flashcard, index: number) => (
                 <div
                   key={index}
-                  className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow"
+                  className="bg-white border border-foreground/20 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow"
                 >
                   <div className="flex items-center gap-6">
-                    <div className="flex-shrink-0 w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-sm font-medium text-gray-600">
+                    <div className="flex-shrink-0 w-8 h-8 bg-foreground/10 rounded-full flex items-center justify-center text-sm font-medium ">
                       {index + 1}
                     </div>
                     <div className="flex w-full">
-                      <div className="flex items-center w-1/3 border-r border-gray-300">
-                        <h3 className="font-medium text-gray-900">
-                          {card.term}
-                        </h3>
+                      <div className="flex items-center w-1/3 border-r border-foreground/20">
+                        <h3 className="font-medium">{card.term}</h3>
                       </div>
                       <div className="pl-6 md:pl-6 flex items-center w-2/3">
-                        <p className="text-gray-600">{card.definition}</p>
+                        <p>{card.definition}</p>
                       </div>
                     </div>
                   </div>

@@ -4,54 +4,56 @@ import { Event } from "@/services/groupApi";
 import EventListItem from "./EventListItem";
 
 interface EventListProps {
-	events: Event[];
-	isLoading: boolean;
-	error: string | null;
-	onEventClick: (eventId: string) => void;
-	selectedDate?: Date;
+  events: Event[];
+  isLoading: boolean;
+  error: string | null;
+  onEventClick: (eventId: string) => void;
+  selectedDate?: Date;
 }
 
 export default function EventList({
-	events,
-	isLoading,
-	error,
-	onEventClick,
-	selectedDate
+  events,
+  isLoading,
+  error,
+  onEventClick,
+  selectedDate,
 }: EventListProps) {
-	if (isLoading) {
-		return <p className="text-center text-gray-500">Loading events...</p>;
-	}
+  if (isLoading) {
+    return (
+      <p className="text-center text-muted-foreground">Loading events...</p>
+    );
+  }
 
-	if (error) {
-		return <p className="text-center text-red-500">{error}</p>;
-	}
+  if (error) {
+    return <p className="text-center text-red-500">{error}</p>;
+  }
 
-	if (events.length === 0) {
-		if (selectedDate) {
-			return (
-				<p className="text-center text-gray-500">
-					No events for this day.
-				</p>
-			);
-		}
-		return (
-      	<p className="text-center text-gray-500">
-        	No upcoming events for this group.
-      	</p>
-    	);
-	}
+  if (events.length === 0) {
+    if (selectedDate) {
+      return (
+        <p className="text-center text-muted-foreground">
+          No events for this day.
+        </p>
+      );
+    }
+    return (
+      <p className="text-center text-muted-foreground">
+        No upcoming events for this group.
+      </p>
+    );
+  }
 
-	return (
-		<div className="w-full max-w-xl mx-auto">
-			<div className="bg-white p-6 rounded-lg divide-y divide-gray-200 flex flex-col gap-2">
-				{events.map((event) => (
-					<EventListItem
-						key={event._id}
-						event={event}
-						onClick={() => onEventClick(event._id)}
-					/>
-				))}
-			</div>
-		</div>
-	);
+  return (
+    <div className="w-full max-w-xl mx-auto">
+      <div className="bg-white p-6 rounded-lg divide-y divide-foreground/20 flex flex-col gap-2">
+        {events.map((event) => (
+          <EventListItem
+            key={event._id}
+            event={event}
+            onClick={() => onEventClick(event._id)}
+          />
+        ))}
+      </div>
+    </div>
+  );
 }

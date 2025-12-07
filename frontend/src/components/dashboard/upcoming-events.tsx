@@ -59,7 +59,7 @@ export default function UpcomingEvents({
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl p-6 h-[343px] overflow-y-auto ">
+    <div className="border border-foreground/10 rounded-2xl p-6 h-[343px] overflow-y-auto ">
       <div className="space-y-6">
         {Object.entries(groupedEvents).map(
           ([date, { dayOfWeek, events: dateEvents }]) => (
@@ -68,12 +68,12 @@ export default function UpcomingEvents({
               <div className="flex-shrink-0 w-32 pt-4">
                 <p
                   className={`text-sm font-medium ${
-                    isToday(date) ? "text-red-500" : "text-gray-500"
+                    isToday(date) ? "font-semibold" : "text-accent-foreground"
                   }`}
                 >
                   {isToday(date) ? "Today " : dayOfWeek}
                 </p>
-                <p className="text-sm text-gray-500">{date}</p>
+                <p className="text-sm text-accent-foreground">{date}</p>
               </div>
 
               {/* Events on right */}
@@ -90,15 +90,15 @@ export default function UpcomingEvents({
                     <div
                       key={event._id}
                       onClick={() => onEventClick(event._id)}
-                      className="cursor-pointer hover:bg-gray-50 transition-colors rounded-lg p-3 -mx-3"
+                      className="cursor-pointer hover:bg-accent/40 transition-colors rounded-lg p-3 -mx-3"
                     >
                       <div className="flex items-start gap-3">
-                        <div className="w-2 h-2 bg-gray-400 rounded-full flex-shrink-0 mt-2" />
+                        <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0 mt-2" />
                         <div className="flex-1">
-                          <h4 className="text-gray-900 font-medium text-base">
+                          <h4 className="font-medium text-base">
                             {event.title}
                           </h4>
-                          <p className="text-gray-500 text-sm mt-0.5">
+                          <p className="text-accent-foreground text-sm mt-0.5">
                             {timeStr}
                           </p>
                         </div>
