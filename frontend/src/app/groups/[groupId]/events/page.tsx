@@ -183,7 +183,7 @@ export default function GroupEventsPage() {
                 onChange={(e) =>
                   setTimeFilter(e.target.value as "all" | "week" | "month")
                 }
-                className="rounded-md border border-gray-300 px-3 py-1.5 text-sm bg-white outline-none focus:ring-2 focus:ring-gray-400"
+                className="rounded-md border border-foreground/20 px-3 py-2.25 text-sm bg-white outline-none focus:ring-2 focus:ring-primary cursor-pointer"
               >
                 <option value="all">All</option>
                 <option value="week">Within next week</option>
@@ -207,7 +207,7 @@ export default function GroupEventsPage() {
           </div>
 
           <div className="md:w-1/3 w-full flex justify-center items-start flex-shrink-0">
-            <div className="bg-white p-4 rounded-lg shadow-md w-full ">
+            <div className="bg-white p-4 rounded-lg border border-foreground/10 shadow-md w-full ">
               <Calendar
                 mode="single"
                 selected={selectedDate}

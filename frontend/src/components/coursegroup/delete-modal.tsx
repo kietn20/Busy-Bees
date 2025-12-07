@@ -29,9 +29,9 @@ const DeleteModal = ({ groupId }: { groupId: string }) => {
       await deleteCourseGroup(groupId);
       // navigate back to home page
       toast.success("Group deleted successfully.");
-      router.push('/');
+      router.push("/");
     } catch (err: any) {
-      const message = err?.response?.data?.message || 'Failed to delete group.';
+      const message = err?.response?.data?.message || "Failed to delete group.";
       setError(message);
       toast.error(message);
     } finally {
@@ -42,7 +42,9 @@ const DeleteModal = ({ groupId }: { groupId: string }) => {
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button variant="destructive" className="cursor-pointer">Delete</Button>
+        <Button className="cursor-pointer bg-red-500 hover:bg-red-600 text-white">
+          Delete
+        </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
@@ -53,9 +55,15 @@ const DeleteModal = ({ groupId }: { groupId: string }) => {
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel className="cursor-pointer">Cancel</AlertDialogCancel>
-           <AlertDialogAction onClick={handleDelete} className="bg-red-500 cursor-pointer" disabled={isDeleting}>
-            {isDeleting ? 'Deleting...' : 'Delete'}
+          <AlertDialogCancel className="cursor-pointer">
+            Cancel
+          </AlertDialogCancel>
+          <AlertDialogAction
+            onClick={handleDelete}
+            className="bg-red-500 cursor-pointer text-white"
+            disabled={isDeleting}
+          >
+            {isDeleting ? "Deleting..." : "Delete"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

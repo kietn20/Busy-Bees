@@ -77,7 +77,7 @@ export default function GroupPage() {
             </div>
           </div>
         </div>
-        <div className="w-1/3 max-h-[750px] overflow-y-auto border border-foreground/10 rounded-3xl py-6 bg-[#ead4aa]/3">
+        <div className="w-1/3 max-h-[750px] overflow-y-auto border border-foreground/10 rounded-3xl py-6">
           <h2 className="text-xl font-semibold px-4">Group Activity</h2>
           <GroupActivity />
         </div>

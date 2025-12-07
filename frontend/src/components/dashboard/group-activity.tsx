@@ -44,15 +44,15 @@ const GroupActivity = () => {
   const getIcon = (kind: string) => {
     switch (kind) {
       case "flashcardSet":
-        return <BookOpen className="w-5 h-5 text-gray-700" />;
+        return <BookOpen className="w-5 h-5 text-foreground" />;
       case "note":
-        return <StickyNote className="w-5 h-5 text-gray-700" />;
+        return <StickyNote className="w-5 h-5 text-foreground" />;
       case "event":
-        return <Calendar className="w-5 h-5 text-gray-700" />;
+        return <Calendar className="w-5 h-5 text-foreground" />;
       case "comment":
-        return <MessageCircle className="w-5 h-5 text-gray-700" />;
+        return <MessageCircle className="w-5 h-5 text-foreground" />;
       default:
-        return <MessageCircle className="w-5 h-5 text-gray-700" />;
+        return <MessageCircle className="w-5 h-5 text-foreground" />;
     }
   };
 
@@ -103,7 +103,7 @@ const GroupActivity = () => {
   };
 
   return (
-    <div className="p-4 bg-[#FFFBEF]/10">
+    <div className="p-4">
       {isLoading ? (
         <div className="space-y-3">
           {Array.from({ length: 4 }).map((_, i) => (
@@ -132,7 +132,7 @@ const GroupActivity = () => {
                 className={`flex-shrink-0 w-10 h-10 rounded-2xl bg-white flex items-center justify-center`}
               >
                 {activity.isReply ? (
-                  <Reply className="w-5 h-5 text-gray-700" />
+                  <Reply className="w-5 h-5" />
                 ) : (
                   getIcon(activity.kind)
                 )}
@@ -140,15 +140,15 @@ const GroupActivity = () => {
 
               <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between gap-2 mb-1">
-                  <span className="text-xs font-medium text-gray-500">
+                  <span className="text-xs font-medium text-muted-foreground">
                     {activity.categoryLabel}
                   </span>
-                  <span className="text-xs text-gray-400 whitespace-nowrap">
+                  <span className="text-xs text-muted-foreground whitespace-nowrap">
                     {renderTimestamp(activity.timestamp)}
                   </span>
                 </div>
 
-                <p className="text-sm text-gray-900 leading-snug min-w-0 overflow-hidden">
+                <p className="text-sm  leading-snug min-w-0 overflow-hidden">
                   <span className="inline-block font-semibold align-middle">
                     {activity.user
                       ? `${activity.user.firstName || ""} ${
@@ -156,7 +156,7 @@ const GroupActivity = () => {
                         }`.trim()
                       : "Someone"}
                   </span>{" "}
-                  <span className="inline-block text-gray-700 align-middle">
+                  <span className="inline-block align-middle">
                     {getVerb(activity)}
                   </span>{" "}
                   <span
@@ -170,7 +170,9 @@ const GroupActivity = () => {
             </div>
           ))}
           {activities.length === 0 && (
-            <div className="text-sm text-gray-500">No recent activity</div>
+            <div className="text-sm text-muted-foreground">
+              No recent activity
+            </div>
           )}
         </div>
       )}

@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { Event } from '@/services/groupApi';
-import { Calendar, UserCircle } from 'lucide-react';
+import { Event } from "@/services/groupApi";
+import { Calendar, UserCircle } from "lucide-react";
 
 interface EventListItemProps {
   event: Event;
@@ -9,34 +9,40 @@ interface EventListItemProps {
 }
 
 export default function EventListItem({ event, onClick }: EventListItemProps) {
-  const eventDate = new Date(event.startTime).toLocaleDateString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
+  const eventDate = new Date(event.startTime).toLocaleDateString("en-US", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
   });
-  const eventTime = new Date(event.startTime).toLocaleTimeString('en-US', {
-    hour: '2-digit',
-    minute: '2-digit',
+  const eventTime = new Date(event.startTime).toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
   });
 
   return (
     <div
-      className="border border-gray-200 p-4 cursor-pointer hover:bg-gray-50 transition-colors rounded-2xl flex flex-col justify-between"
+      className="border border-foreground/10 p-4 cursor-pointer hover:bg-accent/25 transition-colors rounded-2xl flex flex-col justify-between"
       onClick={onClick}
     >
       <h3 className="font-semibold text-lg">{event.title}</h3>
-      <div className="flex items-center text-sm text-gray-500 mt-2 space-x-4">
+      <div className="flex items-center text-sm text-muted-foreground mt-2 space-x-4">
         <div className="flex items-center">
           <Calendar className="h-4 w-4 mr-1.5" />
-          <span>{eventDate} at {eventTime}</span>
+          <span>
+            {eventDate} at {eventTime}
+          </span>
         </div>
         <div className="flex items-center">
           <UserCircle className="h-4 w-4 mr-1.5" />
           <span>Hosted by {event.createdBy.firstName}</span>
         </div>
       </div>
-      {event.description && <p className="mt-2 text-gray-600 break-words whitespace-pre-line w-full">{event.description}</p>}
+      {event.description && (
+        <p className="mt-2 break-words whitespace-pre-line w-full text-sm">
+          {event.description}
+        </p>
+      )}
     </div>
   );
 }

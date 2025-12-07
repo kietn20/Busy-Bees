@@ -12,7 +12,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 export default function EditAccount() {
   const { user, refreshUser } = useAuth();
   const router = useRouter();
-  
+
   const [form, setForm] = useState({
     firstName: "",
     lastName: "",
@@ -45,7 +45,9 @@ export default function EditAccount() {
       return;
     }
     if (form.firstName.length > 50) {
-      toast.error("First name must be 50 characters or less.", { id: ERROR_TOAST_ID });
+      toast.error("First name must be 50 characters or less.", {
+        id: ERROR_TOAST_ID,
+      });
       return;
     }
     if (!form.lastName.trim()) {
@@ -53,10 +55,12 @@ export default function EditAccount() {
       return;
     }
     if (form.lastName.length > 50) {
-      toast.error("Last name must be 50 characters or less.", { id: ERROR_TOAST_ID });
+      toast.error("Last name must be 50 characters or less.", {
+        id: ERROR_TOAST_ID,
+      });
       return;
     }
-    
+
     if (!isOAuthUser) {
       if (!form.email.trim()) {
         toast.error("Email is required.", { id: ERROR_TOAST_ID });
@@ -64,19 +68,27 @@ export default function EditAccount() {
       }
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(form.email)) {
-        toast.error("Please enter a valid email address.", { id: ERROR_TOAST_ID });
+        toast.error("Please enter a valid email address.", {
+          id: ERROR_TOAST_ID,
+        });
         return;
       }
     }
 
     if (!isOAuthUser && form.password) {
       if (form.password.length < 8) {
-        toast.error("Password must be at least 8 characters.", { id: ERROR_TOAST_ID });
+        toast.error("Password must be at least 8 characters.", {
+          id: ERROR_TOAST_ID,
+        });
         return;
       }
-      const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>]).{8,}$/;
+      const strongPasswordRegex =
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>]).{8,}$/;
       if (!strongPasswordRegex.test(form.password)) {
-        toast.error("Password must include uppercase, lowercase, number, and special character.", { id: ERROR_TOAST_ID });
+        toast.error(
+          "Password must include uppercase, lowercase, number, and special character.",
+          { id: ERROR_TOAST_ID }
+        );
         return;
       }
       if (form.password !== form.confirmPassword) {
@@ -98,25 +110,25 @@ export default function EditAccount() {
           payload.password = form.password;
         }
       }
-      
+
       const response = await axios.put(
         "http://localhost:8080/api/account/update",
         payload,
-        { 
+        {
           withCredentials: true,
           headers: {
-            ...(localStorage.getItem('authToken') && {
-              'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+            ...(localStorage.getItem("authToken") && {
+              Authorization: `Bearer ${localStorage.getItem("authToken")}`,
             }),
-          }
+          },
         }
       );
 
       toast.success(response.data.message || "Profile updated successfully.");
-      
+
       await refreshUser();
 
-      setForm(prev => ({
+      setForm((prev) => ({
         ...prev,
         password: "",
         confirmPassword: "",
@@ -126,7 +138,6 @@ export default function EditAccount() {
         router.push("/account");
       }, 1000);
     } catch (error: any) {
-      
       const rawMessage =
         error.response?.data?.message?.toLowerCase() ||
         error.message?.toLowerCase() ||
@@ -137,14 +148,11 @@ export default function EditAccount() {
         error.message ||
         "Failed to update profile";
 
-      if (
-        rawMessage.includes("e11000") ||
-        rawMessage.includes("duplicate")
-      ) {
+      if (rawMessage.includes("e11000") || rawMessage.includes("duplicate")) {
         message = "Email already exists. Please use a different email address.";
       }
       toast.error(message, { id: ERROR_TOAST_ID });
-      
+
       if (error.response?.data?.errors) {
         error.response.data.errors.forEach((err: any) => {
           toast.error(err.msg || err.message, { id: ERROR_TOAST_ID });
@@ -167,30 +175,37 @@ export default function EditAccount() {
     <ProtectedRoute>
       <div className="container mx-auto px-6 py-8 max-w-4xl">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-800">Edit Account</h1>
-          <p className="text-gray-600 mt-2">Update your profile information below.</p>
+          <h1 className="text-xl font-bold">Edit Account</h1>
+          <p className="text-muted-foreground mt-2">
+            Update your profile information below.
+          </p>
         </div>
 
         {/* Personal Information */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <h2 className="text-lg font-semibold mb-6 text-gray-800 border-b pb-2">
+        <div className="bg-white p-6 mb-6">
+          <h2 className="text-lg font-semibold mb-6  border-b pb-2">
             Personal Information
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="firstName"
+                className="block text-sm font-medium d"
+              >
                 First Name <span className="text-red-500">*</span>
               </label>
               <Input
                 id="firstName"
                 value={form.firstName}
-                onChange={(e) => setForm({ ...form, firstName: e.target.value })}
+                onChange={(e) =>
+                  setForm({ ...form, firstName: e.target.value })
+                }
                 placeholder="Enter your first name"
                 maxLength={50}
               />
             </div>
             <div className="space-y-2">
-              <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="lastName" className="block text-sm font-medium ">
                 Last Name <span className="text-red-500">*</span>
               </label>
               <Input
@@ -205,8 +220,9 @@ export default function EditAccount() {
 
           {/* Email - Read-only for OAuth users */}
           <div className="space-y-2 mt-6">
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-              Email Address {!isOAuthUser && <span className="text-red-500">*</span>}
+            <label htmlFor="email" className="block text-sm font-medium">
+              Email Address{" "}
+              {!isOAuthUser && <span className="text-red-500">*</span>}
             </label>
             <div className="relative">
               <Input
@@ -219,14 +235,15 @@ export default function EditAccount() {
                 placeholder="Enter your email"
               />
               {isOAuthUser && (
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded font-medium">
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs bg-primary px-2 py-1 rounded-lg font-medium">
                   Managed by Google
                 </span>
               )}
             </div>
             {isOAuthUser && (
-              <p className="text-xs text-gray-500">
-                Your email is managed through your Google account and cannot be changed here.
+              <p className="text-xs text-muted-foreground">
+                Your email is managed through your Google account and cannot be
+                changed here.
               </p>
             )}
           </div>
@@ -234,66 +251,83 @@ export default function EditAccount() {
 
         {/* Password Section - Only for non-OAuth users */}
         {!isOAuthUser ? (
-          <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-            <h2 className="text-lg font-semibold mb-6 text-gray-800 border-b pb-2">
+          <div className="bg-white p-6 mb-6">
+            <h2 className="text-lg font-semibold mb-6 border-b pb-2">
               Change Password
             </h2>
 
             <div className="space-y-4 max-w-md">
               <div className="space-y-2">
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="password" className="block text-sm font-medium">
                   New Password
                 </label>
                 <Input
                   id="password"
                   type="password"
                   value={form.password}
-                  onChange={(e) => setForm({ ...form, password: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, password: e.target.value })
+                  }
                   placeholder="Leave blank to keep current password"
                 />
-                <p className="text-xs text-gray-500">
-                  Must be at least 8 characters with uppercase, lowercase, number, and special character
+                <p className="text-xs text-muted-foreground">
+                  Must be at least 8 characters with uppercase, lowercase,
+                  number, and special character
                 </p>
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+                <label
+                  htmlFor="confirmPassword"
+                  className="block text-sm font-medium"
+                >
                   Confirm New Password
                 </label>
                 <Input
                   id="confirmPassword"
                   type="password"
                   value={form.confirmPassword}
-                  onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, confirmPassword: e.target.value })
+                  }
                   placeholder="Confirm your new password"
                 />
               </div>
             </div>
           </div>
         ) : (
-          <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-            <h2 className="text-lg font-semibold mb-6 text-gray-800 border-b pb-2">
+          <div className="bg-white p-6 mb-6">
+            <h2 className="text-lg font-semibold mb-6 border-b pb-2">
               Password
             </h2>
-            <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+            <div className="bg-accent/40 border border-foreground/20 rounded-md p-4">
               <div className="flex items-start gap-3">
-                <span className="text-2xl">🔒</span>
                 <div>
-                  <p className="text-sm text-blue-900 font-medium mb-1">
+                  <p className="text-sm text-foreground font-medium mb-1">
                     You're signed in with Google
                   </p>
-                  <p className="text-sm text-blue-800 mb-3">
+                  <p className="text-sm text-muted-foreground mb-3">
                     Your password is managed through your Google account.
                   </p>
                   <a
                     href="https://myaccount.google.com/security"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm text-blue-600 hover:text-blue-800 hover:underline inline-flex items-center gap-1 font-medium"
+                    className="text-sm text-[#bf9748] hover:text-[#bf9748]/80 hover:underline inline-flex items-center gap-1 font-medium"
                   >
                     Manage Google Account Security
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                      />
                     </svg>
                   </a>
                 </div>
@@ -307,11 +341,7 @@ export default function EditAccount() {
           <Button variant="outline" onClick={() => router.push("/account")}>
             Cancel
           </Button>
-          <Button 
-            onClick={handleSaveProfile} 
-            disabled={saving} 
-            className="bg-yellow-400 hover:bg-yellow-500 text-black font-semibold"
-          >
+          <Button onClick={handleSaveProfile} disabled={saving}>
             {saving ? "Saving..." : "Save Changes"}
           </Button>
         </div>

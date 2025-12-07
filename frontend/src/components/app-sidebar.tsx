@@ -149,13 +149,13 @@ export function AppSidebar({
             <SidebarMenu>
               {favLoading ? (
                 <SidebarMenuItem>
-                  <div className="py-4 pl-6 text-sm text-gray-500">
+                  <div className="py-4 pl-6 text-sm text-muted-foreground">
                     Loading favorites...
                   </div>
                 </SidebarMenuItem>
               ) : favorites.length === 0 ? (
                 <SidebarMenuItem>
-                  <div className="py-4 pl-6 text-sm text-gray-500">
+                  <div className="py-4 pl-6 text-sm text-muted-foreground">
                     No favorites yet
                   </div>
                 </SidebarMenuItem>

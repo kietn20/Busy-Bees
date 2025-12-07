@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -12,15 +12,22 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useAuth } from '@/context/AuthContext';
-import { updateEvent, deleteEvent } from '@/services/eventApi';
-import { Event } from '@/services/groupApi';
-import toast from "react-hot-toast"
+import { useAuth } from "@/context/AuthContext";
+import { updateEvent, deleteEvent } from "@/services/eventApi";
+import { Event } from "@/services/groupApi";
+import toast from "react-hot-toast";
 
 interface EventDetailModalProps {
   isOpen: boolean;
@@ -31,26 +38,35 @@ interface EventDetailModalProps {
   onEventUpdated: () => void;
 }
 
-export default function EventDetailModal({ isOpen, onClose, event, isLoading, groupOwnerId, onEventUpdated }: EventDetailModalProps) {
+export default function EventDetailModal({
+  isOpen,
+  onClose,
+  event,
+  isLoading,
+  groupOwnerId,
+  onEventUpdated,
+}: EventDetailModalProps) {
   const { user } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
   // states for the edit form
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [startTime, setStartTime] = useState('');
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [startTime, setStartTime] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
   // when the event prop changes, update the form state
   useEffect(() => {
     if (event) {
       setTitle(event.title);
-      setDescription(event.description || '');
+      setDescription(event.description || "");
 
       const dt = new Date(event.startTime);
-      const pad = (n: number) => n.toString().padStart(2, '0');
-      const localDateTime = `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}T${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
+      const pad = (n: number) => n.toString().padStart(2, "0");
+      const localDateTime = `${dt.getFullYear()}-${pad(
+        dt.getMonth() + 1
+      )}-${pad(dt.getDate())}T${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
       setStartTime(localDateTime);
     }
   }, [event]);
@@ -64,7 +80,10 @@ export default function EventDetailModal({ isOpen, onClose, event, isLoading, gr
 
   if (!event && !isLoading) return null;
 
-  const canModify = user && event && (user.id === event.createdBy._id || user.id === groupOwnerId);
+  const canModify =
+    user &&
+    event &&
+    (user.id === event.createdBy._id || user.id === groupOwnerId);
 
   const handleSaveChanges = async () => {
     if (!event) return;
@@ -106,61 +125,121 @@ export default function EventDetailModal({ isOpen, onClose, event, isLoading, gr
     }
   };
 
-  const formatDate = (isoString: string) => new Date(isoString).toLocaleString('en-US', { dateStyle: 'full', timeStyle: 'short' });
+  const formatDate = (isoString: string) =>
+    new Date(isoString).toLocaleString("en-US", {
+      dateStyle: "full",
+      timeStyle: "short",
+    });
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md w-full">
         <DialogHeader>
-          <DialogTitle>{isEditing ? 'Edit Event' : event?.title}</DialogTitle>
-          {!isEditing && <DialogDescription className="pt-2">Hosted by {event?.createdBy.firstName}</DialogDescription>}
+          <DialogTitle>{isEditing ? "Edit Event" : event?.title}</DialogTitle>
+          {!isEditing && (
+            <DialogDescription className="pt-2">
+              Hosted by {event?.createdBy.firstName}
+            </DialogDescription>
+          )}
         </DialogHeader>
-        
 
         {isEditing ? (
           // --- EDIT MODE ---
-          <div className="space-y-4 py-4">
-            <div><Label htmlFor="edit-title">Title</Label><Input id="edit-title" value={title} onChange={e => setTitle(e.target.value)} maxLength={45} /></div>
-            <div><Label htmlFor="edit-startTime">Start Time</Label>
-                <Input id="edit-startTime" type="datetime-local" min="1900-01-01T00:00"
-                  max="2099-12-31T23:59" value={startTime} onChange={e => setStartTime(e.target.value)} />
+          <div className="space-y-6 py-2">
+            <div>
+              <div className="flex justify-between">
+                <Label htmlFor="edit-title">Title</Label>
+                <div className="text-xs text-muted-foreground text-right">
+                  {title.length} / 45
                 </div>
-            <div><Label htmlFor="edit-description">Description</Label><Textarea id="edit-description" value={description} onChange={e => setDescription(e.target.value)} maxLength={150} className="w-[460px]"/></div>
+              </div>
+              <Input
+                id="edit-title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                maxLength={45}
+                className="mt-2"
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-startTime">Start Time</Label>
+              <Input
+                id="edit-startTime"
+                type="datetime-local"
+                min="1900-01-01T00:00"
+                max="2099-12-31T23:59"
+                className="mt-2"
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
+              />
+            </div>
+            <div>
+              <div className="flex justify-between">
+                <Label htmlFor="edit-description">Description</Label>
+                <div className="text-xs text-muted-foreground text-right">
+                  {description.length} / 150
+                </div>
+              </div>
+              <Textarea
+                id="edit-description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                maxLength={150}
+                className="mt-2 w-[460px]"
+              />
+            </div>
           </div>
         ) : (
           // --- VIEW MODE ---
-          <div className="mt-4 space-y-4">
+          <div className="space-y-4">
             {isLoading && <p>Loading details...</p>}
             {event && (
               <>
-                <p><strong>Start Time:</strong> {formatDate(event.startTime)}</p>
-                {event.description && <p className="break-all whitespace-pre-line w-full" style={{ wordBreak: "break-all", overflowWrap: "break-word" }}>
-                    <strong>Description:</strong> {event.description}
-                  </p>}
+                <div className="flex flex-row">
+                  <p className="font-medium pr-2">Start Time: </p>
+                  <p>{formatDate(event.startTime)}</p>
+                </div>
+                {event.description && (
+                  <p
+                    className="break-all whitespace-pre-line w-full"
+                    style={{
+                      wordBreak: "break-all",
+                      overflowWrap: "break-word",
+                    }}
+                  >
+                    {event.description}
+                  </p>
+                )}
               </>
             )}
           </div>
         )}
-
 
         <DialogFooter className="sm:justify-between">
           <div>
             {canModify && !isEditing && (
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <Button variant="destructive">Delete</Button>
+                  <Button className="bg-red-400 hover:bg-red-500 text-white">
+                    Delete
+                  </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
                     <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                     <AlertDialogDescription>
-                      This action cannot be undone. This will permanently delete the event "{event?.title}".
+                      This action cannot be undone. This will permanently delete
+                      the event "{event?.title}".
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleDelete} disabled={isDeleting}>
-                      {isDeleting ? 'Deleting...' : 'Continue'}
+                    <AlertDialogAction
+                      onClick={handleDelete}
+                      disabled={isDeleting}
+                      className="bg-red-400 hover:bg-red-500 text-white"
+                    >
+                      {isDeleting ? "Deleting..." : "Continue"}
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
@@ -169,16 +248,21 @@ export default function EventDetailModal({ isOpen, onClose, event, isLoading, gr
           </div>
 
           <div className="flex space-x-2">
-            {canModify && (
-              isEditing ? (
+            {canModify &&
+              (isEditing ? (
                 <>
-                  <Button variant="ghost" onClick={() => setIsEditing(false)}>Cancel</Button>
-                  <Button onClick={handleSaveChanges} disabled={isSaving}>{isSaving ? 'Saving...' : 'Save Changes'}</Button>
+                  <Button variant="ghost" onClick={() => setIsEditing(false)}>
+                    Cancel
+                  </Button>
+                  <Button onClick={handleSaveChanges} disabled={isSaving}>
+                    {isSaving ? "Saving..." : "Save Changes"}
+                  </Button>
                 </>
               ) : (
-                <Button variant="outline" onClick={() => setIsEditing(true)}>Edit</Button>
-              )
-            )}
+                <Button variant="outline" onClick={() => setIsEditing(true)}>
+                  Edit
+                </Button>
+              ))}
           </div>
         </DialogFooter>
       </DialogContent>
