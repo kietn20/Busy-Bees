@@ -133,10 +133,10 @@ const deleteNote = async (req, res) => {
     }
 
     // 5. Delete all comments associated with this note
-    await NoteComment.deleteMany({ noteId: noteId }); 
+    await NoteComment.deleteMany({ noteId: noteId });
 
-    // 6. Delete the note
-    await Note.findByIdAndDelete(noteId);
+    // 6. Delete the note (using findOneAndDelete to ensure hooks fire)
+    await Note.findOneAndDelete({ _id: noteId });
 
     res.status(200).json({
       message: "Note deleted successfully",
