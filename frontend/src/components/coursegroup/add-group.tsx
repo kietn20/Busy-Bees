@@ -78,7 +78,7 @@ const AddGroup = () => {
       <DialogTrigger asChild>
         <Button
           variant="outline"
-          className="px-5 border-[#5f471d] py-2 font-medium rounded-3xl"
+          className="px-5 border-muted-foreground py-2 font-medium rounded-3xl"
         >
           Add Group
         </Button>
@@ -87,7 +87,7 @@ const AddGroup = () => {
         <form onSubmit={handleSubmit}>
           <div className="flex flex-col items-center space-y-6 py-6">
             <DialogHeader className="text-center">
-              <DialogTitle className="text-2xl font-bold text-[#7b8a72]">
+              <DialogTitle className="text-2xl font-bold text-foreground">
                 {isCreateMode ? "Create a Group" : "Join a Group"}
               </DialogTitle>
             </DialogHeader>
@@ -122,7 +122,7 @@ const AddGroup = () => {
               </span>
               <button
                 type="button"
-                className="text-sm text-[#A5BD97] hover:text-[#5D6B54] font-medium"
+                className="text-sm text-muted-foreground hover:text-foreground font-medium cursor-pointer"
                 onClick={toggleMode}
                 disabled={isLoading}
               >

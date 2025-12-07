@@ -10,6 +10,7 @@ import GroupDetailsModal from "@/components/coursegroup/display-details";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import GoogleSignInToast from "@/components/GoogleSignInToast";
+import Image from "next/image";
 
 export default function HomePage() {
   const [groups, setGroups] = useState<CourseGroup[]>([]);
@@ -72,7 +73,7 @@ export default function HomePage() {
     return (
       <>
         <GoogleSignInToast />
-        <div className="w-full max-w-sm bg-[#FFFBEF]/30 rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition-all">
+        <div className="w-full max-w-sm bg-[#ead4aa]/5 rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition-all">
           <Link href={`/groups/${id}`}>
             <div className="h-44 bg-[url('/beige.jpg')] bg-cover bg-center" />
           </Link>
@@ -95,10 +96,19 @@ export default function HomePage() {
       <GoogleSignInToast />
 
       {user && (
-        <main className="py-12 container mx-auto px-6">
+        <main className="pt-8 container mx-auto px-6">
           <div className="flex items-start justify-between mb-8 animate-in fade-in slide-in-from-top-3 duration-300">
             <div>
-              <h1 className="text-3xl md:text-4xl font-bold">My Groups</h1>
+              <div className="flex items-center gap-2">
+                <h1 className="text-3xl md:text-4xl font-bold">My Groups</h1>
+                <Image
+                  src="/group.png"
+                  alt="Group"
+                  width={350}
+                  height={350}
+                  className="pl-2"
+                />
+              </div>
               <p className="mt-2 text-accent-foreground">
                 Quick access to the course groups you belong to.
               </p>
@@ -164,11 +174,13 @@ export default function HomePage() {
           </div>
         </main>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 animate-in fade-in duration-300">
-          {groups.map((g) => (
-            <Card key={pickId(g)} g={g} />
-          ))}
-        </div>
+        <main className="relative z-10 container mx-auto px-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 animate-in fade-in duration-300">
+            {groups.map((g) => (
+              <Card key={pickId(g)} g={g} />
+            ))}
+          </div>
+        </main>
       )}
 
       {selectedGroup && (

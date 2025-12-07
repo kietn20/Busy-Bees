@@ -70,8 +70,8 @@ export default function GroupEventsPage() {
 
   const modifiersStyles = {
     event: {
-      backgroundColor: "#FBBF24", // Amber-400
-      color: "#1F2937",
+      backgroundColor: "#FEE27d", // Amber-400
+      color: "#624134",
       borderRadius: "0.5rem",
     },
   };
