@@ -121,12 +121,7 @@ export const CommentInputModal = ({
           >
             Cancel
           </Button>
-          <Button
-            type="button"
-            onClick={handleSubmit}
-            disabled={submitting}
-            className="bg-yellow-400 text-black hover:bg-yellow-300"
-          >
+          <Button type="button" onClick={handleSubmit} disabled={submitting} gi>
             {submitting ? "Saving..." : "Add Comment"}
           </Button>
         </DialogFooter>
