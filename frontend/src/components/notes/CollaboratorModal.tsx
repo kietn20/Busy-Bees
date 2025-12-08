@@ -112,7 +112,7 @@ export default function CollaboratorModal({
 
         <div className="py-4 max-h-[60vh] overflow-y-auto space-y-4">
           {potentialCollaborators.length === 0 ? (
-            <p className="text-sm text-gray-500 text-center">
+            <p className="text-sm text-muted-foreground text-center">
               No other members in this group yet.
             </p>
           ) : (

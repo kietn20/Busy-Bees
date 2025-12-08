@@ -96,7 +96,7 @@ const AddGroup = () => {
               <Input
                 id="group-name"
                 placeholder={isCreateMode ? "Group Name" : "Invite Code"}
-                className="w-full px-4 py-3 text-center border border-gray-200 rounded-lg"
+                className="w-full px-4 py-3 text-center border border-foreground/10 rounded-lg"
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 required
@@ -112,7 +112,7 @@ const AddGroup = () => {
               {isLoading ? "Loading..." : isCreateMode ? "Create" : "Join"}
             </Button>
 
-            <div className="border-t border-gray-300 w-full max-w-sm"></div>
+            <div className="border-t border-foreground/10 w-full max-w-sm"></div>
 
             <div className="text-center">
               <span className="text-sm">

@@ -104,7 +104,9 @@ const GroupMembersList = ({ groupId }: GroupMembersListProps) => {
         </div>
       )}
       {otherMembers.length === 0 && (
-        <p className="text-gray-500">No other members in this group yet.</p>
+        <p className="text-muted-foreground">
+          No other members in this group yet.
+        </p>
       )}
     </div>
   );

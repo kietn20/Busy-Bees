@@ -91,7 +91,7 @@ export default function CreateNoteModal({
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-3xl h-[80vh] flex flex-col !bg-white overflow-scroll max-w-[90vw]">
         <DialogHeader className="bg-white">
-          <DialogTitle className="text-gray-900">Create a New Note</DialogTitle>
+          <DialogTitle>Create a New Note</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-4 flex-grow flex flex-col bg-white">
           <div className="bg-white">
@@ -104,7 +104,7 @@ export default function CreateNoteModal({
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Note Title"
               required
-              className="!text-2xl !font-bold border-none shadow-none focus-visible:ring-0 bg-white text-gray-900 w-full max-w-full "
+              className="!text-2xl !font-bold border-none shadow-none focus-visible:ring-0 bg-white w-full max-w-full "
             />
           </div>
           <div className="flex-grow min-h-0 bg-white overflow-hidden">

@@ -125,7 +125,7 @@ export default function HomePage() {
       )}
 
       {authLoading ? (
-        <p className="text-center mt-12 animate-pulse text-gray-600">
+        <p className="text-center mt-12 animate-pulse text-muted-foreground">
           Loading authentication...
         </p>
       ) : !user ? (
@@ -159,7 +159,7 @@ export default function HomePage() {
           </main>
         </div>
       ) : loading ? (
-        <p className="text-center mt-12 animate-pulse text-gray-600">
+        <p className="text-center mt-12 animate-pulse text-muted-foreground">
           Loading your groups...
         </p>
       ) : error ? (
@@ -167,7 +167,7 @@ export default function HomePage() {
       ) : groups.length === 0 ? (
         <main className="py-12 container mx-auto px-6">
           <div className="flex flex-col items-center justify-center py-24 text-center">
-            <p className="text-gray-700 text-xl mb-6">
+            <p className="text-xl mb-6">
               You are not a member of any course group.
             </p>
             <AddGroup />

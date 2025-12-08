@@ -84,10 +84,10 @@ export const CommentInputModal = ({
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <DialogContent className="max-w-xl">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold text-gray-900">
+          <DialogTitle className="text-xl font-semibold">
             Add Comment
           </DialogTitle>
-          <DialogDescription className="text-sm text-gray-500">
+          <DialogDescription className="text-sm text-muted-foreground">
             Share your thoughts about this note. You can edit or delete your
             comment later.
           </DialogDescription>
@@ -103,7 +103,7 @@ export const CommentInputModal = ({
             className="w-full resize-none text-sm whitespace-pre-wrap break-all"
           />
           <div className="flex justify-between items-center">
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-muted-foreground">
               {value.length}/{MAX_LENGTH} characters
             </p>
             {error && (
@@ -121,7 +121,7 @@ export const CommentInputModal = ({
           >
             Cancel
           </Button>
-          <Button type="button" onClick={handleSubmit} disabled={submitting} gi>
+          <Button type="button" onClick={handleSubmit} disabled={submitting}>
             {submitting ? "Saving..." : "Add Comment"}
           </Button>
         </DialogFooter>

@@ -21,7 +21,7 @@ const SidebarNotes = ({
       {/* Notes List */}
       <div className="flex-1 overflow-y-auto">
         {notes.length === 0 ? (
-          <div className="p-6 text-center text-gray-500 text-sm">
+          <div className="p-6 text-center text-muted-foreground text-sm">
             No notes available
           </div>
         ) : (
@@ -36,7 +36,9 @@ const SidebarNotes = ({
                 onClick={() => onNoteSelect(note._id)}
                 isSelected={selectedNoteId === note._id}
                 favorited={Boolean(favoritesMap[note._id])}
-                onToggleFavorite={(next) => onToggleFavorite && onToggleFavorite(note._id, next)}
+                onToggleFavorite={(next) =>
+                  onToggleFavorite && onToggleFavorite(note._id, next)
+                }
               />
             ))}
           </div>

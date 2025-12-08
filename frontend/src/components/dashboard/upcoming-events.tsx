@@ -16,7 +16,9 @@ export default function UpcomingEvents({
   onEventClick,
 }: UpcomingEventsProps) {
   if (isLoading) {
-    return <p className="text-center text-gray-500">Loading events...</p>;
+    return (
+      <p className="text-center text-muted-foreground">Loading events...</p>
+    );
   }
 
   if (error) {
@@ -25,7 +27,7 @@ export default function UpcomingEvents({
 
   if (events.length === 0) {
     return (
-      <p className="text-center text-gray-500">
+      <p className="text-center text-muted-foreground">
         No upcoming events for this group.
       </p>
     );
