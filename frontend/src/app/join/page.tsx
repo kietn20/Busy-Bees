@@ -1,16 +1,17 @@
 // Purpose: Page for users to join a group using an invite code
 
-'use client';
+"use client";
 
-import { useState, FormEvent, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import ProtectedRoute from '@/components/ProtectedRoute';
-import { joinGroup } from '@/services/groupApi';
-import { AxiosError } from 'axios';
+import { useState, FormEvent, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import ProtectedRoute from "@/components/ProtectedRoute";
+import { joinGroup } from "@/services/groupApi";
+import { AxiosError } from "axios";
 import toast from "react-hot-toast";
+import { Button } from "@/components/ui/button";
 
 export default function JoinGroupPage() {
-  const [inviteCode, setInviteCode] = useState('');
+  const [inviteCode, setInviteCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -19,21 +20,21 @@ export default function JoinGroupPage() {
 
   // auto fill invite code from URL on mount
   useEffect(() => {
-    const codeFromUrl = searchParams.get('code');
+    const codeFromUrl = searchParams.get("code");
     if (codeFromUrl) {
       setInviteCode(codeFromUrl.toUpperCase());
     }
   }, [searchParams]);
 
-
-
   // extract invite code from URL
   const extractInviteCode = (input: string): string => {
     try {
       // check if input contains a URL pattern
-      if (input.includes('://') || input.includes('join?code=')) {
-        const url = new URL(input.startsWith('http') ? input : `http://${input}`);
-        const codeParam = url.searchParams.get('code');
+      if (input.includes("://") || input.includes("join?code=")) {
+        const url = new URL(
+          input.startsWith("http") ? input : `http://${input}`
+        );
+        const codeParam = url.searchParams.get("code");
         if (codeParam) {
           return codeParam.toUpperCase();
         }
@@ -46,7 +47,7 @@ export default function JoinGroupPage() {
 
   const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
     e.preventDefault();
-    const pastedText = e.clipboardData.getData('text');
+    const pastedText = e.clipboardData.getData("text");
     const code = extractInviteCode(pastedText);
     setInviteCode(code);
   };
@@ -69,10 +70,11 @@ export default function JoinGroupPage() {
       // on success, redirect to the group page
       const groupId = response.data.group.id;
       router.push(`/groups/${groupId}`);
-
     } catch (error) {
       const axiosError = error as AxiosError<{ message: string }>;
-      const message = axiosError.response?.data?.message || 'Failed to join group. Please check the code and try again.';
+      const message =
+        axiosError.response?.data?.message ||
+        "Failed to join group. Please check the code and try again.";
       setError(message);
       toast.error(message);
     } finally {
@@ -85,11 +87,16 @@ export default function JoinGroupPage() {
       <div className="flex items-center justify-center mt-20">
         <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
           <h1 className="text-3xl font-bold text-center">Join a Group</h1>
-          <p className="text-center text-gray-600">Enter an invite code to join an existing course group.</p>
+          <p className="text-center text-muted-foreground">
+            Enter an invite code to join an existing course group.
+          </p>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label htmlFor="inviteCode" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="inviteCode"
+                className="block text-sm font-medium "
+              >
                 Invite Code
               </label>
               <input
@@ -101,19 +108,14 @@ export default function JoinGroupPage() {
                 value={inviteCode}
                 onChange={handleChange}
                 onPaste={handlePaste}
-                className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-yellow-500 focus:border-yellow-500"
+                className="w-full px-3 py-2 mt-1 border border-foreground/20 rounded-md shadow-sm focus:ring-primary focus:border-primary"
               />
             </div>
 
-
             <div>
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full px-4 py-2 font-bold text-white bg-blue-500 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-gray-400"
-              >
-                {isLoading ? 'Joining...' : 'Join Group'}
-              </button>
+              <Button type="submit" disabled={isLoading} className="w-full">
+                {isLoading ? "Joining..." : "Join Group"}
+              </Button>
             </div>
           </form>
         </div>
